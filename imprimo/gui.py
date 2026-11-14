@@ -27,6 +27,7 @@ from .core import (LAYER_KINDS, MODES, SHEET_PRESETS, ImposeError, Layer, spread
                    resolve_export,
                    render, to_mm)
 from .about import REPO_URL
+from .crease import PRESETS as CREASE_PRESETS, crease_spec, detect_any, format_positions, parse_positions
 from .i18n import LANGUAGES, get_language, set_language, t
 from .theme import THEMES, apply_theme, is_dark
 from .pdfinfo import STANDARDS, detect_profile, icc_from_file, system_cmyk_profiles
@@ -1056,7 +1057,15 @@ class LayerRow(QFrame):
 
 def guess_kind(path, spots=()):
     """Layer type from the spot colour names in the PDF, then from the file name."""
-    words = (("white", ("biel", "white", "wit", "weiss", "weiß")),
+    from .spots import kind_of
+    lib = {"crease": "crease", "cut": "diecut", "perf": "diecut", "white": "white",
+           "varnish": "varnish", "foil": "foil"}
+    for sp in spots:
+        k = lib.get(kind_of(sp) or "")
+        if k:
+            return k
+    words = (("crease", ("crease", "bigov", "ryhov", "score", "_big", "-big", " big")),
+             ("white", ("biel", "white", "wit", "weiss", "weiß")),
              ("diecut", ("vysek", "výsek", "cut", "die", "stanz", "kontur")),
              ("foil", ("foil", "folia", "fólia", "razba", "ražba", "gold", "silver")),
              ("varnish", ("lak", "varnish", "uv", "clear", "gloss", "matt")))
@@ -1115,6 +1124,9 @@ class MainWindow(QMainWindow):
         self.layer_rows = []
         self.infos = None
         self.infos_key = None
+        self.crease_detected = None   # crease.Detected from the PDF / the Crease layer
+        self.crease_source = ""
+        self._crease_key = None
         self.plan = None
         self.side_idx = 0
         self._loading = False
@@ -1320,6 +1332,30 @@ class MainWindow(QMainWindow):
         f.addRow(self.slug)
         col.addWidget(g)
 
+        # Creasing
+        self.crease_box = Section(t("crease_group"), "crease")
+        f = QFormLayout(self.crease_box.body)
+        self.crease = QComboBox()
+        for key in CREASE_PRESETS:
+            self.crease.addItem(t(f"crease_{key}"), key)
+        self.crease_dir = QComboBox()
+        self.crease_dir.addItem(t("crease_dir_v"), "v")
+        self.crease_dir.addItem(t("crease_dir_h"), "h")
+        self.crease_pos = QLineEdit()
+        self.crease_pos.setPlaceholderText(t("crease_pos_ph"))
+        self.crease_pos.setToolTip(t("crease_pos_tip"))
+        self.crease_marks = QCheckBox(t("crease_marks"))
+        self.crease_marks.setToolTip(t("crease_marks_tip"))
+        self.crease_status = hint_label()
+        self.crease_status.setTextFormat(Qt.RichText)
+        f.addRow(t("crease_preset"), self.crease)
+        f.addRow(t("crease_dir"), self.crease_dir)
+        f.addRow(t("crease_pos"), self.crease_pos)
+        f.addRow(self.crease_marks)
+        f.addRow(self.crease_status)
+        f.addRow(hint_label(t("crease_hint")))
+        col.addWidget(self.crease_box)
+
         # Layers
         g = Section(t("layers_group"), "layers")
         lv = QVBoxLayout(g.body)
@@ -1480,18 +1516,19 @@ class MainWindow(QMainWindow):
 
         # signals → recalculation
         for w in (self.mode, self.orientation, self.rotation, self.blanks,
-                  self.flip, self.back_or):
+                  self.flip, self.back_or, self.crease, self.crease_dir):
             w.currentIndexChanged.connect(self.changed)
         for w in (self.sheet_w, self.sheet_h, self.margin, self.cols, self.rows,
                   self.gutter_x, self.gutter_y, self.creep, self.bleed, self.assume,
                   self.mark_off, self.mark_len, self.mark_w):
             w.valueChanged.connect(self.changed)
-        for w in (self.duplex, self.crop, self.reg, self.slug, self.manual_rb,
+        for w in (self.duplex, self.crop, self.reg, self.slug, self.manual_rb, self.crease_marks,
                   self.out_print, self.out_layers, self.out_combined):
             w.toggled.connect(self.changed)
         self._rebuild_layer_rows()
         self.manual_rb.toggled.connect(self._manual_toggled)
         self.range.editingFinished.connect(self.changed)
+        self.crease_pos.editingFinished.connect(self.changed)
         self.split.toggled.connect(self.changed)
         self.sheet.currentIndexChanged.connect(self._preset_changed)
         self.std.currentIndexChanged.connect(self.changed)
@@ -1522,6 +1559,12 @@ class MainWindow(QMainWindow):
             grp.addAction(a)
             menu.addAction(a)
 
+        menu = mb.addMenu(t("tools_menu"))
+        a = QAction(t("spots_action"), self)
+        a.setMenuRole(QAction.NoRole)
+        a.triggered.connect(self.show_spots)
+        menu.addAction(a)
+
         # Help: on macOS “About Imprimo” moves to the application menu (AboutRole)
         menu = mb.addMenu(t("help_menu"))
         a = QAction(t("about_action"), self)
@@ -1543,6 +1586,10 @@ class MainWindow(QMainWindow):
 
     def show_about(self):
         self._about().exec()
+
+    def show_spots(self):
+        from .spots_dialog import SpotColorsDialog
+        SpotColorsDialog(self, self.last_dir).exec()
 
     def switch_theme(self, mode):
         store().setValue("theme", mode)
@@ -1603,7 +1650,95 @@ class MainWindow(QMainWindow):
             export_combined=self.out_combined.isChecked(),
             pdf_standard=self.std.currentData() or "keep",
             icc_profile=self.icc.currentData() if self.icc.currentData() != CHOOSE else "keep",
+            **self._crease_settings(),
         )
+
+    # ------------------------------------------------------------ creasing
+    def _crease_settings(self):
+        preset = self.crease.currentData() or "off"
+        d = dict(crease=preset, crease_dir=self.crease_dir.currentData() or "v",
+                 crease_pos=self.crease_pos.text().strip(),
+                 crease_marks=self.crease_marks.isChecked())
+        if preset == "pdf":
+            det = self.crease_detected
+            if det is not None and det.found:
+                d["crease_dir"] = "v" if det.main_vertical else "h"
+                d["crease_pos"] = format_positions(det.vertical if det.main_vertical
+                                                   else det.horizontal)
+            else:
+                d["crease_pos"] = ""
+        elif preset != "custom":
+            d["crease_pos"] = ""
+        return d
+
+    def _detect_creases(self):
+        """Crease lines from a Crease layer (preferred) or from the print PDF – only when
+        the preset is “from PDF”, cached until the file or the layers change."""
+        key = (self.path, tuple((e["layer"].path, e["layer"].kind) for e in self.layers))
+        if key == self._crease_key:
+            return
+        self._crease_key = key
+        self.crease_detected, self.crease_source = None, ""
+        try:
+            for e in self.layers:
+                if e["layer"].kind == "crease":
+                    d = detect_any(e["pdf"], e["infos"] or analyze(e["pdf"]))
+                    if d.found:
+                        self.crease_detected = d
+                        self.crease_source = os.path.basename(e["layer"].path)
+                        return
+            if self.src is not None:
+                d = detect_any(self.src, self.infos or analyze(self.src))
+                if d.found:
+                    self.crease_detected, self.crease_source = d, os.path.basename(self.path)
+        except Exception:
+            self.crease_detected = None
+
+    def _update_crease_panel(self):
+        preset = self.crease.currentData() or "off"
+        booklet = self.mode.currentData() == "booklet"
+        on = preset != "off" and not booklet
+        self.crease.setEnabled(not booklet)
+        self.crease_dir.setEnabled(on and preset != "pdf")
+        self.crease_pos.setReadOnly(preset != "custom")
+        self.crease_pos.setEnabled(on)
+        self.crease_marks.setEnabled(on)
+        msg = []
+        if booklet:
+            msg.append(t("crease_booklet"))
+        elif preset == "pdf":
+            det = self.crease_detected
+            if det is not None and det.found:
+                msg.append(t("crease_found", src=self.crease_source, spot=det.spot or "Crease"))
+                if det.vertical and det.horizontal:
+                    msg.append(t("crease_both_dirs"))
+            else:
+                msg.append(t("crease_none_found"))
+        if on and preset != "custom":
+            # show what the preset / the PDF gives, so the student sees the numbers
+            vals, vertical = [], True
+            if self.plan is not None:
+                spec = crease_spec(self.read_settings(), self.plan.page_w, self.plan.page_h)
+                if spec is not None:
+                    vals, vertical = spec.positions, spec.vertical
+            was, self._loading = self._loading, True
+            self.crease_pos.setText(format_positions(vals))
+            if preset == "pdf":
+                self.crease_dir.setCurrentIndex(self.crease_dir.findData("v" if vertical else "h"))
+            self._loading = was
+        elif not on and preset != "custom":
+            self.crease_pos.setText("")
+        if on and self.plan is not None:
+            spec = crease_spec(self.read_settings(), self.plan.page_w, self.plan.page_h)
+            if spec is not None and spec.rejected:
+                msg.append(t("crease_outside", pos=format_positions(spec.rejected)))
+            if preset == "custom":
+                try:
+                    parse_positions(self.crease_pos.text())
+                except ValueError as e:
+                    msg.append(t("crease_bad", tok=str(e)))
+        self.crease_status.setText("<br>".join(msg))
+        self.crease_status.setVisible(bool(msg))
 
     def apply_settings(self, s: Settings, sheet_key: str | None = None):
         self._loading = True
@@ -1641,6 +1776,10 @@ class MainWindow(QMainWindow):
         self.slug.setChecked(s.slug)
         self.creep.setValue(s.creep)
         setc(self.blanks, s.blanks)
+        setc(self.crease, s.crease if s.crease in CREASE_PRESETS else "off")
+        setc(self.crease_dir, s.crease_dir)
+        self.crease_pos.setText(s.crease_pos if s.crease == "custom" else "")
+        self.crease_marks.setChecked(s.crease_marks)
         self.range.setText(s.page_range)
         self.split.setChecked(s.split_spreads)
         self.out_print.setChecked(s.export_print)
@@ -1754,6 +1893,8 @@ class MainWindow(QMainWindow):
         marks = self.crop.isChecked()
         self.mark_off.setEnabled(marks)
         self.mark_len.setEnabled(marks)
+        if hasattr(self, "crease_box"):
+            self._update_crease_panel()
 
     def changed(self, *_):
         if self._loading:
@@ -1782,6 +1923,7 @@ class MainWindow(QMainWindow):
         self.src, self.path = pdf, path
         self.last_dir = os.path.dirname(path)
         self.infos = None
+        self._crease_key = None
         self.rasters.clear()
         self._clear_layers()
         QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -1876,6 +2018,9 @@ class MainWindow(QMainWindow):
                 self.infos_key = key
                 for e in self.layers:
                     e["infos"] = analyze(e["pdf"], *key)
+            if s.crease == "pdf":
+                self._detect_creases()
+                s = self.read_settings()
             self.plan = build_plan(self.infos, s)
         except ImposeError as e:
             self.plan = None
@@ -1898,6 +2043,7 @@ class MainWindow(QMainWindow):
                  u=f"{p.utilization:.0%}")
         self.info.setText(f"<b>{head}</b> · {tail}")
         self.warn.setText("\n".join("⚠ " + w for w in p.warnings))
+        self._update_crease_panel()
         self._update_nav()
         self._update_picker()
         self._update_preflight(s)

@@ -1,5 +1,5 @@
 """Sample PDFs for testing: business cards, A5 booklet, rotated page, no TrimBox,
-PDF/X samples and layer samples (varnish)."""
+PDF/X samples, layer samples (varnish) and crease samples (DL roll fold, invitation)."""
 import os
 
 import pikepdf
@@ -188,6 +188,58 @@ def make_layer_samples():
     boxes(p, 3)
 
 
+def _crease_line(c, x, top, colour):
+    c.setStrokeColor(colour)
+    c.setStrokeOverprint(True)
+    c.setLineWidth(0.25)
+    c.line(x, 0, x, top)
+
+
+def make_crease_samples():
+    from reportlab.lib.colors import CMYKColorSep
+    crease = CMYKColorSep(1, 0, 1, 0, spotName="Crease", density=1)
+    b = 3*mm
+
+    # DL roll (C) fold from A4 landscape: panels 100 / 100 / 97 mm, creases drawn in the
+    # print PDF (the wrong-but-common way – preflight warns, Imprimo still reads them)
+    w, h = 297*mm, 210*mm
+    p = os.path.join(OUT, "dl_cfold_crease_in_print.pdf")
+    c = canvas.Canvas(p, pagesize=(w + 2*b, h + 2*b))
+    for i, (x0, pw, col) in enumerate(((0, 100, (0.1, 0.3, 0.6, 0)), (100, 100, (0.5, 0.1, 0.1, 0)),
+                                       (200, 97, (0.2, 0.6, 0.1, 0)))):
+        c.setFillColor(CMYKColor(*col))
+        c.rect(b + x0*mm - (b if i == 0 else 0), 0, pw*mm + (b if i in (0, 2) else 0), h + 2*b,
+               stroke=0, fill=1)
+        c.setFillColor(CMYKColor(0, 0, 0, 1))
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(b + (x0 + 8)*mm, b + h - 20*mm, f"panel {i + 1} – {pw} mm")
+    for x in (100, 200):
+        _crease_line(c, b + x*mm, h + 2*b, crease)
+    c.showPage()
+    c.save()
+    boxes(p, 3)
+
+    # invitation A5 landscape folded in half: print PDF + a separate crease PDF (the right way)
+    w, h = 210*mm, 148*mm
+    p = os.path.join(OUT, "invite_A5.pdf")
+    c = canvas.Canvas(p, pagesize=(w + 2*b, h + 2*b))
+    card_page(c, w, h, b, CMYKColor(0, 0.15, 0.4, 0), "INVITATION – front | inside")
+    c.showPage()
+    c.save()
+    boxes(p, 3)
+    p = os.path.join(OUT, "invite_A5_crease.pdf")
+    c = canvas.Canvas(p, pagesize=(w + 2*b, h + 2*b))
+    _crease_line(c, b + 105*mm, h + 2*b, crease)
+    c.showPage()
+    c.save()
+    boxes(p, 3)
+    # the same crease PDF with /Rotate 90 – the crease becomes horizontal, 105 mm from the top
+    q = os.path.join(OUT, "invite_A5_crease_rot90.pdf")
+    with pikepdf.open(p) as pdf:
+        pdf.pages[0].obj.Rotate = 90
+        pdf.save(q)
+
+
 if __name__ == "__main__":
     make_cards()
     make_booklet(10)
@@ -195,4 +247,5 @@ if __name__ == "__main__":
     make_no_trimbox()
     make_pdfx_samples()
     make_layer_samples()
+    make_crease_samples()
     print(sorted(os.listdir(OUT)))

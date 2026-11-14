@@ -24,6 +24,7 @@ import pikepdf
 from pikepdf import Array, Dictionary, Name
 
 from . import APP_NAME, __version__
+from .crease import card_segments, crease_spec
 from .fonts import encode as font_encode, make_font
 from .i18n import t
 from .pdfinfo import BUNDLED_ICC, STANDARDS, SourceProfile, icc_from_file, icc_info
@@ -92,6 +93,10 @@ class Settings:
     export_combined: bool = False
     pdf_standard: str = "keep"       # keep | none | x1a2001 | x1a2003 | x32002 | x32003 | x4
     icc_profile: str = "keep"        # keep | bundled | cesta k .icc
+    crease: str = "off"              # off | half | z3 | c3 | custom | pdf (see crease.py)
+    crease_dir: str = "v"            # v = vertical lines (from the left) | h = horizontal (from the top)
+    crease_pos: str = ""             # custom / pdf: positions in mm on the product, "99; 198"
+    crease_marks: bool = True        # crease marks at the sheet edge (manual creaser with a stop)
 
 
 # --------------------------------------------------------------------------
@@ -341,6 +346,15 @@ class Side:
     cuts_y: list
     folds_x: list
     folds_y: list
+    crease_segs: list = field(default_factory=list)   # crease lines on this side (sheet coords)
+
+    @property
+    def creases_x(self):
+        return _uniq([a[0] for a, b in self.crease_segs if abs(a[0] - b[0]) < EPS])
+
+    @property
+    def creases_y(self):
+        return _uniq([a[1] for a, b in self.crease_segs if abs(a[1] - b[1]) < EPS])
 
 
 @dataclass
@@ -429,11 +443,16 @@ def _sheet_sides(sheet_no, entries, SW, SH, s: Settings, bleed, duplex,
     mirror_x = (s.duplex_flip == "long") == portrait
     M = (-1, 0, 0, 1, SW, 0) if mirror_x else (1, 0, 0, -1, 0, SH)
 
+    creases = []                     # front side, sheet coordinates
     for (cell, fp, bp), rect in zip(entries, rects):
         L, B, R, T = _side_bleeds(rect, rects, bleed)
         clip = (rect[0] - L, rect[1] - B, rect[2] + R, rect[3] + T)
         P = cell.matrix
         front.append(Item(fp, P, clip, rect, cell.W, cell.H))
+        spec = crease_spec(s, cell.W, cell.H) if s.mode != "booklet" and fp is not None else None
+        if spec is not None:
+            for a, b in card_segments(spec, cell.W, cell.H):
+                creases.append((apply(P, *a), apply(P, *b)))
         if duplex:
             if back_flip == FLIP_BOOK:
                 F = (-1, 0, 0, 1, cell.W, 0)
@@ -443,7 +462,7 @@ def _sheet_sides(sheet_no, entries, SW, SH, s: Settings, bleed, duplex,
                              map_rect(M, rect), cell.W, cell.H))
 
     sides = [Side(sheet_no, False, front, block, cuts_x, cuts_y,
-                  list(folds_x), list(folds_y))]
+                  list(folds_x), list(folds_y), creases)]
     if duplex:
         mx = lambda v: SW - v
         my = lambda v: SH - v
@@ -453,7 +472,8 @@ def _sheet_sides(sheet_no, entries, SW, SH, s: Settings, bleed, duplex,
         else:
             bx = (cuts_x, _uniq([my(v) for v in cuts_y]),
                   list(folds_x), [my(v) for v in folds_y])
-        sides.append(Side(sheet_no, True, back, map_rect(M, block), *bx))
+        back_creases = [(apply(M, *a), apply(M, *b)) for a, b in creases]
+        sides.append(Side(sheet_no, True, back, map_rect(M, block), *bx, back_creases))
     return sides
 
 
@@ -740,12 +760,60 @@ def _marks(side: Side, s: Settings, SW, SH, bleed):
                 hseg(y, bx1 + off, bx1 + off + L)
             ops.append("[] 0 d")
 
+    if s.crease_marks and side.crease_segs:
+        # dash-dot, so a crease mark is never mistaken for a cut or a fold mark
+        ops.append("[4 1.5 0.8 1.5] 0 d")
+        for x in side.creases_x:
+            vseg(x, by0 - off - L, by0 - off)
+            vseg(x, by1 + off, by1 + off + L)
+        for y in side.creases_y:
+            hseg(y, bx0 - off - L, bx0 - off)
+            hseg(y, bx1 + off, bx1 + off + L)
+        ops.append("[] 0 d")
+
     if s.reg_marks:
         for tx, ty, r, arm in _reg_targets(side, s, SW, SH, bleed)[0]:
             ops.append(_circle(tx, ty, r))
             ops.append(f"{_n(tx - arm)} {_n(ty)} m {_n(tx + arm)} {_n(ty)} l S")
             ops.append(f"{_n(tx)} {_n(ty - arm)} m {_n(tx)} {_n(ty + arm)} l S")
     return ops
+
+
+CREASE_LABEL = "B"       # next to each crease mark (B = big, crease)
+
+
+def _crease_labels(side: Side, s: Settings, SW, SH, bleed):
+    """A small letter at the outer end of each crease mark."""
+    size = 5.0
+    bx0, by0, bx1, by1 = side.block
+    off = max(mm(s.mark_offset), bleed)
+    L = mm(s.mark_length)
+    txt = font_encode(t("crease_mark_letter")).decode("latin-1")
+    out = []
+
+    def put(x, y):
+        if 0 <= x <= SW - size and 0 <= y <= SH - size:
+            out.append(f"BT /F1 {_n(size)} Tf {_n(x)} {_n(y)} Td ({txt}) Tj ET")
+
+    for x in side.creases_x:
+        put(x + 1.2, by1 + off + L - size)              # top end
+        put(x + 1.2, by0 - off - L)                     # bottom end
+    for y in side.creases_y:
+        put(bx0 - off - L, y + 1.2)                     # left end
+        put(bx1 + off + L - size * 0.7, y + 1.2)        # right end
+    return out
+
+
+def crease_summary(s: Settings, W: float, H: float) -> str:
+    """“Big: 99 / 198 mm zľava” – for the info line and the panel."""
+    spec = crease_spec(s, W, H)
+    if spec is None or not spec.positions:
+        return ""
+    from .i18n import get_language
+    pos = " / ".join(f"{v:.1f}".rstrip("0").rstrip(".") for v in spec.positions)
+    if get_language() == "sk":
+        pos = pos.replace(".", ",")
+    return t("crease_from_left" if spec.vertical else "crease_from_top", pos=pos)
 
 
 def _slug(side: Side, plan: Plan, s: Settings, SW, SH, bleed, filename, stamp, label=None):
@@ -758,8 +826,9 @@ def _slug(side: Side, plan: Plan, s: Settings, SW, SH, bleed, filename, stamp, l
     label = t("slug_back") if side.is_back else t("slug_front")
     if extra_label:
         label = f"{label} | {extra_label}"
+    crease = crease_summary(s, plan.page_w, plan.page_h) if side.crease_segs else ""
     text = (f"{filename} | {t('slug_sheet')} {side.sheet_no}/{total} {label} | "
-            f"{plan.summary(s)} | {stamp}")
+            f"{plan.summary(s)}" + (f" | {crease}" if crease else "") + f" | {stamp}")
     y = by0 - reach - size
     if y < mm(2):
         y_top = by1 + reach
@@ -777,6 +846,7 @@ LAYER_KINDS = {
     "white": ("white", "below"),
     "diecut": ("diecut", "above"),
     "foil": ("foil", "above"),
+    "crease": ("crease", "above"),   # crease lines: read for the crease marks, never printed
     "custom": ("layer", "above"),
 }
 
@@ -858,7 +928,8 @@ def render_sources(sources: list[Source], plan: Plan, s: Settings, side_indices=
     fn = out.make_indirect(Dictionary(FunctionType=2, Domain=[0, 1], C0=[0, 0, 0, 0],
                                       C1=[1, 1, 1, 1], N=1))
     cs_reg = out.make_indirect(Array([Name.Separation, Name("/All"), Name.DeviceCMYK, fn]))
-    font = make_font(out) if s.slug else None
+    has_creases = s.crease_marks and any(sd.crease_segs for sd in plan.sides)
+    font = make_font(out) if (s.slug or has_creases) else None
 
     gstates = Dictionary()
     if any(src.overprint for src in sources):
@@ -923,6 +994,12 @@ def render_sources(sources: list[Source], plan: Plan, s: Settings, side_indices=
             ops.append(f"q /CSReg CS 1 SCN {_n(s.mark_weight)} w 0 J")
             ops += mark_ops
             ops.append("Q")
+        if font is not None and s.crease_marks and side.crease_segs:
+            lbl = _crease_labels(side, s, SW, SH, bleed)
+            if lbl:
+                ops.append("q /CSReg cs 1 scn")
+                ops += lbl
+                ops.append("Q")
         if s.slug:
             ops.append("q /CSReg cs 1 scn " + _slug(side, plan, s, SW, SH, bleed, filename, stamp, label) + " Q")
         if guides:
@@ -930,6 +1007,10 @@ def render_sources(sources: list[Source], plan: Plan, s: Settings, side_indices=
             ops += [f"{_re(it.trim)} S" for it in side.items]
             ops.append("[3 2] 0 d 1 0 0.6 RG")
             ops += [f"{_re(it.clip)} S" for it in side.items]
+            if side.crease_segs:
+                ops.append("0.8 w [6 2 1.5 2] 0 d 0 0.62 0.25 RG")
+                ops += [f"{_n(a[0])} {_n(a[1])} m {_n(b[0])} {_n(b[1])} l S"
+                        for a, b in side.crease_segs]
             ops.append("Q")
 
         page = out.add_blank_page(page_size=(SW, SH))
@@ -1186,10 +1267,28 @@ def export_outputs(src, infos, prof, plan, s: Settings, layers: list, base_path:
     return written
 
 
+def detect_creases(pdf: pikepdf.Pdf, infos):
+    from .crease import detect_any
+    return detect_any(pdf, infos)
+
+
+def apply_detected_creases(s: Settings, det) -> bool:
+    """Fill crease_dir / crease_pos from detected lines; False when nothing was found."""
+    from .crease import format_positions
+    if not det.found:
+        s.crease_pos = ""
+        return False
+    s.crease_dir = "v" if det.main_vertical else "h"
+    s.crease_pos = format_positions(det.vertical if det.main_vertical else det.horizontal)
+    return True
+
+
 def impose_file(in_path: str, out_path: str, s: Settings) -> Plan:
     from .pdfinfo import detect_profile
     with pikepdf.open(in_path) as src:
         infos = analyze(src, s.assume_bleed, s.split_spreads)
+        if s.crease == "pdf":
+            apply_detected_creases(s, detect_creases(src, infos))
         plan = build_plan(infos, s)
         prof = detect_profile(src)
         name = os.path.basename(in_path)

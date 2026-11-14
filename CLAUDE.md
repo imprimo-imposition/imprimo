@@ -39,6 +39,8 @@ imprimo/preview.py      fast preview: cached pdfium page bitmaps composed with Q
                         JPEG-downscaled proxies for heavy pages, page number badges
 imprimo/gui.py          MainWindow, SheetView (zoom/pan), OverviewView (all sheets,
                         Space/middle-button hand tool), collapsible sections, LayerRow
+imprimo/crease.py       crease presets/positions (mm on the product), crease line detection
+imprimo/spots.py        spot colour library + aliases, .ase writer (spots_dialog.py = window)
 imprimo/preflight.py    source and layer checks
 imprimo/pdfinfo.py      PDF/X, PDF/A, output intent detection, ICC profiles
 imprimo/theme.py        light/dark/system (GNOME portal detection on Linux)
@@ -70,7 +72,6 @@ as spreads, PDFs without TrimBox, rotated pages.
 ## Plans (not started)
 
 - V2 binding: signatures (folded sections of 8/16/32 pages), collation marks, cover with spine.
-- Creasing (bigovanie / ryhovanie): mark crease lines in the layout and on the sheet.
 - Custom splash screen from Maxim (PNG 1200 × 720).
 - Website: minimalist, modern, links to GitHub releases.
 - Windows testing feedback from users.

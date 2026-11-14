@@ -353,6 +353,13 @@ def evaluate(F: Findings, family: str | None, selected_pages: set, src_intent_id
     spots = sorted(n for n, pp in F.spots.items() if hit(pp))
     if spots:
         out.append(("info", t("pf_spots", spots=", ".join(spots[:8]))))
+    # technical colours (crease, die-cut…) belong in a layer of their own, not in the print
+    from .spots import spot_for
+    for n in spots:
+        sp = spot_for(n)
+        if sp is not None and sp.technical:
+            out.append(("warn", t("pf_technical_spot", spot=n, use=t(f"spot_use_{sp.kind}"))
+                        + _pages(F.spots[n], sel)))
 
     # transparency, JPEG 2000, layers
     if hit(F.transparency):

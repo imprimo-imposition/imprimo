@@ -48,11 +48,37 @@ Open a PDF with the button or by dropping it onto the window. The preview update
 
 Crop marks, dashed fold marks, registration targets and an info line (file, sheet, date). Marks use the Registration colour (Separation /All). Targets shrink to fit a narrow margin; if they don't fit at all, Imprimo warns.
 
-### Layers (varnish, white, die-cut, foil)
+### Creasing
+
+For invitations, cards and folded leaflets (section *Creasing*):
+
+- **Presets** – *in half*, *Z-fold* (3 equal panels), *roll (C) fold* (the inner panel 3 mm narrower, e.g. A4 → 100 / 100 / 97 mm), *custom positions* (`99; 198`) or *from the PDF*.
+- Positions are in mm on the **finished product** (without bleed): vertical creases from the left edge, horizontal ones from the top. Imprimo carries them to every copy on the sheet – rotated pieces and the back side included.
+- **Crease marks at the sheet edge** – dash-dot marks labelled *B* (Slovak *big*) / *CR* outside the bleed, for setting the stop of a manual creaser. The positions are also printed in the info line.
+- **From the PDF** – Imprimo finds straight lines in the spot colour **Crease** (or an alias such as *Big*, *Bigovanie*, *Score*) in a *Crease* layer or in the print PDF and fills in the positions. The preflight warns when crease lines are in the print PDF, because a digital press would print them.
+- The preview shows the creases as green dash-dot lines (with *Guides*). A booklet is creased at the fold, so creasing is off there.
+
+### Spot colours
+
+*Tools → Spot colours…* lists the technical spot colours Imprimo works with and saves them as an **Adobe Swatch Exchange (.ase)** palette for Illustrator, InDesign, Photoshop, Affinity, CorelDRAW or Scribus. The palette is also in [`spot-colors/`](spot-colors/).
+
+| Name | Use | Printed |
+|---|---|---|
+| **Crease** | creasing | no |
+| **CutContour** | die-cut, contour cut | no |
+| **Perforation** | perforation | no |
+| **Fold** | fold without crease | no |
+| **White** | white underprint | yes |
+| **Varnish** | spot varnish | yes |
+| **Foil** | hot foil | yes |
+
+Names are matched regardless of case, spaces and accents; Slovak names (*Big*, *Výsek*, *Lak*, *Biela*, …) are recognised too.
+
+### Layers (varnish, white, die-cut, foil, crease)
 
 *+ Add layer (PDF)* adds a PDF that is imposed exactly like the print (positions, rotation, back side, creep). Per layer:
 
-- **Type** – varnish, white, die-cut, foil or custom; sets the defaults below and the file suffix.
+- **Type** – varnish, white, die-cut, foil, crease or custom; sets the defaults below and the file suffix. A *crease* layer is read for the crease positions and exported separately, never printed.
 - **Spot colour** – *Read from PDF* (default) lists the spot colours used in the layer PDF. If the printer requires a specific name, turn it off and enter the name – Imprimo checks that the layer uses it.
 - **Position** – above the print, or below it (white underprint).
 - **Overprint** – forces overprint for the whole layer so it doesn't knock out the print.
@@ -83,7 +109,9 @@ After opening, Imprimo shows how the PDF was exported (standard, output intent, 
 Two modes in the bottom bar:
 
 - **Sheet** – one sheet side with zoom: − / +, *Whole sheet*, *100 %*, Ctrl/Cmd + wheel or pinch; drag or scroll to pan; double-click toggles zoom. ← → switch sheets.
-- **All sheets** – every sheet side as a thumbnail with the pages it carries (e.g. *Sheet 1 · front · pp. 8, 1*); double-sided work shows front | back per row. Click a thumbnail to open it; Ctrl/Cmd + wheel or − / + change the thumbnail size. Hold Space and drag (or drag with the middle mouse button) to move around.
+- **All sheets** – every sheet side as a thumbnail with the pages it carries (e.g. *Sheet 1 · front · pp. 8, 1*); double-sided work shows front | back per row. Zoom works like in *Sheet* (up to 200 %); click a thumbnail to open it.
+
+In both modes: Ctrl/Cmd + wheel or pinch zooms at the cursor, drag, Space + drag or the middle mouse button pans.
 
 *Page numbers* (next to *Guides*) puts a numbered badge in the middle of every page, in both modes. The badge is turned like the page content, so on the back you can see where the head of each page is; the underline tells 6 from 9. Blank pages added to a booklet show *blank*, pages split from a spread show which PDF page and half they come from. Like the guides, the numbers are never saved to the PDF.
 
@@ -101,7 +129,11 @@ On first start Imprimo offers to add itself to the applications menu (a `.deskto
 main.py                  entry point (splash first, crash report)
 imprimo/
   core.py                geometry, imposition plan, rendering, layers, PDF/X export
+  crease.py              crease presets and positions, finding crease lines in a PDF
+  spots.py               spot colour library (Crease, CutContour, …), .ase export
   gui.py                 user interface (PySide6)
+  about.py               About dialog (licence, versions)
+  spots_dialog.py        Spot colours window
   preview.py             cached page bitmaps and sheet composition for the preview
   splash.py              QApplication, icon, splash screen, macOS app name
   preflight.py           source and layer checks
@@ -114,7 +146,8 @@ imprimo/
   assets/                font, ICC profile, icons
 tests/
   make_samples.py        sample PDFs (needs reportlab and pillow)
-  test_core.py           page order, PDF/X export, layers
+  test_core.py           page order, PDF/X export, layers, creasing, spot colours
+spot-colors/             Imprimo spot colour palette (.ase) and how to import it
 packaging/
   package.py             builds the release zips (see packaging/README.md)
   docs/                  README.txt / CITAJ-MA.txt of the packages
@@ -128,7 +161,8 @@ tools_make_icons.py      builds .ico / .icns / PNG from the icon master
 python -m imprimo.cli input.pdf output.pdf --set mode=booklet --set sheet_w=297 --set sheet_h=420
 ```
 
-Setting names are the fields of `Settings` in `imprimo/core.py`.
+Setting names are the fields of `Settings` in `imprimo/core.py`, e.g. `--set crease=c3`,
+`--set crease=custom --set crease_pos="99; 198"` or `--set crease=pdf`.
 
 ## Tests
 
