@@ -156,9 +156,22 @@ It writes `imprimo.ico` (Windows, 16–256 px; 16–24 px use a simplified targe
 - Preflight doesn't replace a certified one (Acrobat, pdfToolbox).
 - Annotations and form fields are not carried over.
 
+## Licence
+
+Imprimo is free software, licensed under the **GNU General Public License v3.0 or later** ([LICENSE](LICENSE)).
+You may use it free of charge – at school, at home and in companies, also for commercial print work –
+share it and change it. If you distribute a modified version, it has to be under the GPL too, with its source code.
+
+**Commercial licence:** companies that want to build Imprimo into a closed-source product, or need other
+terms, can get a separate licence from the author – open an issue on GitHub.
+
+**Contributions:** by sending a pull request you agree that your contribution is licensed under
+GPL-3.0-or-later and may also be included in the author's commercial licence.
+
 ## Bundled files
 
-See `imprimo/assets/README-assets.txt`: DejaVu Sans Condensed (Bitstream Vera / DejaVu licence) and the FOGRA39L Coated ICC profile (free of known copyright restrictions).
+Third-party libraries and their licences: [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
+Assets – see `imprimo/assets/README-assets.txt`: DejaVu Sans Condensed (Bitstream Vera / DejaVu licence) and the FOGRA39L Coated ICC profile (free of known copyright restrictions).
 
 ---
 Author: Maxim Darák

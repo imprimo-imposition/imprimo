@@ -17,3 +17,9 @@ pravý klik → Otvoriť v programe → Imprimo.
 
 Ak sa nespustí, v Termináli spusti a pošli výpis:
   /Applications/Imprimo.app/Contents/MacOS/Imprimo
+
+Licencia
+--------
+Imprimo je slobodný softvér pod licenciou GNU GPL v3.0 alebo novšou
+(LICENSE.txt). Pribalené knižnice a ich licencie: THIRD-PARTY-NOTICES.txt.
+Zdrojový kód a nové verzie: https://github.com/imprimo-imposition/imprimo

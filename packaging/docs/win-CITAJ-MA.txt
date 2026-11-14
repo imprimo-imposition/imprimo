@@ -20,3 +20,9 @@ Program nič neinštaluje. Nastavenia ukladá do registra používateľa
 (HKCU\Software\Imprimo). Odinštalovanie = zmazanie priečinka.
 
 Požiadavky: Windows 10 alebo 11, 64-bit.
+
+Licencia
+--------
+Imprimo je slobodný softvér pod licenciou GNU GPL v3.0 alebo novšou
+(LICENSE.txt). Pribalené knižnice a ich licencie: THIRD-PARTY-NOTICES.txt.
+Zdrojový kód a nové verzie: https://github.com/imprimo-imposition/imprimo

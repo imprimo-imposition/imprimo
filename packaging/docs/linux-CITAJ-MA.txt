@@ -21,3 +21,9 @@ Ak sa nespustí
 Spusti ./Imprimo v termináli – vypíše chybu. Záznam je aj v
 ~/Imprimo/imprimo-chyba.log. Na čistých inštaláciách s X11 niekedy
 chýba knižnica xcb-cursor:  sudo dnf install xcb-util-cursor
+
+Licencia
+--------
+Imprimo je slobodný softvér pod licenciou GNU GPL v3.0 alebo novšou
+(LICENSE.txt). Pribalené knižnice a ich licencie: THIRD-PARTY-NOTICES.txt.
+Zdrojový kód a nové verzie: https://github.com/imprimo-imposition/imprimo

@@ -17,3 +17,9 @@ right-click → Open With → Imprimo.
 
 If it doesn't start, run this in Terminal and send the output:
   /Applications/Imprimo.app/Contents/MacOS/Imprimo
+
+Licence
+-------
+Imprimo is free software under the GNU GPL v3.0 or later (LICENSE.txt).
+Bundled libraries and their licences: THIRD-PARTY-NOTICES.txt.
+Source code and new versions: https://github.com/imprimo-imposition/imprimo

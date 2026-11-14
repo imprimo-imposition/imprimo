@@ -15,6 +15,8 @@ technically precise and practical. Private notes (not in git): `CLAUDE.local.md`
 - User interface: Slovak and English, all texts in `imprimo/i18n.py`. Every key must exist
   in both languages (check: the SK and EN key sets are equal).
 - Package readmes: `README.txt` (EN) + `CITAJ-MA.txt` (SK), sources in `packaging/docs/`.
+- Licence: GPL-3.0-or-later (`LICENSE`). A new or updated bundled dependency must be
+  listed in `THIRD-PARTY-NOTICES.txt` (shipped in every release zip).
 - Exported file suffix: `_imposed` (layers: `_imposed_varnish`, …, `_imposed_layers`).
 - Releases: zips named with the version – `Imprimo-X.Y.Z-windows.zip`, `-macOS.zip`,
   `-linux-x86_64.zip`, source `imprimo-X.Y.Z.zip`. Bump `__version__` in

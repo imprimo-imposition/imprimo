@@ -20,3 +20,9 @@ If it doesn't start
 Run ./Imprimo in a terminal – it prints the error. The log is also in
 ~/Imprimo/imprimo-chyba.log. On plain X11 installations the xcb-cursor
 library is sometimes missing:  sudo dnf install xcb-util-cursor
+
+Licence
+-------
+Imprimo is free software under the GNU GPL v3.0 or later (LICENSE.txt).
+Bundled libraries and their licences: THIRD-PARTY-NOTICES.txt.
+Source code and new versions: https://github.com/imprimo-imposition/imprimo

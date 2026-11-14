@@ -26,3 +26,9 @@ Nothing is installed. Settings are stored in the user registry
 (HKCU\Software\Imprimo). To uninstall, delete the folder.
 
 Requirements: Windows 10 or 11, 64-bit.
+
+Licence
+-------
+Imprimo is free software under the GNU GPL v3.0 or later (LICENSE.txt).
+Bundled libraries and their licences: THIRD-PARTY-NOTICES.txt.
+Source code and new versions: https://github.com/imprimo-imposition/imprimo
