@@ -26,6 +26,7 @@ from .core import (LAYER_KINDS, MODES, SHEET_PRESETS, ImposeError, Layer, spread
                    layer_display_name, layer_source, output_paths, parse_range, render_sources,
                    resolve_export,
                    render, to_mm)
+from .about import REPO_URL
 from .i18n import LANGUAGES, get_language, set_language, t
 from .theme import THEMES, apply_theme, is_dark
 from .pdfinfo import STANDARDS, detect_profile, icc_from_file, system_cmyk_profiles
@@ -1520,6 +1521,28 @@ class MainWindow(QMainWindow):
             a.triggered.connect(lambda _=False, c=code: self.switch_theme(c))
             grp.addAction(a)
             menu.addAction(a)
+
+        # Help: on macOS “About Imprimo” moves to the application menu (AboutRole)
+        menu = mb.addMenu(t("help_menu"))
+        a = QAction(t("about_action"), self)
+        a.setMenuRole(QAction.AboutRole)
+        a.triggered.connect(self.show_about)
+        menu.addAction(a)
+        a = QAction(t("about_show_license") + "…", self)
+        a.setMenuRole(QAction.NoRole)
+        a.triggered.connect(lambda: self._about().show_license())
+        menu.addAction(a)
+        a = QAction(t("github_action"), self)
+        a.setMenuRole(QAction.NoRole)
+        a.triggered.connect(lambda: QDesktopServices.openUrl(QUrl(REPO_URL)))
+        menu.addAction(a)
+
+    def _about(self):
+        from .about import AboutDialog
+        return AboutDialog(self)
+
+    def show_about(self):
+        self._about().exec()
 
     def switch_theme(self, mode):
         store().setValue("theme", mode)

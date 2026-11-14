@@ -76,6 +76,8 @@ def copy_app(dst, drop_icons):
     os.makedirs(dst)
     shutil.copy2(os.path.join(ROOT, "main.py"), dst)
     shutil.copy2(os.path.join(ROOT, "README.md"), dst)
+    for name in ("LICENSE", "THIRD-PARTY-NOTICES.txt"):     # read by the About dialog
+        shutil.copy2(os.path.join(ROOT, name), dst)
     shutil.copytree(os.path.join(ROOT, "imprimo"), os.path.join(dst, "imprimo"),
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     for f in ("imprimo-1024-master.png",) + tuple(drop_icons):
