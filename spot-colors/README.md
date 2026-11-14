@@ -21,8 +21,9 @@ of its own. *CutContour* is the name Roland, Mimaki and Summa cutters expect.
 - **Illustrator** – Swatches panel → menu → *Open Swatch Library → Other Library…* → choose the `.ase`.
 - **InDesign** – Swatches panel → menu → *Load Swatches…*
 - **Photoshop** – Swatches panel → menu → *Import Swatches…*
-- **Affinity Designer / Publisher** – Swatches panel → menu → *Import Palette…* (check that the colours
-  are imported as spot colours; if not, set *Spot* in the colour's properties).
+- **Affinity Designer / Publisher** – Swatches panel → menu → *Import Palette…* → **As Application Palette**
+  (or *As Document Palette*). **Not** *As System Palette* – a system palette (a macOS colour list) has no
+  spot colours, so Crease would become a plain colour and Imprimo would not find it.
 - **CorelDRAW** – Colour palettes → *Open palette* → `.ase`.
 - **Scribus** – *Edit → Colours and Fills → Import*.
 
@@ -31,8 +32,8 @@ of its own. *CutContour* is the name Roland, Mimaki and Summa cutters expect.
 1. Draw the crease as a straight line, 0.25 pt, in **Crease**, set to *overprint*.
 2. Put it on a layer of its own (e.g. *Crease*).
 3. Export the print PDF **without** that layer, and the crease layer as a second PDF.
-4. In Imprimo: open the print PDF, add the second PDF as a layer of type *Crease* and choose
-   *Crease → From the PDF*. Imprimo reads the positions and puts crease marks at the sheet edge.
+4. In Imprimo: open the print PDF, in *Creasing* choose *Crease → From a crease PDF* and
+   *Choose PDF…* the second PDF. Imprimo reads the positions and puts crease marks at the sheet edge.
 
 Imprimo also recognises other names regardless of case, spaces and accents – e.g. *Big*, *Bigovanie*,
 *Score* for a crease, *Výsek*, *Die*, *Dieline* for a die-cut.
@@ -44,7 +45,11 @@ Imprimo also recognises other names regardless of case, spaces and accents – e
 **Imprimo-spot-colors.ase** – technické spotové farby na dokončovacie spracovanie. Rovnaký súbor
 uloží Imprimo cez *Nástroje → Spotové farby…*.
 
+**Affinity:** paletu importuj ako **aplikačnú** (Application) alebo **dokumentovú** (Document), **nie ako
+systémovú** (System) – systémová paleta (zoznam farieb macOS) nepozná spotové farby, Crease by bola
+obyčajná farba a Imprimo by ju nenašlo.
+
 **Big nakresli** ako rovnú čiaru 0,25 pt vo farbe **Crease** s prestrieraním (overprint), v samostatnej
-vrstve. Tlačové PDF exportuj bez tejto vrstvy, vrstvu s bigmi ako druhé PDF. V Imprime ho pridaj ako
-vrstvu typu *Bigovanie* a zvoľ *Big → Z PDF*. Imprimo spozná aj názvy *Big*, *Bigovanie*, *Výsek*,
+vrstve. Tlačové PDF exportuj bez tejto vrstvy, vrstvu s bigmi ako druhé PDF. V Imprime v sekcii
+*Bigovanie* zvoľ *Big → Z PDF s bigmi* a cez *Vybrať PDF…* vyber toto druhé PDF. Imprimo spozná aj názvy *Big*, *Bigovanie*, *Výsek*,
 *Lak*, *Biela* a ďalšie – bez ohľadu na veľké písmená a diakritiku.
