@@ -53,6 +53,9 @@ imprimo/cli.py          command line (`--set field=value`, fields of Settings)
 tests/                  make_samples.py (needs reportlab, pillow), test_core.py
 packaging/              package.py (release zips), docs/, windows/ launcher
 tools_make_icons.py     .ico / .icns / PNG from imprimo/assets/icon/imprimo-1024-master.png
+docs/                   website on GitHub Pages (https://imprimo-imposition.github.io/imprimo/),
+                        one static index.html (SK/EN), screenshots docs/mac/*.webp made by
+                        tools_web_screenshots.py (needs Screen Recording permission)
 ```
 
 Coordinates: PDF points, y up. Affine matrices are tuples `(a, b, c, d, e, f)` in PDF
@@ -76,5 +79,6 @@ as spreads, PDFs without TrimBox, rotated pages.
 
 - V2 binding: signatures (folded sections of 8/16/32 pages), collation marks, cover with spine.
 - Custom splash screen from Maxim (PNG 1200 × 720).
-- Website: minimalist, modern, links to GitHub releases.
+- Donations: GitHub Sponsors or Ko-fi, later possibly an o. z. (2 % of tax); a gift
+  without anything in return – the user sets up the account himself.
 - Windows testing feedback from users.

@@ -6,6 +6,8 @@ Pages are placed as vector Form XObjects: fonts, CMYK, spot colours and gradient
 
 The user interface is available in Slovak and English (menu *Language*).
 
+**Website:** https://imprimo-imposition.github.io/imprimo/ · **Download:** [latest release](https://github.com/imprimo-imposition/imprimo/releases/latest)
+
 ## Sample files
 
 [`examples/`](examples/) has 10 lessons with sample PDFs – business cards, a card without bleed, an invitation
@@ -188,6 +190,8 @@ packaging/
   docs/                  README.txt / CITAJ-MA.txt of the packages
   windows/               source of the Imprimo.exe launcher
 tools_make_icons.py      builds .ico / .icns / PNG from the icon master
+tools_web_screenshots.py macOS window screenshots for the website
+docs/                    the website (GitHub Pages): index.html, mac/ screenshots
 ```
 
 ## Command line
