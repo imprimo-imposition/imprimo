@@ -159,7 +159,8 @@ It writes `imprimo.ico` (Windows, 16–256 px; 16–24 px use a simplified targe
 ## How Imprimo is made
 
 Imprimo is designed and tested by **Maxim Darák**, a teacher of print media, together with students of
-**SOŠ služieb, Košická 20, Prešov** (Slovakia) as part of their SOČ project (Slovak secondary-school
+**SOŠ služieb, Košická 20, Prešov** (Slovakia), field of study **GTM – grafik tlačových médií**
+(print media graphic designer), as part of their SOČ project (Slovak secondary-school
 research competition). Maxim is not a programmer: the code is written with AI assistance
 ([Claude Code](https://claude.com/claude-code) by Anthropic) under his direction. He brings the know-how
 of print production, decides what Imprimo does and how it works, and tests it on real print jobs
@@ -185,4 +186,4 @@ Third-party libraries and their licences: [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-
 Assets – see `imprimo/assets/README-assets.txt`: DejaVu Sans Condensed (Bitstream Vera / DejaVu licence) and the FOGRA39L Coated ICC profile (free of known copyright restrictions).
 
 ---
-Author: Maxim Darák, with students of SOŠ služieb, Košická 20, Prešov · developed with AI assistance (Claude Code)
+Author: Maxim Darák, with students of SOŠ služieb, Košická 20, Prešov, field of study GTM · developed with AI assistance (Claude Code)
