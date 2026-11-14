@@ -1,0 +1,22 @@
+IMPRIMO {V} pre Windows (skúšobná prenosná verzia)
+=================================================
+
+Spustenie
+---------
+1. Celý ZIP rozbaľ do priečinka (napr. na plochu alebo do Dokumentov).
+   Nespúšťaj program priamo z otvoreného ZIP súboru.
+2. Dvojklik na Imprimo.exe.
+
+Windows môže zobraziť okno „Windows chránil váš počítač“ (SmartScreen),
+lebo program nie je digitálne podpísaný: klikni na „Ďalšie informácie“
+→ „Spustiť aj tak“.
+
+Ak sa program nespustí
+----------------------
+- Spusti Imprimo-diagnostics.bat – v čiernom okne sa zobrazí chyba.
+- Záznam chyby je aj v %LOCALAPPDATA%\Imprimo\imprimo-chyba.log
+
+Program nič neinštaluje. Nastavenia ukladá do registra používateľa
+(HKCU\Software\Imprimo). Odinštalovanie = zmazanie priečinka.
+
+Požiadavky: Windows 10 alebo 11, 64-bit.

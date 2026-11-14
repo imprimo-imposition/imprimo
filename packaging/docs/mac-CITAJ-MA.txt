@@ -1,0 +1,19 @@
+IMPRIMO {V} pre macOS (skúšobná verzia, Apple Silicon, macOS 15 a novší)
+=======================================================================
+
+Inštalácia
+----------
+1. Imprimo.app presuň do priečinka Aplikácie (Applications).
+2. Prvé spustenie: aplikácia nie je overená u Apple, preto ju macOS zablokuje.
+   - Klikni na Imprimo.app → v hlásení zvoľ „Hotovo“.
+   - Nastavenia systému → Súkromie a bezpečnosť → pri „Imprimo“ klikni
+     „Otvoriť napriek tomu“ a potvrď heslom.
+   Alebo v Termináli (jeden riadok):
+     xattr -dr com.apple.quarantine /Applications/Imprimo.app
+3. Potom sa spúšťa normálne (Dock, Launchpad).
+
+PDF otvoríš pretiahnutím na ikonu v Docku alebo cez Finder →
+pravý klik → Otvoriť v programe → Imprimo.
+
+Ak sa nespustí, v Termináli spusti a pošli výpis:
+  /Applications/Imprimo.app/Contents/MacOS/Imprimo

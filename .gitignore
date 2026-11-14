@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+dist/
+tests/samples/
+.DS_Store
+*_imposed*.pdf
+CLAUDE.local.md

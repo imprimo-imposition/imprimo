@@ -1,0 +1,23 @@
+IMPRIMO {V} pre Linux (x86_64) – skúšobná prenosná verzia
+=========================================================
+
+Spustenie
+---------
+1. Rozbaľ ZIP (napr. do ~/Aplikacie alebo ~/Programy).
+2. Spusti „Imprimo“ (dvojklik alebo ./Imprimo v termináli).
+3. Pri prvom spustení Imprimo ponúkne pridanie do menu aplikácií –
+   tak bude mať ikonu v doku a v prehľade aplikácií a PDF pôjde otvárať
+   cez „Otvoriť v programe“. Ak priečinok neskôr presunieš, položka
+   v menu sa upraví sama.
+
+Odstránenie z menu: ./uninstall-menu.sh, potom zmaž priečinok.
+(./install-menu.sh ju pridá znova ručne.)
+
+Ak sa súbory nedajú spustiť (stratili sa práva pri rozbaľovaní):
+    chmod +x Imprimo install-menu.sh uninstall-menu.sh runtime/bin/python3.12
+
+Ak sa nespustí
+--------------
+Spusti ./Imprimo v termináli – vypíše chybu. Záznam je aj v
+~/Imprimo/imprimo-chyba.log. Na čistých inštaláciách s X11 niekedy
+chýba knižnica xcb-cursor:  sudo dnf install xcb-util-cursor

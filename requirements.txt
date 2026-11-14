@@ -1,0 +1,7 @@
+pikepdf>=8.0
+pypdfium2>=4.0
+PySide6-Essentials>=6.5
+fonttools>=4.40
+Pillow>=9.0
+# only for tests/make_samples.py:
+# reportlab
