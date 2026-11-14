@@ -1,4 +1,4 @@
-# Imprimo 0.6.3
+# Imprimo 0.6.4
 
 Imposition of print-ready PDFs for Windows, macOS and Linux – business cards, labels, booklets, cut & stack – with PDF/X export, preflight and extra layers (varnish, white, die-cut, foil).
 

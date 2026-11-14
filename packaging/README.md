@@ -12,17 +12,19 @@ Imprimo ships as portable folders with their own Python 3.12, so users install n
 ## Making a release
 
 1. Set `__version__` in `imprimo/__init__.py` and the heading of `README.md`.
-2. Run the tests (`python tests/make_samples.py && python tests/test_core.py`).
-3. Put the previous release zips in one folder and run (macOS or Linux):
+2. Commit the release changes – the source zip is made with `git archive` from `HEAD`,
+   so it contains only committed files (never `CLAUDE.local.md` or other local files).
+3. Run the tests (`python tests/make_samples.py && python tests/test_core.py`).
+4. Put the previous release zips in one folder and run (macOS or Linux):
 
    ```bash
-   python3 packaging/package.py 0.6.4 --base ~/Imprimo-releases/0.6.3
+   python3 packaging/package.py 0.6.5 --base ~/Imprimo-releases/0.6.4
    ```
 
    The zips land in `dist/`. The runtimes are taken over from the previous release; only
    the app, the readmes (`packaging/docs/`, `{V}` = version) and the version change.
    Windows readmes get CRLF line endings.
-4. `pip install ziglang` lets the script rebuild `Imprimo.exe` with the new version
+5. `pip install ziglang` lets the script rebuild `Imprimo.exe` with the new version
    resource (`packaging/windows/launcher.c`, `launcher.rc`, icon from the assets).
 
 ## Runtimes (only needed when dependencies change)

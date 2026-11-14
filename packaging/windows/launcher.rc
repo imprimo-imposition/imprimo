@@ -1,8 +1,8 @@
 #include <winver.h>
 1 ICON "imprimo.ico"
 1 VERSIONINFO
-FILEVERSION 0,6,3,0
-PRODUCTVERSION 0,6,3,0
+FILEVERSION 0,6,4,0
+PRODUCTVERSION 0,6,4,0
 FILEOS VOS_NT_WINDOWS32
 FILETYPE VFT_APP
 BEGIN
@@ -12,12 +12,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "Maxim Darak"
       VALUE "FileDescription", "Imprimo"
-      VALUE "FileVersion", "0.6.3"
+      VALUE "FileVersion", "0.6.4"
       VALUE "InternalName", "Imprimo"
       VALUE "OriginalFilename", "Imprimo.exe"
       VALUE "ProductName", "Imprimo"
-      VALUE "ProductVersion", "0.6.3"
-      VALUE "LegalCopyright", "Maxim Darak"
+      VALUE "ProductVersion", "0.6.4"
+      VALUE "LegalCopyright", "(C) Maxim Darak, GPL-3.0-or-later"
     END
   END
   BLOCK "VarFileInfo"

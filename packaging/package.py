@@ -5,7 +5,7 @@ The bundled Python runtimes are not rebuilt: each package is made from the
 previous release zip of the same platform, with the app folder, the readmes and
 the version replaced. Put the previous release zips in one folder and run
 
-    python3 packaging/package.py 0.6.4 --base ~/Imprimo-releases/0.6.3
+    python3 packaging/package.py 0.6.5 --base ~/Imprimo-releases/0.6.4
 
 Output (default: dist/):
     Imprimo-0.6.4-windows.zip, Imprimo-0.6.4-macOS.zip,
@@ -198,9 +198,14 @@ def main():
             if os.path.exists(z):
                 os.remove(z)
             parent, base = os.path.split(ROOT)
-            run("zip", "-q", "-r", z, base, "-x", "*/__pycache__/*", "-x", "*.pyc",
-                "-x", f"{base}/dist/*", "-x", f"{base}/.git/*", "-x", f"{base}/tests/samples/*",
-                "-x", f"{base}/.venv/*", "-x", "*/.DS_Store", cwd=parent)
+            if os.path.isdir(os.path.join(ROOT, ".git")):
+                # only what is committed – no private or local files (CLAUDE.local.md, .claude/…)
+                run("git", "archive", "--format=zip", f"--prefix={base}/", "-o", z, "HEAD", cwd=ROOT)
+            else:
+                run("zip", "-q", "-r", z, base, "-x", "*/__pycache__/*", "-x", "*.pyc",
+                    "-x", f"{base}/dist/*", "-x", f"{base}/tests/samples/*", "-x", f"{base}/.venv/*",
+                    "-x", "*/.DS_Store", "-x", f"{base}/CLAUDE.local.md", "-x", f"{base}/.claude/*",
+                    cwd=parent)
             print("source →", z)
     finally:
         shutil.rmtree(work, ignore_errors=True)
