@@ -5,8 +5,10 @@ Imposition Wizard or Quite Imposing – with PDF/X export, preflight and extra l
 (varnish, white, die-cut, foil). Python 3.12 + PySide6, runs on Windows, macOS, Linux.
 Feature overview: `README.md`. Packaging and releases: `packaging/README.md`.
 
-Author: Maxim Darák. Imprimo is used by beginners as well as print shops, so the UI must
-be understandable for beginners. Maxim writes in Slovak – answer him in Slovak,
+Author: Maxim Darák, with students of SOŠ služieb, Košická 20, Prešov (SOČ project) – this
+credit is public on purpose (README, About dialog). Code is written with AI assistance, as stated
+in README “How Imprimo is made”. Imprimo is used by beginners as well as print shops, so the UI
+must be understandable for beginners. Maxim writes in Slovak – answer him in Slovak,
 technically precise and practical. Private notes (not in git): `CLAUDE.local.md`.
 
 ## Rules

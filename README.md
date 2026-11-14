@@ -156,6 +156,17 @@ It writes `imprimo.ico` (Windows, 16–256 px; 16–24 px use a simplified targe
 - Preflight doesn't replace a certified one (Acrobat, pdfToolbox).
 - Annotations and form fields are not carried over.
 
+## How Imprimo is made
+
+Imprimo is designed and tested by **Maxim Darák**, a teacher of print media, together with students of
+**SOŠ služieb, Košická 20, Prešov** (Slovakia) as part of their SOČ project (Slovak secondary-school
+research competition). Maxim is not a programmer: the code is written with AI assistance
+([Claude Code](https://claude.com/claude-code) by Anthropic) under his direction. He brings the know-how
+of print production, decides what Imprimo does and how it works, and tests it on real print jobs
+with his students. Every change is checked by automated tests.
+
+Found a problem or have an idea? Please [open an issue](https://github.com/imprimo-imposition/imprimo/issues).
+
 ## Licence
 
 Imprimo is free software, licensed under the **GNU General Public License v3.0 or later** ([LICENSE](LICENSE)).
@@ -174,4 +185,4 @@ Third-party libraries and their licences: [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-
 Assets – see `imprimo/assets/README-assets.txt`: DejaVu Sans Condensed (Bitstream Vera / DejaVu licence) and the FOGRA39L Coated ICC profile (free of known copyright restrictions).
 
 ---
-Author: Maxim Darák
+Author: Maxim Darák, with students of SOŠ služieb, Košická 20, Prešov · developed with AI assistance (Claude Code)

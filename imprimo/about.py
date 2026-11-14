@@ -104,7 +104,8 @@ class AboutDialog(QDialog):
             f"<div style='font-size:20pt; font-weight:600'>{APP_NAME}</div>"
             f"<div>{t('about_version', v=__version__)}</div>"
             f"<p>{t('about_desc')}</p>"
-            f"<p>© Maxim Darák</p>")
+            f"<p>© Maxim Darák</p>"
+            f"<p>{t('about_credits')}</p>")
         head.setWordWrap(True)
         head.setTextFormat(Qt.RichText)
         top.addWidget(head, 1)
