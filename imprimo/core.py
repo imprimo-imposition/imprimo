@@ -380,9 +380,12 @@ class Plan:
     margin: float = 0.0
     gang: list = field(default_factory=list)        # gang run: [(name, qty, slots, made)]
     gang_owner: list = field(default_factory=list)  # gang run: job index of every slot
+    area_used: float = 0.0                          # poster: printed poster area (all pages)
 
     @property
     def utilization(self):
+        if self.area_used:                          # poster: its area over all the sheets
+            return self.area_used / (self.n_sheets * self.sheet_w * self.sheet_h)
         return self.per_sheet * self.page_w * self.page_h / (self.sheet_w * self.sheet_h)
 
     def summary(self, s: Settings) -> str:
@@ -801,6 +804,7 @@ def _plan_tile(pages, W, H, s: Settings, bleed) -> Plan:
                                   glue_x, glue_y, [], (r, c, rows, cols)))
     plan = Plan(SW, SH, sides, len(sides), 1, W, H, cols, rows, 0)
     plan.margin = m
+    plan.area_used = PW * PH * len(pages)
     return plan
 
 

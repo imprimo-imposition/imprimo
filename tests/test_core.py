@@ -308,6 +308,7 @@ def test_tile_plan():
     s = Settings(mode="tile", sheet_w=210, sheet_h=297, margin=10, tile_overlap=10, bleed=3)
     p = build_plan(fake(1, 420, 594), s)
     assert (p.cols, p.rows, p.n_sheets) == (2, 4, 8)
+    assert abs(p.utilization - 0.5) < 0.01                    # 420×594 over 8 × A4 = 50 %
     assert round(p.sheet_w / mm(1)) == 297
     a1, a2 = p.sides[0], p.sides[1]
     assert a1.tile == (0, 0, 4, 2) and a2.tile == (0, 1, 4, 2)
