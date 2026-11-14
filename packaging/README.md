@@ -24,7 +24,9 @@ Imprimo ships as portable folders with their own Python 3.12, so users install n
    The zips land in `dist/`. The runtimes are taken over from the previous release; only
    the app, the readmes (`packaging/docs/`, `{V}` = version) and the version change.
    Windows readmes get CRLF line endings.
-5. `pip install ziglang` lets the script rebuild `Imprimo.exe` with the new version
+5. The script also writes `docs/latest.json` (version and download links for the website's
+   buttons) – commit and push it after publishing the GitHub release.
+6. `pip install ziglang` lets the script rebuild `Imprimo.exe` with the new version
    resource (`packaging/windows/launcher.c`, `launcher.rc`, icon from the assets).
 
 ## Runtimes (only needed when dependencies change)

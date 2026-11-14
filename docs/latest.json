@@ -1,0 +1,8 @@
+{
+  "version": "0.7.0",
+  "downloads": {
+    "win": "https://github.com/imprimo-imposition/imprimo/releases/download/v0.7.0/Imprimo-0.7.0-windows.zip",
+    "mac": "https://github.com/imprimo-imposition/imprimo/releases/download/v0.7.0/Imprimo-0.7.0-macOS.zip",
+    "linux": "https://github.com/imprimo-imposition/imprimo/releases/download/v0.7.0/Imprimo-0.7.0-linux-x86_64.zip"
+  }
+}

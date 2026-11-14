@@ -453,16 +453,29 @@ footer a { color: var(--ink); }
 
   // direct downloads of the latest release (the buttons fall back to the release page)
   var pattern = { win: /-windows\.zip$/, mac: /-macOS\.zip$/, linux: /-linux-x86_64\.zip$/ };
-  fetch("https://api.github.com/repos/imprimo-imposition/imprimo/releases/latest")
-    .then(function (r) { return r.ok ? r.json() : null; })
-    .then(function (rel) {
-      if (!rel || !rel.assets) return;
-      document.querySelectorAll(".btn[data-os]").forEach(function (b) {
-        var a = rel.assets.find(function (x) { return pattern[b.dataset.os].test(x.name); });
-        if (a) b.href = a.browser_download_url;
-      });
-      var k = document.querySelector(".kicker b");
-      if (k && rel.tag_name) k.textContent = rel.tag_name;
+  function apply(tag, urls) {
+    document.querySelectorAll(".btn[data-os]").forEach(function (b) {
+      if (urls[b.dataset.os]) b.href = urls[b.dataset.os];
+    });
+    var k = document.querySelector(".kicker b");
+    if (k && tag) k.textContent = tag;
+  }
+  // latest.json is written by packaging/package.py with every release
+  fetch("latest.json", { cache: "no-cache" })
+    .then(function (r) { if (!r.ok) throw r; return r.json(); })
+    .then(function (j) { apply("v" + j.version, j.downloads || {}); })
+    .catch(function () {
+      return fetch("https://api.github.com/repos/imprimo-imposition/imprimo/releases/latest")
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (rel) {
+          if (!rel || !rel.assets) return;
+          var urls = {};
+          Object.keys(pattern).forEach(function (os) {
+            var a = rel.assets.find(function (x) { return pattern[os].test(x.name); });
+            if (a) urls[os] = a.browser_download_url;
+          });
+          apply(rel.tag_name, urls);
+        });
     })
     .catch(function () {});
 

@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import glob
+import json
 import os
 import plistlib
 import re
@@ -195,6 +196,17 @@ def main():
                 os.remove(z)
             run("zip", "-q", "-r", "-y", "-9", z, new_top, cwd=d)
             print("  →", z)
+
+        # the website's download buttons read docs/latest.json
+        base_url = f"https://github.com/imprimo-imposition/imprimo/releases/download/v{V}/"
+        latest = {"version": V, "downloads": {
+            "win": base_url + f"Imprimo-{V}-windows.zip",
+            "mac": base_url + f"Imprimo-{V}-macOS.zip",
+            "linux": base_url + f"Imprimo-{V}-linux-x86_64.zip"}}
+        with open(os.path.join(ROOT, "docs", "latest.json"), "w", encoding="utf-8") as f:
+            json.dump(latest, f, indent=2)
+            f.write("\n")
+        print("website downloads → docs/latest.json")
 
         if "source" in want:
             z = os.path.join(out_dir, f"imprimo-{V}.zip")
