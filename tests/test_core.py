@@ -247,6 +247,49 @@ def test_bleed_fill_export():
     assert any("zrkadl" in w or "mirror" in w for w in p.warnings)
 
 
+# --------------------------------------------------------------------------
+# Job presets
+
+def test_builtin_presets():
+    from imprimo import presets
+    from imprimo.core import SHEET_PRESETS
+    from imprimo.i18n import STRINGS
+    for p in presets.BUILTIN:
+        s = p.to_settings()
+        assert p.sheet_key in SHEET_PRESETS and p.builtin in STRINGS["sk"]
+        build_plan(fake(8, 90, 50) if s.mode != "booklet" else fake(8), s)   # must plan
+    by = {p.builtin: p.to_settings() for p in presets.BUILTIN}
+    assert build_plan(fake(2, 90, 50), by["preset_cards"]).per_sheet == 21    # 3 mm bleed
+    assert build_plan(fake(2, 85, 55), by["preset_cards"]).per_sheet == 21
+    assert build_plan(fake(2, 90, 50), by["preset_cards2"]).per_sheet == 24   # 2 mm bleed
+    assert not by["preset_cards_1s"].duplex and not by["preset_cards2_1s"].duplex
+    assert build_plan(fake(1, 90, 50), by["preset_cards2_1s"]).per_sheet == 24
+    dl = next(p for p in presets.BUILTIN if p.builtin == "preset_dl").to_settings()
+    assert dl.crease == "c3" and dl.duplex
+
+
+def test_preset_roundtrip_and_merge():
+    from imprimo import presets
+    s = Settings(mode="cutstack", bleed=2, page_range="1-4")
+    p = presets.from_settings("Lístky", s, "A4 (210 × 297)")
+    assert "page_range" not in p.settings
+    back = presets.loads(presets.file_text([p]))[0]
+    assert back.name == "Lístky" and back.sheet_key == "A4 (210 × 297)"
+    assert presets.same(back.to_settings(), s)               # page_range is ignored
+    s2 = Settings(mode="cutstack", bleed=3)
+    assert not presets.same(back.to_settings(), s2)
+    own, n = presets.merge([back], presets.loads(presets.file_text([p])))
+    assert n == 0 and len(own) == 1                           # identical → skipped
+    other = presets.from_settings("Lístky", s2, "A4 (210 × 297)")
+    own, n = presets.merge(own, [other])
+    assert n == 1 and [q.name for q in own] == ["Lístky", "Lístky (2)"]
+    try:
+        presets.loads('{"format": "something-else"}')
+        assert False
+    except ValueError:
+        pass
+
+
 if __name__ == "__main__":
     for k, f in list(globals().items()):
         if k.startswith("test_"):

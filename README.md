@@ -32,6 +32,10 @@ Open a PDF with the button or by dropping it onto the window. The preview update
 | **Cut & stack** | After cutting and stacking the piles, pieces are in order (numbered tickets). |
 | **Saddle-stitch booklet** | Page count padded to a multiple of 4, optional creep. |
 
+### Presets
+
+**Preset** at the top of the panel sets everything for a kind of job in one click: sheet, layout, bleed, double-sided printing, marks, creasing and export. Imprimo comes with presets for single- and double-sided business cards (90×50 or 85×55 – the size always comes from the PDF; with 3 mm bleed 21 per SRA3, with 2 mm bleed 24 cards 90×50), an invitation folded in half, a DL roll fold leaflet, a saddle-stitch booklet and tickets (★). *Save…* stores the current settings as your own preset; *Presets → Manage* renames, reorders and deletes them, *Export / Import* moves them to another computer as a `.json` file – a teacher prepares presets once and the class imports them. When a setting is changed, the preset field switches to *custom settings*.
+
 ### Sheet and layout
 
 - Sheet presets (SRA3, A3+, A3, SRA4, A4, B3, SRA2, B2), custom size or *fit to content*.
@@ -132,6 +136,7 @@ imprimo/
   core.py                geometry, imposition plan, rendering, layers, PDF/X export
   crease.py              crease presets and positions, finding crease lines in a PDF
   spots.py               spot colour library (Crease, CutContour, …), .ase export
+  presets.py             job presets (built-in, user's, .json import / export)
   gui.py                 user interface (PySide6)
   about.py               About dialog (licence, versions)
   spots_dialog.py        Spot colours window

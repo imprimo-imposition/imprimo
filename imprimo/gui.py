@@ -18,7 +18,8 @@ from PySide6.QtWidgets import (QApplication, QButtonGroup, QCheckBox, QComboBox,
                                QDoubleSpinBox, QFileDialog, QFormLayout, QFrame, QGroupBox,
                                QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMessageBox,
                                QPushButton, QRadioButton, QScrollArea, QSizePolicy, QSpinBox,
-                               QSplitter, QToolButton, QVBoxLayout, QWidget)
+                               QSplitter, QToolButton, QVBoxLayout, QWidget, QDialog,
+                               QDialogButtonBox, QInputDialog, QListWidget)
 
 from . import APP_NAME, __version__
 from .core import (LAYER_KINDS, MODES, SHEET_PRESETS, ImposeError, Layer, spread_pages,
@@ -26,6 +27,7 @@ from .core import (LAYER_KINDS, MODES, SHEET_PRESETS, ImposeError, Layer, spread
                    layer_display_name, layer_source, output_paths, parse_range, render_sources,
                    resolve_export, mm,
                    render, to_mm)
+from . import presets as presets_mod
 from .about import REPO_URL
 from .crease import PRESETS as CREASE_PRESETS, crease_spec, detect_any, format_positions, parse_positions
 from .i18n import LANGUAGES, get_language, set_language, t
@@ -1174,8 +1176,10 @@ class MainWindow(QMainWindow):
             lang = "sk" if QLocale.system().name()[:2] in ("sk", "cs") else "en"
         set_language(lang)
 
+        self.job_presets = presets_mod.loads(qs.value("job_presets", "[]"))
         self._build_ui()
         self._load_settings()
+        self._sync_job()
 
     # ---------------------------------------------------------------- UI
     def _build_ui(self):
@@ -1185,6 +1189,23 @@ class MainWindow(QMainWindow):
         panel = QWidget()
         col = QVBoxLayout(panel)
         col.setContentsMargins(10, 10, 10, 10)
+
+        # Job preset – one click sets everything for a kind of job
+        row = QHBoxLayout()
+        lbl = QLabel(f"<b>{t('job_label')}</b>")
+        self.job = QComboBox()
+        self.job.setToolTip(t("job_tip"))
+        self.job.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        self.job.setMinimumContentsLength(16)
+        self.job.activated.connect(self._job_chosen)
+        save = QPushButton(t("job_save_btn"))
+        save.setToolTip(t("job_save_tip"))
+        save.clicked.connect(self.save_job_preset)
+        row.addWidget(lbl)
+        row.addWidget(self.job, 1)
+        row.addWidget(save)
+        col.addLayout(row)
+        self._fill_job_combo()
 
         # File
         g = Section(t("file"), "file")
@@ -1602,6 +1623,20 @@ class MainWindow(QMainWindow):
             grp.addAction(a)
             menu.addAction(a)
 
+        menu = mb.addMenu(t("jobs_menu"))
+        for item in ((t("job_save_action"), self.save_job_preset),
+                     (t("job_manage_action"), self.manage_job_presets),
+                     None,
+                     (t("job_import_action"), self.import_job_presets),
+                     (t("job_export_action"), self.export_job_presets)):
+            if item is None:
+                menu.addSeparator()
+                continue
+            a = QAction(item[0], self)
+            a.setMenuRole(QAction.NoRole)
+            a.triggered.connect(item[1])
+            menu.addAction(a)
+
         menu = mb.addMenu(t("tools_menu"))
         a = QAction(t("spots_action"), self)
         a.setMenuRole(QAction.NoRole)
@@ -1910,6 +1945,183 @@ class MainWindow(QMainWindow):
         self._loading = False
         self._preset_changed()
 
+    # ------------------------------------------------------------ job presets
+    def _all_jobs(self):
+        return list(presets_mod.BUILTIN) + list(self.job_presets)
+
+    def _job_name(self, p):
+        return t(p.builtin) if p.builtin else p.name
+
+    def _fill_job_combo(self):
+        if not hasattr(self, "job"):
+            return
+        self.job.blockSignals(True)
+        self.job.clear()
+        self.job.addItem(t("job_custom"), None)
+        for i, p in enumerate(presets_mod.BUILTIN):
+            self.job.addItem("★ " + self._job_name(p), ("b", i))
+        if self.job_presets:
+            self.job.insertSeparator(self.job.count())
+        for i, p in enumerate(self.job_presets):
+            self.job.addItem(p.name, ("u", i))
+        self.job.blockSignals(False)
+
+    def _job_at(self, data):
+        if not data:
+            return None
+        kind, i = data
+        lst = presets_mod.BUILTIN if kind == "b" else self.job_presets
+        return lst[i] if 0 <= i < len(lst) else None
+
+    def _job_chosen(self, index):
+        p = self._job_at(self.job.itemData(index))
+        if p is None:
+            return
+        s = p.to_settings()
+        s.page_range = self.range.text()
+        self.apply_settings(s, p.sheet_key)
+        self._crease_key = None
+        self.changed()
+        self.statusBar().showMessage(t("job_applied", name=self._job_name(p)), 6000)
+
+    def _sync_job(self):
+        """Show the preset that matches the current settings, or “custom settings”."""
+        if not hasattr(self, "job"):
+            return
+        cur, key = self.read_settings(), self.sheet.currentData()
+        match = 0
+        for i in range(self.job.count()):
+            p = self._job_at(self.job.itemData(i))
+            if p is not None and p.sheet_key == key and presets_mod.same(p.to_settings(), cur):
+                match = i
+                break
+        if self.job.currentIndex() != match:
+            self.job.blockSignals(True)
+            self.job.setCurrentIndex(match)
+            self.job.blockSignals(False)
+
+    def _store_jobs(self):
+        store().setValue("job_presets", presets_mod.dumps(self.job_presets))
+        self._fill_job_combo()
+        self._sync_job()
+
+    def save_job_preset(self):
+        cur = self._job_at(self.job.currentData())
+        suggest = cur.name if cur is not None and not cur.builtin else ""
+        name, ok = QInputDialog.getText(self, t("job_save_title"), t("job_save_prompt"),
+                                        text=suggest)
+        name = (name or "").strip()
+        if not ok or not name:
+            return
+        new = presets_mod.from_settings(name, self.read_settings(), self.sheet.currentData())
+        existing = [i for i, p in enumerate(self.job_presets) if p.name == name]
+        if existing:
+            r = QMessageBox.question(self, APP_NAME, t("job_overwrite", name=name))
+            if r != QMessageBox.Yes:
+                return
+            self.job_presets[existing[0]] = new
+        else:
+            self.job_presets.append(new)
+        self._store_jobs()
+        self.statusBar().showMessage(t("job_saved", name=name), 6000)
+
+    def manage_job_presets(self):
+        dlg = QDialog(self)
+        dlg.setWindowTitle(t("job_manage_title"))
+        dlg.resize(420, 360)
+        lay = QVBoxLayout(dlg)
+        lst = QListWidget()
+        lay.addWidget(QLabel(t("job_manage_hint")))
+        lay.addWidget(lst, 1)
+
+        def fill(sel=0):
+            lst.clear()
+            for p in self.job_presets:
+                lst.addItem(p.name)
+            if self.job_presets:
+                lst.setCurrentRow(max(0, min(sel, len(self.job_presets) - 1)))
+
+        def rename():
+            r = lst.currentRow()
+            if r < 0:
+                return
+            old = self.job_presets[r].name
+            name, ok = QInputDialog.getText(dlg, t("job_rename"), t("job_save_prompt"), text=old)
+            name = (name or "").strip()
+            if ok and name and name != old:
+                self.job_presets[r].name = presets_mod.unique_name(
+                    name, [p.name for p in self.job_presets])
+                self._store_jobs()
+                fill(r)
+
+        def delete():
+            r = lst.currentRow()
+            if r < 0:
+                return
+            if QMessageBox.question(dlg, APP_NAME, t("job_delete_q", name=self.job_presets[r].name)) \
+                    == QMessageBox.Yes:
+                del self.job_presets[r]
+                self._store_jobs()
+                fill(r)
+
+        def move(d):
+            r = lst.currentRow()
+            if 0 <= r < len(self.job_presets) and 0 <= r + d < len(self.job_presets):
+                jp = self.job_presets
+                jp[r], jp[r + d] = jp[r + d], jp[r]
+                self._store_jobs()
+                fill(r + d)
+
+        bb = QDialogButtonBox()
+        for text, fn in ((t("job_rename"), rename), (t("job_delete"), delete),
+                         ("↑", lambda: move(-1)), ("↓", lambda: move(1))):
+            b = QPushButton(text)
+            b.clicked.connect(fn)
+            bb.addButton(b, QDialogButtonBox.ActionRole)
+        close = bb.addButton(QDialogButtonBox.Close)
+        close.setText(t("close"))
+        bb.rejected.connect(dlg.reject)
+        lay.addWidget(bb)
+        fill()
+        dlg.exec()
+
+    def export_job_presets(self):
+        if not self.job_presets:
+            QMessageBox.information(self, APP_NAME, t("job_none_to_export"))
+            return
+        path, _ = QFileDialog.getSaveFileName(self, t("job_export_action"),
+                                              os.path.join(self.last_dir, "imprimo-predvolby.json"),
+                                              "JSON (*.json)")
+        if not path:
+            return
+        if not path.lower().endswith(".json"):
+            path += ".json"
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(presets_mod.file_text(self.job_presets))
+        except OSError as e:
+            QMessageBox.warning(self, APP_NAME, t("save_fail", err=e))
+            return
+        self.statusBar().showMessage(t("job_exported", n=len(self.job_presets), path=path), 8000)
+
+    def import_job_presets(self):
+        path, _ = QFileDialog.getOpenFileName(self, t("job_import_action"), self.last_dir,
+                                              "JSON (*.json)")
+        if not path:
+            return
+        try:
+            with open(path, encoding="utf-8") as f:
+                new = presets_mod.loads(f.read())
+        except (OSError, ValueError) as e:
+            QMessageBox.warning(self, APP_NAME, t("job_import_fail", err=e))
+            return
+        if not new:
+            QMessageBox.warning(self, APP_NAME, t("job_import_fail", err=os.path.basename(path)))
+            return
+        self.job_presets, n = presets_mod.merge(self.job_presets, new)
+        self._store_jobs()
+        QMessageBox.information(self, APP_NAME, t("job_imported", n=n))
+
     def _load_settings(self):
         qs = store()
         s = Settings()
@@ -2016,6 +2228,7 @@ class MainWindow(QMainWindow):
         if self._loading:
             return
         self._update_visibility()
+        self._sync_job()
         self.timer.start()
 
     # ------------------------------------------------------------- file
@@ -2121,6 +2334,7 @@ class MainWindow(QMainWindow):
     # ---------------------------------------------------------- preview
     def refresh(self):
         self._update_visibility()
+        self._sync_job()
         if self.src is None:
             self.plan = None
             self._update_nav()
