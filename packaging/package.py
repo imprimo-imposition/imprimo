@@ -5,7 +5,7 @@ The bundled Python runtimes are not rebuilt: each package is made from the
 previous release zip of the same platform, with the app folder, the readmes and
 the version replaced. Put the previous release zips in one folder and run
 
-    python3 packaging/package.py 0.6.5 --base ~/Imprimo-releases/0.6.4
+    python3 packaging/package.py 0.7.1 --base ~/Imprimo-releases/0.7.0
 
 Output (default: dist/):
     Imprimo-0.6.4-windows.zip, Imprimo-0.6.4-macOS.zip,
