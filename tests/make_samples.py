@@ -188,6 +188,30 @@ def make_layer_samples():
     boxes(p, 3)
 
 
+def make_no_bleed():
+    """Business card with colour up to the trim but no bleed – for generated bleed."""
+    p = os.path.join(OUT, "card_no_bleed.pdf")
+    w, h = 85*mm, 55*mm
+    c = canvas.Canvas(p, pagesize=(w, h))
+    n = 24
+    for i in range(n):                       # diagonal colour stripes touching every edge
+        c.setFillColor(CMYKColor(i / n, 0.6 - 0.5 * i / n, 0.2 + 0.6 * (i % 3) / 3, 0))
+        p_ = c.beginPath()
+        x0 = -h + i * (w + h) / n
+        x1 = -h + (i + 1) * (w + h) / n
+        p_.moveTo(x0, 0); p_.lineTo(x1, 0); p_.lineTo(x1 + h, h); p_.lineTo(x0 + h, h); p_.close()
+        c.drawPath(p_, stroke=0, fill=1)
+    c.setFillColor(CMYKColor(0, 0, 0, 1))
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(6*mm, h - 12*mm, "NO BLEED")
+    c.showPage()
+    c.save()
+    with pikepdf.open(p, allow_overwriting_input=True) as pdf:
+        for pg in pdf.pages:
+            pg.obj.TrimBox = pikepdf.Array([0, 0, float(w), float(h)])
+        pdf.save(p)
+
+
 def _crease_line(c, x, top, colour):
     c.setStrokeColor(colour)
     c.setStrokeOverprint(True)
@@ -248,4 +272,5 @@ if __name__ == "__main__":
     make_pdfx_samples()
     make_layer_samples()
     make_crease_samples()
+    make_no_bleed()
     print(sorted(os.listdir(OUT)))

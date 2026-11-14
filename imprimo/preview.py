@@ -20,7 +20,7 @@ from PySide6.QtCore import QRectF
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor, QFont, QImage, QPainter, QPen, QTransform
 
-from .core import chain, compose, map_rect, translate
+from .core import bleed_patches, chain, compose, map_rect, translate
 
 LEVELS = (0.25, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0, 8.0)   # pixels per point
 MAX_SIDE = 8000                                           # longest bitmap side in px
@@ -176,11 +176,12 @@ class PageRasters:
 class PreviewSource:
     """One PDF drawn in the preview: the print or a layer."""
 
-    def __init__(self, path, infos, page_for=None, opacity=1.0):
+    def __init__(self, path, infos, page_for=None, opacity=1.0, fill=("off", 0.0)):
         self.path = path
         self.infos = infos
         self.page_for = page_for or (lambda i: i)
         self.opacity = opacity
+        self.fill = fill              # generated bleed: (method, bleed in pt)
 
 
 def sheet_to_widget(ox, oy, s, sheet_h):
@@ -218,18 +219,28 @@ def paint_side(p: QPainter, side, sources, s2w, dpr, rasters: PageRasters, wante
             media = rasters.media.get((src.path, pp), info.media)
             i2r = (1.0 / lv, 0.0, 0.0, -1.0 / lv, media[0], media[3])
             ca = map_rect(s2w, it.clip)
-            cb = map_rect(r2w, info.limit)
-            clip = QRectF(max(ca[0], cb[0]), max(ca[1], cb[1]), 0, 0)
-            clip.setRight(min(ca[2], cb[2]))
-            clip.setBottom(min(ca[3], cb[3]))
-            if clip.width() <= 0 or clip.height() <= 0:
-                continue
-            p.save()
-            p.setClipRect(clip)
-            p.setOpacity(src.opacity)
-            p.setTransform(QTransform(*compose(i2r, r2w)))
-            p.drawImage(0, 0, img)
-            p.restore()
+            # generated bleed first (mirrored / stretched copies), the page on top
+            v2w = compose(chain(C, it.matrix), s2w)
+            for M, strip in bleed_patches(info, src.fill[1], src.fill[0]):
+                pw = compose(chain(info.R, M), v2w)
+                _draw(p, img, i2r, pw, src.opacity, ca, map_rect(v2w, strip), map_rect(pw, info.limit))
+            _draw(p, img, i2r, r2w, src.opacity, ca, map_rect(r2w, info.limit))
+    p.restore()
+
+
+def _draw(p, img, i2r, r2w, opacity, *rects):
+    """Draws a page bitmap with the raw → widget transform, clipped to all `rects`."""
+    x0 = max(r[0] for r in rects)
+    y0 = max(r[1] for r in rects)
+    x1 = min(r[2] for r in rects)
+    y1 = min(r[3] for r in rects)
+    if x1 <= x0 or y1 <= y0:
+        return
+    p.save()
+    p.setClipRect(QRectF(x0, y0, x1 - x0, y1 - y0))
+    p.setOpacity(opacity)
+    p.setTransform(QTransform(*compose(i2r, r2w)))
+    p.drawImage(0, 0, img)
     p.restore()
 
 

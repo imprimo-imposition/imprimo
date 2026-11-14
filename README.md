@@ -38,6 +38,7 @@ Open a PDF with the button or by dropping it onto the window. The preview update
 - *Automatic* layout fits as many pieces as possible, rotating them by 90° when that helps. *Let me choose* offers a clickable miniature sheet and *across / down* fields.
 - Bleed is taken from the PDF (TrimBox/BleedBox). If neighbouring pieces are closer than 2× bleed, the gap is split so bleeds never overlap. *= 2× bleed* sets gaps for double cuts.
 - PDFs without a TrimBox: *Trim without TrimBox* says how much bleed surrounds the page.
+- **Missing bleed** can be generated: *mirroring the edge* (photos, patterns) or *stretching the edge* (flat colours, gradients). Only the sides that lack bleed get it; the page itself is not changed – mirrored or stretched copies of its edge are drawn under it, in the preview and in the export.
 - PDFs exported as spreads (e.g. from Affinity or InDesign with *Export as spreads*) are detected: pages about twice as wide as the single pages are split into a left and a right page, so a booklet gets the correct page order. *Split spreads into pages* turns this off.
 
 ### Double-sided printing

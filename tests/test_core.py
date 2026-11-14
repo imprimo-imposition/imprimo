@@ -202,6 +202,51 @@ def test_technical_spot_warning():
     assert not any("Varnish" in txt and lvl == "warn" for lvl, txt in evaluate(F, None, {1}))
 
 
+# --------------------------------------------------------------------------
+# Generated bleed
+
+def test_bleed_patches():
+    from imprimo.core import bleed_patches
+    t = (0, 0, mm(85), mm(55))
+    no_bleed = PageInfo(0, t, t, t, 0, True, mm(85), mm(55), 0, raw_to_visual(t, 0))
+    assert len(bleed_patches(no_bleed, mm(3), "mirror")) == 8          # 4 sides + 4 corners
+    assert len(bleed_patches(no_bleed, mm(3), "stretch")) == 8
+    assert bleed_patches(no_bleed, mm(3), "off") == []
+    lim = (-mm(3), -mm(3), mm(88), mm(58))
+    full = PageInfo(0, t, lim, lim, 0, True, mm(85), mm(55), mm(3), raw_to_visual(t, 0))
+    assert bleed_patches(full, mm(3), "mirror") == []                  # enough bleed already
+    M, strip = bleed_patches(no_bleed, mm(3), "mirror")[1]             # left side
+    assert M == (-1, 0, 0, 1, 0, 0) and abs(strip[0] + mm(3)) < 1e-6
+
+
+def _pixel_outside_trim(method):
+    """Colour 1.5 mm left of the first card's trim on the exported sheet."""
+    import tempfile
+    import pypdfium2 as pdfium
+    from imprimo.core import impose_file
+    s = Settings(bleed_fill=method, sheet_w=320, sheet_h=450, cols=2, rows=2,
+                 gutter_x=10, gutter_y=10, bleed=3, crop_marks=False, slug=False)
+    with tempfile.TemporaryDirectory() as d:
+        out = os.path.join(d, "o.pdf")
+        plan = impose_file(os.path.join(SAMPLES, "card_no_bleed.pdf"), out, s)
+        x0, y0, x1, y1 = plan.sides[0].items[0].trim
+        k = 2
+        img = pdfium.PdfDocument(out)[0].render(scale=k).to_pil().convert("RGB")
+        return img.getpixel((int((x0 - mm(1.5)) * k), int((plan.sheet_h - (y0 + y1) / 2) * k)))
+
+
+def test_bleed_fill_export():
+    assert _pixel_outside_trim("off") == (255, 255, 255)
+    assert _pixel_outside_trim("mirror") != (255, 255, 255)
+    assert _pixel_outside_trim("stretch") != (255, 255, 255)
+    s = Settings(bleed_fill="mirror", bleed=3)
+    import pikepdf
+    from imprimo.core import analyze
+    with pikepdf.open(os.path.join(SAMPLES, "card_no_bleed.pdf")) as pdf:
+        p = build_plan(analyze(pdf), s)
+    assert any("zrkadl" in w or "mirror" in w for w in p.warnings)
+
+
 if __name__ == "__main__":
     for k, f in list(globals().items()):
         if k.startswith("test_"):

@@ -74,6 +74,7 @@ class Settings:
     gutter_y: float = 0.0
     rotation: str = "auto"           # auto | 0 | 90
     bleed: float = 3.0
+    bleed_fill: str = "off"          # missing bleed: off | mirror (mirrored edges) | stretch (edge stretched)
     assume_bleed: float = 0.0        # PDF without TrimBox: trim this much from the edges
     duplex: bool = False
     duplex_flip: str = "long"        # long | short (printer duplex setting)
@@ -416,6 +417,50 @@ def _side_bleeds(rect, rects, bleed):
     return L, B, R, T
 
 
+# --------------------------------------------------------------------------
+# Generated bleed: mirrored or stretched copies of the page around its trim.
+# The page itself is not changed – extra clipped copies are drawn under it.
+
+STRETCH_BAND = 0.5       # mm of the page edge stretched over the missing bleed
+
+
+def bleed_patches(info: PageInfo, bleed: float, method: str):
+    """[(M, strip)] for the sides where the page has less bleed than `bleed` (pt).
+    Both in upright page coordinates (trim = 0..vis_w × 0..vis_h, y up): M maps the
+    page onto itself (mirror / stretch), strip is the area the copy fills."""
+    if method not in ("mirror", "stretch") or bleed <= EPS:
+        return []
+    w, h, b = info.vis_w, info.vis_h, bleed
+    lx0, ly0, lx1, ly1 = map_rect(info.R, info.limit)
+    short = {"l": -lx0 < b - EPS, "r": lx1 - w < b - EPS,
+             "b": -ly0 < b - EPS, "t": ly1 - h < b - EPS}
+    if not any(short.values()):
+        return []
+    if method == "mirror":
+        fx = {"l": (-1, 0), "r": (-1, 2 * w), "": (1, 0)}       # x' = a·x + e
+        fy = {"b": (-1, 0), "t": (-1, 2 * h), "": (1, 0)}
+    else:
+        e = min(mm(STRETCH_BAND), w / 4, h / 4)
+        k = b / e
+        fx = {"l": (k, -b), "r": (k, w - (w - e) * k), "": (1, 0)}
+        fy = {"b": (k, -b), "t": (k, h - (h - e) * k), "": (1, 0)}
+    o = 0.5          # pt – strips reach slightly under the page, so no hairline gap shows
+    xs = {"l": (-b, o), "r": (w - o, w + b), "": (0, w)}
+    ys = {"b": (-b, o), "t": (h - o, h + b), "": (0, h)}
+    out = []
+    for sx in ("l", "", "r"):
+        for sy in ("b", "", "t"):
+            if not (sx or sy):
+                continue
+            # a side strip when that side is short; a corner when either side is short
+            if not ((sx and short[sx]) or (sy and short[sy])):
+                continue
+            ax, ex = fx[sx]
+            ay, ey = fy[sy]
+            out.append(((ax, 0, 0, ay, ex, ey), (xs[sx][0], ys[sy][0], xs[sx][1], ys[sy][1])))
+    return out
+
+
 def _uniq(vals, exclude=()):
     out = []
     for v in sorted(vals):
@@ -505,8 +550,12 @@ def build_plan(infos: list[PageInfo], s: Settings) -> Plan:
         warnings.append(t("warn_no_trim"))
     bleed = mm(max(0.0, s.bleed))
     avail = min(infos[p].bleed_avail for p in pages)
-    if bleed > avail + EPS and (ref.has_trim or s.assume_bleed > 0):
-        warnings.append(t("warn_bleed_short", avail=f"{to_mm(avail):.1f}", want=f"{s.bleed:g}"))
+    if bleed > avail + EPS:
+        if s.bleed_fill in ("mirror", "stretch"):
+            warnings.append(t(f"info_bleed_fill_{s.bleed_fill}", avail=f"{to_mm(avail):.1f}",
+                              want=f"{s.bleed:g}"))
+        elif ref.has_trim or s.assume_bleed > 0:
+            warnings.append(t("warn_bleed_short", avail=f"{to_mm(avail):.1f}", want=f"{s.bleed:g}"))
 
     if s.mode == "booklet":
         plan = _plan_booklet(pages, W, H, s, bleed)
@@ -977,6 +1026,12 @@ def render_sources(sources: list[Source], plan: Plan, s: Settings, side_indices=
                     gs += "/GSop gs "
                 if src.alpha is not None:
                     gs += f"/GSa{int(src.alpha * 100)} gs "
+                v2s = chain(C, it.matrix)                      # upright page → sheet
+                for M, strip in bleed_patches(info, bleed, s.bleed_fill):
+                    pm = chain(info.R, M)
+                    body.append(f"q {_re(it.clip)} W n {gs}{' '.join(_n(v) for v in v2s)} cm "
+                                f"{_re(strip)} W n {' '.join(_n(v) for v in pm)} cm "
+                                f"{_re(info.limit)} W n {name} Do Q")
                 body.append(f"q {_re(it.clip)} W n {gs}"
                             f"{' '.join(_n(v) for v in m)} cm "
                             f"{_re(info.limit)} W n {name} Do Q")

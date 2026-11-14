@@ -24,7 +24,7 @@ from . import APP_NAME, __version__
 from .core import (LAYER_KINDS, MODES, SHEET_PRESETS, ImposeError, Layer, spread_pages,
                    Settings, Source, analyze, build_plan, export_outputs, finalize,
                    layer_display_name, layer_source, output_paths, parse_range, render_sources,
-                   resolve_export,
+                   resolve_export, mm,
                    render, to_mm)
 from .about import REPO_URL
 from .crease import PRESETS as CREASE_PRESETS, crease_spec, detect_any, format_positions, parse_positions
@@ -1312,9 +1312,14 @@ class MainWindow(QMainWindow):
         g = Section(t("bleed_group"), "bleed")
         f = QFormLayout(g.body)
         self.bleed = mm_spin(3, 0, 20)
+        self.bleed_fill = QComboBox()
+        for key in ("off", "mirror", "stretch"):
+            self.bleed_fill.addItem(t(f"bleed_fill_{key}"), key)
+        self.bleed_fill.setToolTip(t("bleed_fill_tip"))
         self.assume = mm_spin(0, 0, 20)
         self.assume.setToolTip(t("assume_tip"))
         f.addRow(t("bleed"), self.bleed)
+        f.addRow(t("bleed_fill"), self.bleed_fill)
         f.addRow(t("assume"), self.assume)
         col.addWidget(g)
 
@@ -1554,7 +1559,7 @@ class MainWindow(QMainWindow):
 
         # signals → recalculation
         for w in (self.mode, self.orientation, self.rotation, self.blanks,
-                  self.flip, self.back_or, self.crease, self.crease_dir):
+                  self.flip, self.back_or, self.crease, self.crease_dir, self.bleed_fill):
             w.currentIndexChanged.connect(self.changed)
         for w in (self.sheet_w, self.sheet_h, self.margin, self.cols, self.rows,
                   self.gutter_x, self.gutter_y, self.creep, self.bleed, self.assume,
@@ -1669,6 +1674,7 @@ class MainWindow(QMainWindow):
             gutter_y=self.gutter_y.value(),
             rotation=self.rotation.currentData(),
             bleed=self.bleed.value(),
+            bleed_fill=self.bleed_fill.currentData() or "off",
             assume_bleed=self.assume.value(),
             duplex=self.duplex.isChecked(),
             duplex_flip=self.flip.currentData(),
@@ -1873,6 +1879,7 @@ class MainWindow(QMainWindow):
         self.gutter_y.setValue(s.gutter_y)
         setc(self.rotation, s.rotation)
         self.bleed.setValue(s.bleed)
+        setc(self.bleed_fill, s.bleed_fill)
         self.assume.setValue(s.assume_bleed)
         self.duplex.setChecked(s.duplex)
         setc(self.flip, s.duplex_flip)
@@ -2190,8 +2197,8 @@ class MainWindow(QMainWindow):
             return
         s = self.read_settings()
         name = os.path.basename(self.path or "")
-        srcs = self._raster_sources()
-        try:
+        try:                                # the preview must never crash the app
+            srcs = self._raster_sources()
             if self.view_mode == "all":
                 marks = render_sources([], self.plan, s, guides=self.guides.isChecked(),
                                        filename=name)
@@ -2235,14 +2242,16 @@ class MainWindow(QMainWindow):
         """Print and visible layers in drawing order (layers below, print, layers above)."""
         # the crease PDF is drawn as green guides, not as a layer
         visible = [e for e in self.layers if e["layer"].visible and e["layer"].kind != "crease"]
+        st = self.read_settings()
+        fill = (st.bleed_fill, mm(max(0.0, st.bleed)))
         out = []
         for e in [e for e in visible if e["layer"].position == "below"]:
             ls = layer_source(e["layer"], e["pdf"], e["infos"], key="L")
-            out.append(PreviewSource(e["layer"].path, e["infos"], ls.page_for, 0.6))
-        out.append(PreviewSource(self.path, self.infos))
+            out.append(PreviewSource(e["layer"].path, e["infos"], ls.page_for, 0.6, fill))
+        out.append(PreviewSource(self.path, self.infos, fill=fill))
         for e in [e for e in visible if e["layer"].position != "below"]:
             ls = layer_source(e["layer"], e["pdf"], e["infos"], key="L")
-            out.append(PreviewSource(e["layer"].path, e["infos"], ls.page_for, 0.6))
+            out.append(PreviewSource(e["layer"].path, e["infos"], ls.page_for, 0.6, fill))
         return out
 
     def _side_labels(self):
