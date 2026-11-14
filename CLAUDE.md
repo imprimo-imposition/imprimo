@@ -42,6 +42,8 @@ imprimo/gui.py          MainWindow, SheetView (zoom/pan), OverviewView (all shee
 imprimo/crease.py       crease presets/positions (mm on the product), crease line detection
 imprimo/spots.py        spot colour library + aliases, .ase writer (spots_dialog.py = window)
 imprimo/presets.py      job presets: built-ins, user presets (QSettings "job_presets"), .json files
+examples/               lesson PDFs (built by make_examples.py, committed), CITAJ-MA.md + README.md;
+                        examples_dialog.py opens them; packaged into the app folder
 imprimo/preflight.py    source and layer checks
 imprimo/pdfinfo.py      PDF/X, PDF/A, output intent detection, ICC profiles
 imprimo/theme.py        light/dark/system (GNOME portal detection on Linux)

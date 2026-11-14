@@ -290,6 +290,36 @@ def test_preset_roundtrip_and_merge():
         pass
 
 
+# --------------------------------------------------------------------------
+# Sample files (examples/)
+
+def test_examples():
+    import pikepdf
+    from imprimo import presets
+    from imprimo.core import analyze
+    from imprimo.examples_dialog import LESSONS, examples_dir
+    from imprimo.preflight import evaluate, scan
+    d = examples_dir()
+    keys = {p.builtin for p in presets.BUILTIN}
+    for num, pdf, preset in LESSONS:
+        assert preset is None or preset in keys
+        with pikepdf.open(os.path.join(d, pdf)) as src:
+            F = scan(src)
+            bad = [txt for lvl, txt in evaluate(F, None, set(range(1, len(src.pages) + 1)))
+                   if lvl in ("warn", "error")]
+            if num == "08":
+                assert len(bad) >= 4, bad                      # wrong on purpose
+            else:
+                assert not bad, (pdf, bad)                     # clean CMYK, embedded font
+            if preset:
+                s = next(p for p in presets.BUILTIN if p.builtin == preset).to_settings()
+                build_plan(analyze(src), s)
+    from imprimo.crease import detect_any
+    for name, want in (("03_pozvanka_A5_bigy.pdf", [105.0]), ("04_DL_skladacka_bigy.pdf", [100.0, 200.0])):
+        with pikepdf.open(os.path.join(d, name)) as src:
+            assert detect_any(src, analyze(src)).vertical == want
+
+
 if __name__ == "__main__":
     for k, f in list(globals().items()):
         if k.startswith("test_"):

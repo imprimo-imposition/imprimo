@@ -4,7 +4,7 @@ Imprimo ships as portable folders with their own Python 3.12, so users install n
 
 | Package | Content |
 |---|---|
-| `Imprimo-X.Y.Z-windows.zip` | `Imprimo.exe` (small launcher → `runtime\pythonw.exe app\main.py`), `Imprimo-diagnostics.bat` (same with a console), `runtime\`, `app\`, README.txt, CITAJ-MA.txt, LICENSE.txt, THIRD-PARTY-NOTICES.txt |
+| `Imprimo-X.Y.Z-windows.zip` | `Imprimo.exe` (small launcher → `runtime\pythonw.exe app\main.py`), `Imprimo-diagnostics.bat` (same with a console), `runtime\`, `app\` (incl. `examples\`), README.txt, CITAJ-MA.txt, LICENSE.txt, THIRD-PARTY-NOTICES.txt |
 | `Imprimo-X.Y.Z-macOS.zip` | `Imprimo.app` (Apple Silicon, macOS 15+): `Contents/MacOS/Imprimo` shell launcher + `python`, `Contents/lib`, `Contents/Resources/app`, `en.lproj` / `sk.lproj`, Info.plist with `CFBundleDevelopmentRegion=en` |
 | `Imprimo-X.Y.Z-linux-x86_64.zip` | `Imprimo` shell launcher, `install-menu.sh`, `uninstall-menu.sh`, `runtime/`, `app/` |
 | `imprimo-X.Y.Z.zip` | source |

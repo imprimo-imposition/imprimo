@@ -6,6 +6,13 @@ Pages are placed as vector Form XObjects: fonts, CMYK, spot colours and gradient
 
 The user interface is available in Slovak and English (menu *Language*).
 
+## Sample files
+
+[`examples/`](examples/) has 8 lessons with sample PDFs – business cards, a card without bleed, an invitation
+and a DL leaflet with creases, a booklet, cut & stack tickets, spot varnish and a faulty PDF for the preflight –
+each with a preset, steps and an exercise ([Slovak guide](examples/CITAJ-MA.md), [English](examples/README.md)).
+In Imprimo: **Help → Sample files…** opens a lesson with its preset.
+
 ## Running from source
 
 Requires Python 3.10 or newer.
@@ -137,6 +144,7 @@ imprimo/
   crease.py              crease presets and positions, finding crease lines in a PDF
   spots.py               spot colour library (Crease, CutContour, …), .ase export
   presets.py             job presets (built-in, user's, .json import / export)
+  examples_dialog.py     Help → Sample files (lessons in examples/)
   gui.py                 user interface (PySide6)
   about.py               About dialog (licence, versions)
   spots_dialog.py        Spot colours window
@@ -154,6 +162,7 @@ tests/
   make_samples.py        sample PDFs (needs reportlab and pillow)
   test_core.py           page order, PDF/X export, layers, creasing, spot colours
 spot-colors/             Imprimo spot colour palette (.ase) and how to import it
+examples/                sample PDFs (lessons), guides, make_examples.py
 packaging/
   package.py             builds the release zips (see packaging/README.md)
   docs/                  README.txt / CITAJ-MA.txt of the packages

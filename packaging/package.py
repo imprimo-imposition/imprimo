@@ -78,6 +78,9 @@ def copy_app(dst, drop_icons):
     shutil.copy2(os.path.join(ROOT, "README.md"), dst)
     for name in ("LICENSE", "THIRD-PARTY-NOTICES.txt"):     # read by the About dialog
         shutil.copy2(os.path.join(ROOT, name), dst)
+    # sample files for Help → Sample files (the generator script stays in the source zip)
+    shutil.copytree(os.path.join(ROOT, "examples"), os.path.join(dst, "examples"),
+                    ignore=shutil.ignore_patterns("*.py", "__pycache__", ".DS_Store"))
     shutil.copytree(os.path.join(ROOT, "imprimo"), os.path.join(dst, "imprimo"),
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     for f in ("imprimo-1024-master.png",) + tuple(drop_icons):

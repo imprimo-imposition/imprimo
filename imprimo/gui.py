@@ -1645,6 +1645,11 @@ class MainWindow(QMainWindow):
 
         # Help: on macOS “About Imprimo” moves to the application menu (AboutRole)
         menu = mb.addMenu(t("help_menu"))
+        a = QAction(t("ex_action"), self)
+        a.setMenuRole(QAction.NoRole)
+        a.triggered.connect(self.show_examples)
+        menu.addAction(a)
+        menu.addSeparator()
         a = QAction(t("about_action"), self)
         a.setMenuRole(QAction.AboutRole)
         a.triggered.connect(self.show_about)
@@ -1664,6 +1669,22 @@ class MainWindow(QMainWindow):
 
     def show_about(self):
         self._about().exec()
+
+    def show_examples(self):
+        from .examples_dialog import ExamplesDialog
+        ExamplesDialog(self).exec()
+
+    def open_lesson(self, path, preset_key):
+        """Opens a sample PDF and applies the preset its lesson uses."""
+        self.open_file(path)
+        if self.src is None or not preset_key:
+            return
+        for i in range(self.job.count()):
+            p = self._job_at(self.job.itemData(i))
+            if p is not None and p.builtin == preset_key:
+                self.job.setCurrentIndex(i)
+                self._job_chosen(i)
+                break
 
     def show_spots(self):
         from .spots_dialog import SpotColorsDialog
