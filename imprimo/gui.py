@@ -909,6 +909,27 @@ class GridPicker(QWidget):
 # ============================================================================
 # Helper widgets
 
+class ElidedLabel(QLabel):
+    """One-line label that shortens a long text with “…” in the middle (full text as tooltip)."""
+
+    def __init__(self, text=""):
+        super().__init__()
+        self._full = text
+        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+        self.setMinimumWidth(40)
+
+    def setText(self, text):
+        self._full = text
+        self._elide()
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        self._elide()
+
+    def _elide(self):
+        super().setText(self.fontMetrics().elidedText(self._full, Qt.ElideMiddle, max(10, self.width())))
+
+
 class Section(QWidget):
     """Collapsible panel section: bold title with an arrow, remembers its state."""
 
@@ -974,7 +995,8 @@ class LayerRow(QFrame):
         f = QFormLayout()
         self.kind = QComboBox()
         for k in LAYER_KINDS:
-            self.kind.addItem(t(f"layer_{k}"), k)
+            if k != "crease":                       # crease PDFs go to the Creasing section
+                self.kind.addItem(t(f"layer_{k}"), k)
         self.kind.setCurrentIndex(self.kind.findData(ly.kind))
         found = sorted(entry["findings"].spots) if entry.get("findings") else []
         self.spot_auto = QCheckBox(t("spot_from_pdf"))
@@ -1124,8 +1146,8 @@ class MainWindow(QMainWindow):
         self.layer_rows = []
         self.infos = None
         self.infos_key = None
-        self.crease_detected = None   # crease.Detected from the PDF / the Crease layer
-        self.crease_source = ""
+        self.crease_detected = None   # crease.Detected from the crease PDF or the print PDF
+        self.crease_from_print = False
         self._crease_key = None
         self.plan = None
         self.side_idx = 0
@@ -1345,10 +1367,26 @@ class MainWindow(QMainWindow):
         self.crease_pos.setPlaceholderText(t("crease_pos_ph"))
         self.crease_pos.setToolTip(t("crease_pos_tip"))
         self.crease_marks = QCheckBox(t("crease_marks"))
+        self.crease_marks.setChecked(True)
         self.crease_marks.setToolTip(t("crease_marks_tip"))
         self.crease_status = hint_label()
         self.crease_status.setTextFormat(Qt.RichText)
+        # “From the PDF”: the PDF with the crease lines lives here, not among the layers
+        self.crease_src = QWidget()
+        sh = QHBoxLayout(self.crease_src)
+        sh.setContentsMargins(0, 0, 0, 0)
+        self.crease_src_label = ElidedLabel()
+        self.crease_pick = QPushButton(t("crease_pick"))
+        self.crease_pick.clicked.connect(self.choose_crease_pdf)
+        self.crease_clear = QToolButton(text="✕")
+        self.crease_clear.setToolTip(t("crease_clear_tip"))
+        self.crease_clear.clicked.connect(self.remove_crease_pdf)
+        sh.addWidget(self.crease_src_label, 1)
+        sh.addWidget(self.crease_pick)
+        sh.addWidget(self.crease_clear)
+        self.crease_form = f
         f.addRow(t("crease_preset"), self.crease)
+        f.addRow(t("crease_source"), self.crease_src)
         f.addRow(t("crease_dir"), self.crease_dir)
         f.addRow(t("crease_pos"), self.crease_pos)
         f.addRow(self.crease_marks)
@@ -1671,49 +1709,120 @@ class MainWindow(QMainWindow):
             d["crease_pos"] = ""
         return d
 
+    def _crease_entry(self):
+        """The PDF with crease lines (a layer of type “crease”), or None."""
+        return next((e for e in self.layers if e["layer"].kind == "crease"), None)
+
     def _detect_creases(self):
-        """Crease lines from a Crease layer (preferred) or from the print PDF – only when
-        the preset is “from PDF”, cached until the file or the layers change."""
-        key = (self.path, tuple((e["layer"].path, e["layer"].kind) for e in self.layers))
+        """Crease lines from the crease PDF if one is chosen, otherwise from the print PDF –
+        only for the preset “from the PDF”, cached until the file or the crease PDF changes."""
+        ce = self._crease_entry()
+        key = (self.path, ce["layer"].path if ce else None)
         if key == self._crease_key:
             return
         self._crease_key = key
-        self.crease_detected, self.crease_source = None, ""
+        self.crease_detected, self.crease_from_print = None, False
         try:
-            for e in self.layers:
-                if e["layer"].kind == "crease":
-                    d = detect_any(e["pdf"], e["infos"] or analyze(e["pdf"]))
-                    if d.found:
-                        self.crease_detected = d
-                        self.crease_source = os.path.basename(e["layer"].path)
-                        return
-            if self.src is not None:
-                d = detect_any(self.src, self.infos or analyze(self.src))
-                if d.found:
-                    self.crease_detected, self.crease_source = d, os.path.basename(self.path)
+            if ce is not None:
+                self.crease_detected = detect_any(ce["pdf"], ce["infos"] or analyze(ce["pdf"]))
+            elif self.src is not None:
+                self.crease_detected = detect_any(self.src, self.infos or analyze(self.src))
+                self.crease_from_print = self.crease_detected.found
         except Exception:
             self.crease_detected = None
+
+    def choose_crease_pdf(self):
+        if self.src is None:
+            QMessageBox.information(self, APP_NAME, t("drop_here"))
+            return
+        path, _ = QFileDialog.getOpenFileName(self, t("crease_pick_title"), self.last_dir,
+                                              t("pdf_open_filter"))
+        if not path:
+            return
+        try:
+            pdf = pikepdf.open(path)
+            s = self.read_settings()
+            infos = analyze(pdf, s.assume_bleed, s.split_spreads)
+            findings = scan(pdf)
+        except Exception as e:
+            QMessageBox.warning(self, APP_NAME, t("cant_open", err=e))
+            return
+        self._set_crease_entry({"layer": Layer(path, kind="crease", position="above"),
+                                "pdf": pdf, "infos": infos, "findings": findings})
+
+    def _set_crease_entry(self, entry):
+        """Use `entry` as the crease PDF (replaces the previous one) and read creases from it."""
+        if len(entry["infos"]) == 1 and self.src is not None and len(self.src.pages) > 1:
+            entry["layer"].pages = "first"
+        for old in [e for e in self.layers if e["layer"].kind == "crease"]:
+            self._drop_entry(old)
+        self.layers.append(entry)
+        self._crease_key = None
+        was, self._loading = self._loading, True
+        self.crease.setCurrentIndex(self.crease.findData("pdf"))
+        self._loading = was
+        self._rebuild_layer_rows()
+        self.changed()
+
+    def remove_crease_pdf(self):
+        ce = self._crease_entry()
+        if ce is not None:
+            self._drop_entry(ce)
+            self._crease_key = None
+            self.changed()
+
+    def _drop_entry(self, entry):
+        self.layers = [e for e in self.layers if e is not entry]
+        try:
+            entry["pdf"].close()
+        except Exception:
+            pass
 
     def _update_crease_panel(self):
         preset = self.crease.currentData() or "off"
         booklet = self.mode.currentData() == "booklet"
         on = preset != "off" and not booklet
+        from_pdf = on and preset == "pdf"
+        det = self.crease_detected if from_pdf else None
+        found = det is not None and det.found
+        ce = self._crease_entry()
+        form = self.crease_form
         self.crease.setEnabled(not booklet)
+        form.setRowVisible(self.crease_src, from_pdf)
+        # direction and positions mean nothing until there is something to read them from
+        form.setRowVisible(self.crease_dir, not from_pdf or found)
+        form.setRowVisible(self.crease_pos, not from_pdf or found)
         self.crease_dir.setEnabled(on and preset != "pdf")
         self.crease_pos.setReadOnly(preset != "custom")
-        self.crease_pos.setEnabled(on)
-        self.crease_marks.setEnabled(on)
+        self.crease_pos.setEnabled(on and preset == "custom")    # computed values: greyed
+        self.crease_marks.setEnabled(on and (not from_pdf or found))
+        if from_pdf:
+            if ce is not None:
+                name = os.path.basename(ce["layer"].path)
+            elif found:
+                name = t("crease_src_print")
+            else:
+                name = "–"
+            self.crease_src_label.setText(name)
+            self.crease_src_label.setToolTip(ce["layer"].path if ce else (self.path or ""))
+            self.crease_pick.setText(t("crease_change") if ce else t("crease_pick"))
+            self.crease_clear.setVisible(ce is not None)
+
         msg = []
         if booklet:
             msg.append(t("crease_booklet"))
-        elif preset == "pdf":
-            det = self.crease_detected
-            if det is not None and det.found:
-                msg.append(t("crease_found", src=self.crease_source, spot=det.spot or "Crease"))
+        elif from_pdf:
+            if found:
+                n = len(det.vertical if det.main_vertical else det.horizontal)
+                msg.append(t("crease_found_n", n=n, spot=det.spot or "Crease"))
                 if det.vertical and det.horizontal:
                     msg.append(t("crease_both_dirs"))
+                if self.crease_from_print:
+                    msg.append(t("crease_in_print_warn"))
+            elif ce is not None:
+                msg.append(t("crease_none_file", file=os.path.basename(ce["layer"].path)))
             else:
-                msg.append(t("crease_none_found"))
+                msg.append(t("crease_none_print"))
         if on and preset != "custom":
             # show what the preset / the PDF gives, so the student sees the numbers
             vals, vertical = [], True
@@ -2124,7 +2233,8 @@ class MainWindow(QMainWindow):
 
     def _raster_sources(self):
         """Print and visible layers in drawing order (layers below, print, layers above)."""
-        visible = [e for e in self.layers if e["layer"].visible]
+        # the crease PDF is drawn as green guides, not as a layer
+        visible = [e for e in self.layers if e["layer"].visible and e["layer"].kind != "crease"]
         out = []
         for e in [e for e in visible if e["layer"].position == "below"]:
             ls = layer_source(e["layer"], e["pdf"], e["infos"], key="L")
@@ -2401,6 +2511,12 @@ class MainWindow(QMainWindow):
             return
         kind = guess_kind(path, findings.spots.keys())
         layer = Layer(path, kind=kind, position=LAYER_KINDS[kind][1])
+        if kind == "crease":
+            # crease lines are not a printed layer – they belong to the Creasing section
+            self._set_crease_entry({"layer": layer, "pdf": pdf, "infos": infos, "findings": findings})
+            self.crease_box.btn.setChecked(True)          # make sure the section is open
+            self.statusBar().showMessage(t("crease_moved"), 8000)
+            return
         if len(infos) == 1 and self.src is not None and len(self.src.pages) > 1:
             layer.pages = "first"
         self.layers.append({"layer": layer, "pdf": pdf, "infos": infos, "findings": findings})
@@ -2433,6 +2549,8 @@ class MainWindow(QMainWindow):
             row.deleteLater()
         self.layer_rows = []
         for e in self.layers:
+            if e["layer"].kind == "crease":         # shown in the Creasing section
+                continue
             row = LayerRow(e)
             row.changed.connect(self.changed)
             row.removed.connect(self._remove_layer)

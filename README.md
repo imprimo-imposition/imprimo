@@ -55,7 +55,7 @@ For invitations, cards and folded leaflets (section *Creasing*):
 - **Presets** – *in half*, *Z-fold* (3 equal panels), *roll (C) fold* (the inner panel 3 mm narrower, e.g. A4 → 100 / 100 / 97 mm), *custom positions* (`99; 198`) or *from the PDF*.
 - Positions are in mm on the **finished product** (without bleed): vertical creases from the left edge, horizontal ones from the top. Imprimo carries them to every copy on the sheet – rotated pieces and the back side included.
 - **Crease marks at the sheet edge** – dash-dot marks labelled *B* (Slovak *big*) / *CR* outside the bleed, for setting the stop of a manual creaser. The positions are also printed in the info line.
-- **From the PDF** – Imprimo finds straight lines in the spot colour **Crease** (or an alias such as *Big*, *Bigovanie*, *Score*) in a *Crease* layer or in the print PDF and fills in the positions. The preflight warns when crease lines are in the print PDF, because a digital press would print them.
+- **From a crease PDF** – Imprimo finds straight lines in the spot colour **Crease** (or an alias such as *Big*, *Bigovanie*, *Score*) and fills in the positions. *Source* is the PDF exported from the crease layer (*Choose PDF…*); without it, Imprimo looks in the print PDF and warns that a digital press would print the lines. A PDF with Crease lines added under *Layers* is moved to the Creasing section automatically. Direction and positions appear once creases are found.
 - The preview shows the creases as green dash-dot lines (with *Guides*). A booklet is creased at the fold, so creasing is off there.
 
 ### Spot colours
@@ -78,7 +78,7 @@ Names are matched regardless of case, spaces and accents; Slovak names (*Big*, *
 
 *+ Add layer (PDF)* adds a PDF that is imposed exactly like the print (positions, rotation, back side, creep). Per layer:
 
-- **Type** – varnish, white, die-cut, foil, crease or custom; sets the defaults below and the file suffix. A *crease* layer is read for the crease positions and exported separately, never printed.
+- **Type** – varnish, white, die-cut, foil, crease or custom; sets the defaults below and the file suffix. A crease PDF is handled in the Creasing section; with *Layers separately* it is also exported as `name_imposed_crease.pdf` (e.g. for a plotter), never printed.
 - **Spot colour** – *Read from PDF* (default) lists the spot colours used in the layer PDF. If the printer requires a specific name, turn it off and enter the name – Imprimo checks that the layer uses it.
 - **Position** – above the print, or below it (white underprint).
 - **Overprint** – forces overprint for the whole layer so it doesn't knock out the print.
