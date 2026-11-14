@@ -25,7 +25,7 @@ from . import APP_NAME, __version__
 from .core import (LAYER_KINDS, MODES, SHEET_PRESETS, ImposeError, Layer, spread_pages,
                    Settings, Source, analyze, build_plan, export_outputs, finalize,
                    layer_display_name, layer_source, output_paths, parse_range, render_sources,
-                   resolve_export, mm,
+                   resolve_export, mm, tile_name,
                    render, to_mm)
 from . import presets as presets_mod
 from .about import REPO_URL
@@ -73,6 +73,9 @@ PF_STYLE = {"ok": ("✓", "#2e9d4f"), "warn": ("⚠", "#c26a00"),
 CHOOSE = "__choose__"
 
 CUSTOM = "custom"
+# poster target sizes in mm (portrait); "custom" = scale in %
+TILE_TARGETS = {"custom": None, "A3": (297, 420), "A2": (420, 594), "A1": (594, 841),
+                "A0": (841, 1189), "B2": (500, 707), "B1": (707, 1000)}
 FIT = "fit"
 BASE_PX = 1800
 ACCENT = QColor("#2f7de1")
@@ -629,13 +632,18 @@ class OverviewView(ZoomView):
         vw, vh = vp.width(), vp.height()
         avail = max(200, vw - 2 * g)
         two = any(sd.is_back for sd in self.plan.sides)
+        tile = self.plan.sides[0].tile if self.plan.sides else None
         if self.zoom is None:
             cols = 2 if two else max(1, int((avail + g) // (self.FIT_THUMB + g)))
+            if tile:                     # a poster: pieces laid out as the assembled poster
+                cols = tile[3]
             tw = min(self.FIT_THUMB, (avail - (cols - 1) * g) / cols)
         else:
             tw = self.zoom * SW
             cols = 2 if two else max(1, int((avail + g) // (tw + g)))
-        if not two:                      # no empty columns – keeps the grid centred
+            if tile:
+                cols = tile[3]
+        if not two and not tile:         # no empty columns – keeps the grid centred
             cols = max(1, min(cols, len(self.plan.sides)))
         th = tw * SH / SW
         grid_w = cols * tw + (cols - 1) * g
@@ -1329,6 +1337,26 @@ class MainWindow(QMainWindow):
         f.addRow(t("blanks"), self.blanks)
         col.addWidget(self.booklet_box)
 
+        # Poster in pieces
+        self.tile_box = Section(t("tile_group"), "tile")
+        f = QFormLayout(self.tile_box.body)
+        self.tile_target = QComboBox()
+        for key in TILE_TARGETS:
+            self.tile_target.addItem(t(f"tile_target_{key}") if key == "custom" else key, key)
+        self.tile_target.setToolTip(t("tile_target_tip"))
+        self.tile_target.activated.connect(self._tile_target_chosen)
+        self.tile_scale = mm_spin(100, 10, 2000, 5, 1, " %")
+        self.tile_overlap = mm_spin(10, 0, 50, 1, 1)
+        self.tile_overlap.setToolTip(t("tile_overlap_tip"))
+        self.tile_info = hint_label()
+        self.tile_info.setTextFormat(Qt.RichText)
+        f.addRow(t("tile_target"), self.tile_target)
+        f.addRow(t("tile_scale"), self.tile_scale)
+        f.addRow(t("tile_overlap"), self.tile_overlap)
+        f.addRow(self.tile_info)
+        f.addRow(hint_label(t("tile_hint")))
+        col.addWidget(self.tile_box)
+
         # Bleed
         g = Section(t("bleed_group"), "bleed")
         f = QFormLayout(g.body)
@@ -1584,7 +1612,7 @@ class MainWindow(QMainWindow):
             w.currentIndexChanged.connect(self.changed)
         for w in (self.sheet_w, self.sheet_h, self.margin, self.cols, self.rows,
                   self.gutter_x, self.gutter_y, self.creep, self.bleed, self.assume,
-                  self.mark_off, self.mark_len, self.mark_w):
+                  self.mark_off, self.mark_len, self.mark_w, self.tile_scale, self.tile_overlap):
             w.valueChanged.connect(self.changed)
         for w in (self.duplex, self.crop, self.reg, self.slug, self.manual_rb, self.crease_marks,
                   self.out_print, self.out_layers, self.out_combined):
@@ -1731,6 +1759,8 @@ class MainWindow(QMainWindow):
             rotation=self.rotation.currentData(),
             bleed=self.bleed.value(),
             bleed_fill=self.bleed_fill.currentData() or "off",
+            tile_scale=self.tile_scale.value(),
+            tile_overlap=self.tile_overlap.value(),
             assume_bleed=self.assume.value(),
             duplex=self.duplex.isChecked(),
             duplex_flip=self.flip.currentData(),
@@ -1752,6 +1782,44 @@ class MainWindow(QMainWindow):
             icc_profile=self.icc.currentData() if self.icc.currentData() != CHOOSE else "keep",
             **self._crease_settings(),
         )
+
+    # ------------------------------------------------------------ poster
+    def _tile_target_chosen(self, index):
+        """A target size (A3 … A0) sets the scale so the page fits it (same orientation)."""
+        key = self.tile_target.itemData(index)
+        if key not in TILE_TARGETS or key == "custom" or not self.infos:
+            return
+        tw, th = TILE_TARGETS[key]
+        try:
+            ref = self.infos[parse_range(self.range.text(), len(self.infos))[0]]
+        except Exception:
+            ref = self.infos[0]
+        w, h = to_mm(ref.vis_w), to_mm(ref.vis_h)
+        if (w > h) != (tw > th):
+            tw, th = th, tw
+        self.tile_scale.setValue(round(min(tw / w, th / h) * 100, 1))
+
+    def _update_tile_info(self, s):
+        if s.mode != "tile" or self.plan is None:
+            return
+        p = self.plan
+        k = s.tile_scale / 100
+        pw, ph = to_mm(p.page_w) * k, to_mm(p.page_h) * k
+        self.tile_info.setText(t("tile_info", c=p.cols, r=p.rows, n=p.cols * p.rows,
+                                 w=f"{pw:.0f}", h=f"{ph:.0f}",
+                                 sw=f"{to_mm(p.sheet_w):.0f}", sh=f"{to_mm(p.sheet_h):.0f}"))
+        # show the target size the poster was fitted to (fits inside it, touching one side)
+        big, small = max(pw, ph), min(pw, ph)
+        i = 0
+        for j in range(1, self.tile_target.count()):
+            tw, th = TILE_TARGETS[self.tile_target.itemData(j)]
+            TB, TS = max(tw, th), min(tw, th)
+            if big <= TB + 1 and small <= TS + 1 and (abs(big - TB) < 1 or abs(small - TS) < 1):
+                i = j
+                break
+        was = self.tile_target.blockSignals(True)
+        self.tile_target.setCurrentIndex(i)
+        self.tile_target.blockSignals(was)
 
     # ------------------------------------------------------------ creasing
     def _crease_settings(self):
@@ -1936,6 +2004,8 @@ class MainWindow(QMainWindow):
         setc(self.rotation, s.rotation)
         self.bleed.setValue(s.bleed)
         setc(self.bleed_fill, s.bleed_fill)
+        self.tile_scale.setValue(s.tile_scale)
+        self.tile_overlap.setValue(s.tile_overlap)
         self.assume.setValue(s.assume_bleed)
         self.duplex.setChecked(s.duplex)
         setc(self.flip, s.duplex_flip)
@@ -2218,10 +2288,13 @@ class MainWindow(QMainWindow):
     def _update_visibility(self):
         mode = self.mode.currentData()
         booklet = mode == "booklet"
+        tile = mode == "tile"
         self.mode_hint.setText(t(f"mode_hint_{mode}"))
-        self.grid_box.setVisible(not booklet)
+        self.grid_box.setVisible(not booklet and not tile)
         self.booklet_box.setVisible(booklet)
-        self.duplex.setEnabled(not booklet)
+        self.tile_box.setVisible(tile)
+        self.crease_box.setVisible(not tile)
+        self.duplex.setEnabled(not booklet and not tile)
         self.duplex.setText(t("duplex_booklet") if booklet else t("duplex"))
         two_sided = booklet or self.duplex.isChecked()
         self.flip.setEnabled(two_sided)
@@ -2395,6 +2468,7 @@ class MainWindow(QMainWindow):
         self.info.setText(f"<b>{head}</b> · {tail}")
         self.warn.setText("\n".join("⚠ " + w for w in p.warnings))
         self._update_crease_panel()
+        self._update_tile_info(s)
         self._update_nav()
         self._update_picker()
         self._update_preflight(s)
@@ -2492,6 +2566,11 @@ class MainWindow(QMainWindow):
     def _side_labels(self):
         out = []
         for sd in self.plan.sides:
+            if sd.tile:                                   # poster piece: “A1 · page 1”
+                r, c, _rows, _cols = sd.tile
+                pg = sd.items[0].page + 1 if sd.items and sd.items[0].page is not None else 0
+                out.append(f"{tile_name(r, c)} · " + t("ov_pages", pages=pg))
+                continue
             side = t("side_back") if sd.is_back else t("side_front")
             pages = []
             for it in sorted(sd.items, key=lambda it: (-round(it.trim[1]), it.trim[0])):

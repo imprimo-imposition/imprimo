@@ -1,4 +1,4 @@
-# Imprimo sample files – 8 lessons
+# Imprimo sample files – 9 lessons
 
 Samples for trying Imprimo and for teaching imposition. Every lesson has a PDF, a preset, steps,
 what to look at and a small exercise. In Imprimo open them via **Help → Sample files…**.
@@ -18,10 +18,11 @@ except lesson 08, which is wrong on purpose. They are built by `make_examples.py
 | 06 | `06_vstupenky_cut_and_stack.pdf` | cut & stack – numbers in order after cutting |
 | 07 | `07_vizitka_s_lakom.pdf` + `07_vizitka_lak.pdf` | layers, spot colour, overprint |
 | 08 | `08_chybne_pdf_na_preflight.pdf` | preflight: find 5 mistakes |
+| 09 | `09_plagat_A2.pdf` | poster in pieces on A4 / A3, overlap, scaling to A1 |
 
 (File names are Slovak: *vizitky* = business cards, *obojstranne* = double-sided, *bez spadávky* =
 without bleed, *pozvánka* = invitation, *bigy* = creases, *skladačka* = leaflet, *brožúra* = booklet,
-*vstupenky* = tickets, *lak* = varnish, *chybné* = faulty.)
+*vstupenky* = tickets, *lak* = varnish, *chybné* = faulty, *plagát* = poster.)
 
 ## 01 – Business cards 90×50, double-sided
 Preset ★ *Business cards … 3 mm bleed*: 21 cards per SRA3. Switch to ★ *… 2 mm bleed (24 pcs)*: the same
@@ -60,3 +61,10 @@ in the print PDF?
 ## 08 – A faulty PDF for the preflight
 Find the 5 mistakes in the preflight (section *PDF export*): RGB colour, no bleed, a 27 ppi image, a font that
 isn't embedded, and a crease line in the print PDF.
+
+## 09 – Poster A2 in pieces
+Preset ★ *Poster in pieces – A4*: 8 A4 pieces (2 × 4), shown assembled in *All sheets*. Pieces are named A1, A2, B1…
+(rows by letters, columns by numbers) with a small map in the margin. Change the sheet to A3, or set *Final size* to
+A1 – the scale is set automatically. Cut each piece at the crop marks (left and top), lay it over its neighbour's
+overlap up to the dashed mark and glue; the diagonal lines and circles must continue without a step.
+*Exercise:* how many A4 and how many A3 sheets for an A1 poster?

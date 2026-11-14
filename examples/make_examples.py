@@ -308,8 +308,34 @@ def lesson_08():
     d.save()
 
 
+# 09 – poster A2, printed in pieces on A4 / A3
+
+def lesson_09():
+    w, h = 420, 594
+    d = Doc("09_plagat_A2.pdf", w, h, 3, "Plagát A2 – tlač po dieloch")
+    d.fill(CMYKColor(0.02, 0.04, 0.12, 0))
+    c = d.c
+    # thin diagonal lines across the whole poster: after gluing they must continue without a step
+    c.setStrokeColor(CMYKColor(0, 0, 0, 0.25))
+    c.setLineWidth(0.5)
+    for k in range(-12, 13):
+        x = w / 2 + k * 40
+        c.line((x - h) * mm, -3 * mm, (x + 3) * mm, (h + 3) * mm)
+    for r, col in ((170, PINK), (130, ORANGE), (90, TEAL), (50, BLUE)):   # target circles
+        c.setFillColor(col)
+        c.circle(w / 2 * mm, 300 * mm, r * mm, stroke=0, fill=1)
+    d.text(w / 2, 520, "PLAGÁT", 96, K, "center")
+    d.text(w / 2, 490, "A2 · 420 × 594 mm · vzor 09", 22, GREY, "center")
+    d.text(w / 2, 292, "A2", 60, WHITE, "center")
+    for y, s in ((90, "Vytlač po dieloch na A4 alebo A3 a zlep –"),
+                 (72, "šikmé čiary a kruhy musia nadväzovať bez schodíka.")):
+        d.text(w / 2, y, s, 20, K, "center")
+    d.lesson("Imprimo · vzor 09 · plagát po dieloch")
+    d.save()
+
+
 if __name__ == "__main__":
     print("Imprimo – vzorové súbory:")
     for f in (lesson_01, lesson_02, lesson_03, lesson_04, lesson_05, lesson_06, lesson_07,
-              lesson_08):
+              lesson_08, lesson_09):
         f()

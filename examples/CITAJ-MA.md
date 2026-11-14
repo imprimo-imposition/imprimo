@@ -1,4 +1,4 @@
-# Vzorové súbory Imprimo – 8 lekcií
+# Vzorové súbory Imprimo – 9 lekcií
 
 Vzory na vyskúšanie Imprima a na výučbu vyraďovania. Každá lekcia má PDF, predvoľbu,
 postup, na čo sa pozrieť a malú úlohu. V Imprime ich otvoríš cez **Pomocník → Vzorové súbory…**,
@@ -17,6 +17,7 @@ Všetky farby sú CMYK alebo spotové, písmo je vložené – vzory prejdú pre
 | 06 | `06_vstupenky_cut_and_stack.pdf` | cut & stack – čísla po rezaní v poradí |
 | 07 | `07_vizitka_s_lakom.pdf` + `07_vizitka_lak.pdf` | vrstvy, spotová farba, prestrieranie |
 | 08 | `08_chybne_pdf_na_preflight.pdf` | preflight: nájdi 5 chýb |
+| 09 | `09_plagat_A2.pdf` | plagát po dieloch na A4 / A3, prekryv, zväčšenie na A1 |
 
 ---
 
@@ -133,6 +134,22 @@ aby po orezaní ostal pruh všade rovnako ďaleko od okraja.
 
 </details>
 
+## 09 – Plagát A2 po dieloch
+
+**Súbor:** `09_plagat_A2.pdf` – plagát 420 × 594 mm so šikmými čiarami a kruhmi na kontrolu lepenia.
+**Predvoľba:** ★ *Plagát po dieloch – A4, prekryv 10 mm*
+
+1. Imprimo rozdelí plagát na **8 dielov A4** (2 × 4). V *Prehľade hárkov* sú poskladané ako hotový plagát.
+2. Diely sa volajú **A1, A2, B1…** (riadky písmenami, stĺpce číslami); na okraji každého je **mapka**, kde diel leží.
+3. Zmeň *Tlačový hárok* na **A3** – dielov je menej. V sekcii *Plagát* zvoľ *Výsledná veľkosť* **A1** – mierka sa nastaví sama.
+
+**Ako lepiť:** každý diel odrež pri **orezových ryskách** (vľavo a hore), polož ho na susedný diel tak, aby
+prekryl jeho okraj po **prerušovanú rysku**, a zlep. Šikmé čiary a kruhy musia nadväzovať bez schodíka.
+
+**Pozri sa:** *Okraj hárka* = okraj, ktorý tlačiareň nevytlačí (zvyčajne 5–10 mm). Prekryv musí byť menší ako diel.
+
+**Úloha:** koľko hárkov A4 a koľko A3 treba na plagát A1? Čo je lacnejšie a čo sa ľahšie lepí?
+
 ---
 
-Nové lekcie (plagát po dieloch, viac zákaziek na jednom hárku) pribudnú s ďalšími funkciami Imprima.
+Lekcia o viacerých zákazkách na jednom hárku pribudne s ďalšou funkciou Imprima.

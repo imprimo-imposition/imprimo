@@ -291,6 +291,45 @@ def test_preset_roundtrip_and_merge():
 
 
 # --------------------------------------------------------------------------
+# Poster in pieces
+
+def test_tile_names():
+    from imprimo.core import tile_name
+    assert [tile_name(0, 0), tile_name(1, 2), tile_name(25, 0), tile_name(26, 0)] == ["A1", "B3", "Z1", "AA1"]
+
+
+def test_tile_plan():
+    # A2 (420 × 594) at 100 % on A4, 10 mm margin and 10 mm overlap:
+    # landscape area 277 × 190 → 2 × 4 = 8 pieces (portrait would be 3 × 3 = 9)
+    s = Settings(mode="tile", sheet_w=210, sheet_h=297, margin=10, tile_overlap=10, bleed=3)
+    p = build_plan(fake(1, 420, 594), s)
+    assert (p.cols, p.rows, p.n_sheets) == (2, 4, 8)
+    assert round(p.sheet_w / mm(1)) == 297
+    a1, a2 = p.sides[0], p.sides[1]
+    assert a1.tile == (0, 0, 4, 2) and a2.tile == (0, 1, 4, 2)
+    # neighbouring pieces show the poster shifted by (area − overlap) = 267 mm
+    shift = a1.items[0].matrix[4] - a2.items[0].matrix[4]
+    assert abs(shift / mm(1) - 267) < 0.01
+    assert a1.folds_x and not a2.folds_x                     # glue mark only where a piece follows
+    s.tile_scale = 40                                        # 168 × 238 mm fits the 190 × 277 area
+    assert build_plan(fake(1, 420, 594), s).n_sheets == 1
+    s.tile_scale = 50                                        # exactly A4 – but the margin doesn't
+    assert build_plan(fake(1, 420, 594), s).n_sheets > 1     # print, so it needs more pieces
+    s.tile_scale, s.margin, s.tile_overlap = 100, 10, 300   # an overlap bigger than the piece
+    try:
+        build_plan(fake(1, 420, 594), s)
+        assert False
+    except Exception as e:
+        assert "300" in str(e)
+
+
+def test_poster_preset_sheet():
+    from imprimo import presets
+    s = next(p for p in presets.BUILTIN if p.builtin == "preset_poster").to_settings()
+    assert (s.sheet_w, s.sheet_h, s.mode) == (210, 297, "tile")
+
+
+# --------------------------------------------------------------------------
 # Sample files (examples/)
 
 def test_examples():

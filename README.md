@@ -8,8 +8,8 @@ The user interface is available in Slovak and English (menu *Language*).
 
 ## Sample files
 
-[`examples/`](examples/) has 8 lessons with sample PDFs – business cards, a card without bleed, an invitation
-and a DL leaflet with creases, a booklet, cut & stack tickets, spot varnish and a faulty PDF for the preflight –
+[`examples/`](examples/) has 9 lessons with sample PDFs – business cards, a card without bleed, an invitation
+and a DL leaflet with creases, a booklet, cut & stack tickets, spot varnish, a faulty PDF for the preflight and a poster in pieces –
 each with a preset, steps and an exercise ([Slovak guide](examples/CITAJ-MA.md), [English](examples/README.md)).
 In Imprimo: **Help → Sample files…** opens a lesson with its preset.
 
@@ -38,10 +38,11 @@ Open a PDF with the button or by dropping it onto the window. The preview update
 | **Sequential (n-up)** | Pages in order: 1, 2, 3, 4 on the first sheet, the rest on the next. |
 | **Cut & stack** | After cutting and stacking the piles, pieces are in order (numbered tickets). |
 | **Saddle-stitch booklet** | Page count padded to a multiple of 4, optional creep. |
+| **Poster in pieces** | A page bigger than the sheet is split into overlapping pieces for gluing (see below). |
 
 ### Presets
 
-**Preset** at the top of the panel sets everything for a kind of job in one click: sheet, layout, bleed, double-sided printing, marks, creasing and export. Imprimo comes with presets for single- and double-sided business cards (90×50 or 85×55 – the size always comes from the PDF; with 3 mm bleed 21 per SRA3, with 2 mm bleed 24 cards 90×50), an invitation folded in half, a DL roll fold leaflet, a saddle-stitch booklet and tickets (★). *Save…* stores the current settings as your own preset; *Presets → Manage* renames, reorders and deletes them, *Export / Import* moves them to another computer as a `.json` file – a teacher prepares presets once and the class imports them. When a setting is changed, the preset field switches to *custom settings*.
+**Preset** at the top of the panel sets everything for a kind of job in one click: sheet, layout, bleed, double-sided printing, marks, creasing and export. Imprimo comes with presets for single- and double-sided business cards (90×50 or 85×55 – the size always comes from the PDF; with 3 mm bleed 21 per SRA3, with 2 mm bleed 24 cards 90×50), an invitation folded in half, a DL roll fold leaflet, a saddle-stitch booklet, tickets and a poster in A4 pieces (★). *Save…* stores the current settings as your own preset; *Presets → Manage* renames, reorders and deletes them, *Export / Import* moves them to another computer as a `.json` file – a teacher prepares presets once and the class imports them. When a setting is changed, the preset field switches to *custom settings*.
 
 ### Sheet and layout
 
@@ -59,6 +60,15 @@ Open a PDF with the button or by dropping it onto the window. The preview update
 ### Marks
 
 Crop marks, dashed fold marks, registration targets and an info line (file, sheet, date). Marks use the Registration colour (Separation /All). Targets shrink to fit a narrow margin; if they don't fit at all, Imprimo warns.
+
+### Poster in pieces
+
+For posters printed on an office printer: the page is scaled (*Scale* in %, or *Final size* A3 … A0, B2, B1)
+and split into pieces of the chosen sheet, so that every piece overlaps the next one by *Glue overlap* (10 mm).
+The sheet margin is the printer's unprintable edge. Imprimo picks the sheet orientation with the fewest pieces.
+Each piece has crop marks where it is cut (left and top, plus the poster edges), dashed marks showing how far the
+next piece is glued, its name (A1, A2, B1… – rows by letters, columns by numbers) in the info line and a small
+map of the poster. *All sheets* lays the pieces out as the assembled poster. Every selected page becomes its own poster.
 
 ### Creasing
 

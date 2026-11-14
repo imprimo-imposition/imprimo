@@ -53,7 +53,7 @@ SHEET_PRESETS = {
     "B2 (500 × 707)": (500, 707),
 }
 
-MODES = ("repeat", "sequential", "cutstack", "booklet")
+MODES = ("repeat", "sequential", "cutstack", "booklet", "tile")
 
 
 class ImposeError(Exception):
@@ -98,6 +98,8 @@ class Settings:
     crease_dir: str = "v"            # v = vertical lines (from the left) | h = horizontal (from the top)
     crease_pos: str = ""             # custom / pdf: positions in mm on the product, "99; 198"
     crease_marks: bool = True        # crease marks at the sheet edge (manual creaser with a stop)
+    tile_scale: float = 100.0        # tile (poster) mode: scale of the page in %
+    tile_overlap: float = 10.0       # tile mode: mm each piece overlaps the next one (glue strip)
 
 
 # --------------------------------------------------------------------------
@@ -348,6 +350,7 @@ class Side:
     folds_x: list
     folds_y: list
     crease_segs: list = field(default_factory=list)   # crease lines on this side (sheet coords)
+    tile: tuple | None = None       # poster piece: (row, column, rows, columns)
 
     @property
     def creases_x(self):
@@ -383,6 +386,8 @@ class Plan:
     def summary(self, s: Settings) -> str:
         if s.mode == "booklet":
             core = t("sum_booklet", n=self.n_sheets * 4)
+        elif s.mode == "tile":
+            core = t("sum_tile", c=self.cols, r=self.rows, pct=f"{s.tile_scale:g}")
         else:
             core = f"{self.cols}x{self.rows}={self.per_sheet}"
             if self.rot:
@@ -559,6 +564,8 @@ def build_plan(infos: list[PageInfo], s: Settings) -> Plan:
 
     if s.mode == "booklet":
         plan = _plan_booklet(pages, W, H, s, bleed)
+    elif s.mode == "tile":
+        plan = _plan_tile(pages, W, H, s, bleed)
     elif s.mode in ("repeat", "sequential", "cutstack"):
         plan = _plan_grid(pages, W, H, s, bleed)
     else:
@@ -660,6 +667,87 @@ def _plan_grid(pages, W, H, s: Settings, bleed) -> Plan:
     if s.duplex and len(pages) % 2:
         plan.warnings.append(t("warn_duplex_odd"))
     return plan
+
+
+def tile_name(r, c):
+    """A1, A2 … B1 – rows are letters, columns numbers (like a map)."""
+    letters = ""
+    r += 1
+    while r:
+        r, k = divmod(r - 1, 26)
+        letters = chr(65 + k) + letters
+    return f"{letters}{c + 1}"
+
+
+def _tile_grid(PW, PH, aw, ah, ov):
+    def count(P, a):
+        return 1 if P <= a + EPS else math.ceil((P - ov - EPS) / (a - ov))
+    return count(PW, aw), count(PH, ah)
+
+
+def _plan_tile(pages, W, H, s: Settings, bleed) -> Plan:
+    """A poster bigger than the sheet, split into pieces that overlap by tile_overlap.
+    Each piece is cut at its left and top edge and glued onto the overlap of its
+    neighbour (dashed marks show how far)."""
+    k = max(1.0, s.tile_scale) / 100.0
+    PW, PH = W * k, H * k
+    m = mm(max(0, s.margin))
+    ov = mm(max(0, s.tile_overlap))
+    best = None
+    for SW, SH in _sheet_candidates(s):
+        aw, ah = SW - 2 * m, SH - 2 * m
+        if aw - ov < mm(5) or ah - ov < mm(5):
+            continue
+        cols, rows = _tile_grid(PW, PH, aw, ah, ov)
+        if best is None or cols * rows < best[0]:
+            best = (cols * rows, SW, SH, cols, rows)
+    if best is None:
+        raise ImposeError(t("err_tile_overlap", ov=f"{s.tile_overlap:g}", m=f"{s.margin:g}"))
+    _n_, SW, SH, cols, rows = best
+    aw, ah = SW - 2 * m, SH - 2 * m
+    sides = []
+    for page in pages:                                    # every selected page is its own poster
+        for r in range(rows):
+            for c in range(cols):
+                ox, oy = c * (aw - ov), r * (ah - ov)      # piece origin on the poster (y from top)
+                vis_w, vis_h = min(aw, PW - ox), min(ah, PH - oy)
+                x0, x1 = m, m + vis_w
+                y1 = SH - m
+                y0 = y1 - vis_h
+                M = (k, 0, 0, k, m - ox, SH - m - PH + oy)   # upright page → sheet
+                last_c, last_r = c == cols - 1, r == rows - 1
+                clip = (x0 - (bleed if c == 0 else 0), y0 - (bleed if last_r else 0),
+                        x1 + (bleed if last_c else 0), y1 + (bleed if r == 0 else 0))
+                item = Item(page, M, clip, (x0, y0, x1, y1), W, H)
+                cuts_x = [x0] + ([x1] if last_c else [])
+                cuts_y = [y1] + ([y0] if last_r else [])
+                glue_x = [] if last_c else [x1 - ov]      # “glue up to here” marks
+                glue_y = [] if last_r else [y0 + ov]
+                sides.append(Side(len(sides) + 1, False, [item], (x0, y0, x1, y1), cuts_x, cuts_y,
+                                  glue_x, glue_y, [], (r, c, rows, cols)))
+    plan = Plan(SW, SH, sides, len(sides), 1, W, H, cols, rows, 0)
+    plan.margin = m
+    return plan
+
+
+def tile_map_ops(side: Side, SW, SH, s: Settings, bleed):
+    """A small map of the poster in the top margin with this piece filled."""
+    if not side.tile:
+        return []
+    r0, c0, rows, cols = side.tile
+    bx0, by0, bx1, by1 = side.block
+    room = SH - by1 - mm(2)                               # top margin above the block
+    cell = min(mm(3), room / max(rows, 1), mm(30) / max(cols, 1))
+    if cell < mm(0.8):
+        return []
+    x = bx1 - mm(12) - cols * cell
+    y = by1 + (room - rows * cell) / 2 + mm(1)
+    ops = ["0.3 w"]
+    for r in range(rows):
+        for c in range(cols):
+            rx, ry = x + c * cell, y + (rows - 1 - r) * cell
+            ops.append(f"{_n(rx)} {_n(ry)} {_n(cell)} {_n(cell)} re " + ("B" if (r, c) == (r0, c0) else "S"))
+    return ops
 
 
 def _plan_booklet(pages, W, H, s: Settings, bleed) -> Plan:
@@ -873,6 +961,9 @@ def _slug(side: Side, plan: Plan, s: Settings, SW, SH, bleed, filename, stamp, l
     total = plan.n_sheets
     extra_label = label
     label = t("slug_back") if side.is_back else t("slug_front")
+    if side.tile:
+        r, c, rows, cols = side.tile
+        label = t("slug_tile", name=tile_name(r, c), rows=rows, cols=cols, ov=f"{s.tile_overlap:g}")
     if extra_label:
         label = f"{label} | {extra_label}"
     crease = crease_summary(s, plan.page_w, plan.page_h) if side.crease_segs else ""
@@ -1048,6 +1139,10 @@ def render_sources(sources: list[Source], plan: Plan, s: Settings, side_indices=
         if mark_ops:
             ops.append(f"q /CSReg CS 1 SCN {_n(s.mark_weight)} w 0 J")
             ops += mark_ops
+            ops.append("Q")
+        if side.tile:
+            ops.append("q /CSReg CS 1 SCN /CSReg cs 0.35 scn")
+            ops += tile_map_ops(side, SW, SH, s, bleed)
             ops.append("Q")
         if font is not None and s.crease_marks and side.crease_segs:
             lbl = _crease_labels(side, s, SW, SH, bleed)

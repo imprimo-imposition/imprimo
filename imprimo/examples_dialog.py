@@ -21,6 +21,7 @@ LESSONS = (
     ("06", "06_vstupenky_cut_and_stack.pdf", "preset_tickets"),
     ("07", "07_vizitka_s_lakom.pdf", "preset_cards_1s"),
     ("08", "08_chybne_pdf_na_preflight.pdf", None),
+    ("09", "09_plagat_A2.pdf", "preset_poster"),
 )
 
 

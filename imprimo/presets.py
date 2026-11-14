@@ -10,7 +10,7 @@ import dataclasses
 import json
 from dataclasses import dataclass, field
 
-from .core import Settings
+from .core import SHEET_PRESETS, Settings
 
 FILE_FORMAT = "imprimo-presets"
 FILE_VERSION = 1
@@ -44,6 +44,8 @@ def _builtin(key, sheet_key=SRA3, **over) -> Preset:
     d = dataclasses.asdict(Settings())
     for k in NOT_SAVED:
         d.pop(k, None)
+    if sheet_key in SHEET_PRESETS:                       # the sheet size belongs to its key
+        d["sheet_w"], d["sheet_h"] = map(float, SHEET_PRESETS[sheet_key])
     d.update(over)
     return Preset(key, sheet_key, d, builtin=key)
 
@@ -63,6 +65,8 @@ BUILTIN = (
              crease="c3", crease_dir="v"),
     _builtin("preset_booklet", mode="booklet"),
     _builtin("preset_tickets", mode="cutstack", gutter_x=6.0, gutter_y=6.0),
+    # a poster in A4 pieces for an office printer (10 mm unprintable margin)
+    _builtin("preset_poster", "A4 (210 × 297)", mode="tile", margin=10.0, tile_overlap=10.0),
 )
 
 
