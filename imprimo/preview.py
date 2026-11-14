@@ -244,7 +244,7 @@ def _draw(p, img, i2r, r2w, opacity, *rects):
     p.restore()
 
 
-def paint_numbers(p: QPainter, side, s2w, infos, blank_text="", half_text=None):
+def paint_numbers(p: QPainter, side, s2w, infos, blank_text="", half_text=None, label=None):
     """Page number badges in the middle of every page. Each badge is turned like the
     page content, so an upside-down number shows that the page is upside down."""
     p.save()
@@ -267,7 +267,7 @@ def paint_numbers(p: QPainter, side, s2w, infos, blank_text="", half_text=None):
             continue
         p.setBrush(QBrush(QColor(0, 102, 204, 200)))
         p.drawEllipse(QRectF(-50, -50, 100, 100))
-        num = str(it.page + 1)
+        num = label(it.page) if label else str(it.page + 1)
         font.setPixelSize(52 if len(num) < 3 else 38)
         p.setFont(font)
         p.drawText(QRectF(-50, -54, 100, 100), Qt.AlignCenter, num)

@@ -8,8 +8,8 @@ The user interface is available in Slovak and English (menu *Language*).
 
 ## Sample files
 
-[`examples/`](examples/) has 9 lessons with sample PDFs – business cards, a card without bleed, an invitation
-and a DL leaflet with creases, a booklet, cut & stack tickets, spot varnish, a faulty PDF for the preflight and a poster in pieces –
+[`examples/`](examples/) has 10 lessons with sample PDFs – business cards, a card without bleed, an invitation
+and a DL leaflet with creases, a booklet, cut & stack tickets, spot varnish, a faulty PDF for the preflight, a poster in pieces and a gang run –
 each with a preset, steps and an exercise ([Slovak guide](examples/CITAJ-MA.md), [English](examples/README.md)).
 In Imprimo: **Help → Sample files…** opens a lesson with its preset.
 
@@ -39,10 +39,11 @@ Open a PDF with the button or by dropping it onto the window. The preview update
 | **Cut & stack** | After cutting and stacking the piles, pieces are in order (numbered tickets). |
 | **Saddle-stitch booklet** | Page count padded to a multiple of 4, optional creep. |
 | **Poster in pieces** | A page bigger than the sheet is split into overlapping pieces for gluing (see below). |
+| **Several jobs on a sheet (gang run)** | Different PDFs of the same size on one sheet, each with its own quantity (see below). |
 
 ### Presets
 
-**Preset** at the top of the panel sets everything for a kind of job in one click: sheet, layout, bleed, double-sided printing, marks, creasing and export. Imprimo comes with presets for single- and double-sided business cards (90×50 or 85×55 – the size always comes from the PDF; with 3 mm bleed 21 per SRA3, with 2 mm bleed 24 cards 90×50), an invitation folded in half, a DL roll fold leaflet, a saddle-stitch booklet, tickets and a poster in A4 pieces (★). *Save…* stores the current settings as your own preset; *Presets → Manage* renames, reorders and deletes them, *Export / Import* moves them to another computer as a `.json` file – a teacher prepares presets once and the class imports them. When a setting is changed, the preset field switches to *custom settings*.
+**Preset** at the top of the panel sets everything for a kind of job in one click: sheet, layout, bleed, double-sided printing, marks, creasing and export. Imprimo comes with presets for single- and double-sided business cards (90×50 or 85×55 – the size always comes from the PDF; with 3 mm bleed 21 per SRA3, with 2 mm bleed 24 cards 90×50), an invitation folded in half, a DL roll fold leaflet, a saddle-stitch booklet, tickets, business cards of several people (gang run) and a poster in A4 pieces (★). *Save…* stores the current settings as your own preset; *Presets → Manage* renames, reorders and deletes them, *Export / Import* moves them to another computer as a `.json` file – a teacher prepares presets once and the class imports them. When a setting is changed, the preset field switches to *custom settings*.
 
 ### Sheet and layout
 
@@ -60,6 +61,15 @@ Open a PDF with the button or by dropping it onto the window. The preview update
 ### Marks
 
 Crop marks, dashed fold marks, registration targets and an info line (file, sheet, date). Marks use the Registration colour (Separation /All). Targets shrink to fit a narrow margin; if they don't fit at all, Imprimo warns.
+
+### Gang run
+
+*Several jobs on a sheet* puts different PDFs of the same size on one sheet – e.g. business cards of several people.
+The open file is job **A**; *Jobs on the sheet → + Add PDF…* (or dropping PDFs on the window) adds B, C… Each job has a
+quantity; Imprimo splits the slots of the sheet so the number of sheets is as small as possible (every job gets at
+least one slot, spare slots are spread evenly) and shows how many pieces of each job are printed. Every sheet is the
+same. Page 1 of every PDF is used, double-sided page 1 front and page 2 back. The info line lists which slots hold
+which job (A 1–6, B 7–21…), *Page numbers* show the job letters. Layers are not available in a gang run.
 
 ### Poster in pieces
 

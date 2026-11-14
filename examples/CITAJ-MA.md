@@ -1,4 +1,4 @@
-# Vzorové súbory Imprimo – 9 lekcií
+# Vzorové súbory Imprimo – 10 lekcií
 
 Vzory na vyskúšanie Imprima a na výučbu vyraďovania. Každá lekcia má PDF, predvoľbu,
 postup, na čo sa pozrieť a malú úlohu. V Imprime ich otvoríš cez **Pomocník → Vzorové súbory…**,
@@ -18,6 +18,7 @@ Všetky farby sú CMYK alebo spotové, písmo je vložené – vzory prejdú pre
 | 07 | `07_vizitka_s_lakom.pdf` + `07_vizitka_lak.pdf` | vrstvy, spotová farba, prestrieranie |
 | 08 | `08_chybne_pdf_na_preflight.pdf` | preflight: nájdi 5 chýb |
 | 09 | `09_plagat_A2.pdf` | plagát po dieloch na A4 / A3, prekryv, zväčšenie na A1 |
+| 10 | `10_vizitky_jana.pdf`, `…_peter.pdf`, `…_eva.pdf` | viac zákaziek na jednom hárku (gang run) |
 
 ---
 
@@ -150,6 +151,23 @@ prekryl jeho okraj po **prerušovanú rysku**, a zlep. Šikmé čiary a kruhy mu
 
 **Úloha:** koľko hárkov A4 a koľko A3 treba na plagát A1? Čo je lacnejšie a čo sa ľahšie lepí?
 
+## 10 – Vizitky troch ľudí na jednom hárku (gang run)
+
+**Súbory:** `10_vizitky_jana.pdf`, `10_vizitky_peter.pdf`, `10_vizitky_eva.pdf` – každé líc a rub.
+**Predvoľba:** ★ *Vizitky viacerých ľudí (gang run) – SRA3 obojstranne, spadávka 2 mm*
+
+1. Otvor lekciu – Jana je prvá zákazka (**A**). V sekcii **Zákazky na hárku** klikni **+ Pridať PDF…**
+   a pridaj Petra a Evu (alebo ich pretiahni do okna).
+2. Nastav počty: Jana **100 ks**, Peter **250 ks**, Eva **50 ks**.
+3. Imprimo rozdelí 24 miest na hárku podľa počtov: **A 6 · B 15 · C 3** a vypočíta **17 hárkov**
+   (Peter potrebuje 250 / 15 = 16,7 → 17). Navyše vznikne 2 + 5 + 1 kusov.
+4. Zapni *Čísla strán*: namiesto čísel sú na vizitkách písmená zákaziek A, B, C.
+
+**Pozri sa:** v informačnom riadku na okraji hárka je, na ktorých miestach je ktorá zákazka (A 1–6, B 7–21, C 22–24) –
+podľa toho sa po rezaní kôpky roztriedia. Bez gang runu by to boli 3 samostatné tlače: 5 + 11 + 3 = 19 hárkov.
+
+**Úloha:** zmeň Evu na 300 ks. Ako sa zmení rozdelenie miest a počet hárkov? Kedy sa gang run neoplatí?
+
 ---
 
-Lekcia o viacerých zákazkách na jednom hárku pribudne s ďalšou funkciou Imprima.
+Ďalšie lekcie pribudnú s ďalšími funkciami Imprima.

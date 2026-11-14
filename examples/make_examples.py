@@ -334,8 +334,32 @@ def lesson_09():
     d.save()
 
 
+# 10 – gang run: business cards of three people on one sheet
+
+def lesson_10():
+    people = (("jana", "Jana Nováková", "grafička", BLUE),
+              ("peter", "Peter Horváth", "tlačiar", ORANGE),
+              ("eva", "Eva Kováčová", "knihárka", TEAL))
+    for key, name, job, col in people:
+        d = Doc(f"10_vizitky_{key}.pdf", 90, 50, 3, f"Vizitka – {name}")
+        d.fill(col)
+        d.text(7, 30, name, 15, WHITE)
+        d.text(7, 24, job, 8, WHITE)
+        d.c.setFillColor(WHITE)
+        d.c.circle(76 * mm, 25 * mm, 7 * mm, stroke=0, fill=1)
+        d.text(76, 23.3, "".join(w[0] for w in name.split()), 9, col, "center")
+        d.lesson(f"Imprimo · vzor 10 · {key} · LÍC", WHITE)
+        d.page()
+        d.fill(LIGHT)
+        d.fill(col, -3, -3, 96, 9)
+        d.text(7, 36, "SOŠ služieb, Košická 20, Prešov", 8)
+        d.text(7, 31, f"{key}@priklad.sk", 8)
+        d.lesson(f"Imprimo · vzor 10 · {key} · RUB", WHITE, 1.8)
+        d.save()
+
+
 if __name__ == "__main__":
     print("Imprimo – vzorové súbory:")
     for f in (lesson_01, lesson_02, lesson_03, lesson_04, lesson_05, lesson_06, lesson_07,
-              lesson_08, lesson_09):
+              lesson_08, lesson_09, lesson_10):
         f()

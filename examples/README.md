@@ -1,4 +1,4 @@
-# Imprimo sample files – 9 lessons
+# Imprimo sample files – 10 lessons
 
 Samples for trying Imprimo and for teaching imposition. Every lesson has a PDF, a preset, steps,
 what to look at and a small exercise. In Imprimo open them via **Help → Sample files…**.
@@ -19,6 +19,7 @@ except lesson 08, which is wrong on purpose. They are built by `make_examples.py
 | 07 | `07_vizitka_s_lakom.pdf` + `07_vizitka_lak.pdf` | layers, spot colour, overprint |
 | 08 | `08_chybne_pdf_na_preflight.pdf` | preflight: find 5 mistakes |
 | 09 | `09_plagat_A2.pdf` | poster in pieces on A4 / A3, overlap, scaling to A1 |
+| 10 | `10_vizitky_jana.pdf`, `…_peter.pdf`, `…_eva.pdf` | several jobs on one sheet (gang run) |
 
 (File names are Slovak: *vizitky* = business cards, *obojstranne* = double-sided, *bez spadávky* =
 without bleed, *pozvánka* = invitation, *bigy* = creases, *skladačka* = leaflet, *brožúra* = booklet,
@@ -68,3 +69,10 @@ Preset ★ *Poster in pieces – A4*: 8 A4 pieces (2 × 4), shown assembled in *
 A1 – the scale is set automatically. Cut each piece at the crop marks (left and top), lay it over its neighbour's
 overlap up to the dashed mark and glue; the diagonal lines and circles must continue without a step.
 *Exercise:* how many A4 and how many A3 sheets for an A1 poster?
+
+## 10 – Business cards of three people on one sheet (gang run)
+Open the lesson (Jana is job **A**), then under *Jobs on the sheet* add Peter and Eva (*+ Add PDF…* or drop them on
+the window). Quantities Jana 100, Peter 250, Eva 50: Imprimo splits the 24 slots into **A 6 · B 15 · C 3** and needs
+**17 sheets** (250 / 15 → 17), with 2 + 5 + 1 extra pieces. With *Page numbers* on, the cards show their job letter;
+the info line says which slots hold which job (A 1–6, B 7–21, C 22–24) for sorting after cutting. Printed separately
+it would be 5 + 11 + 3 = 19 sheets. *Exercise:* set Eva to 300 – how do the slots and sheets change?

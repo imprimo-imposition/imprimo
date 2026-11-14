@@ -65,6 +65,8 @@ BUILTIN = (
              crease="c3", crease_dir="v"),
     _builtin("preset_booklet", mode="booklet"),
     _builtin("preset_tickets", mode="cutstack", gutter_x=6.0, gutter_y=6.0),
+    # business cards of several people on one sheet (gang run), 2 mm bleed like preset_cards2
+    _builtin("preset_gang_cards", mode="gang", duplex=True, bleed=2.0, gutter_x=4.0, gutter_y=4.0),
     # a poster in A4 pieces for an office printer (10 mm unprintable margin)
     _builtin("preset_poster", "A4 (210 × 297)", mode="tile", margin=10.0, tile_overlap=10.0),
 )

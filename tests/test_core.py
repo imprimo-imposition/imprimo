@@ -257,7 +257,11 @@ def test_builtin_presets():
     for p in presets.BUILTIN:
         s = p.to_settings()
         assert p.sheet_key in SHEET_PRESETS and p.builtin in STRINGS["sk"]
-        build_plan(fake(8, 90, 50) if s.mode != "booklet" else fake(8), s)   # must plan
+        if s.mode == "gang":
+            from imprimo.core import GangJob
+            build_plan(fake(2, 90, 50), s, [GangJob("a", [0, 1], 100)])
+        else:
+            build_plan(fake(8, 90, 50) if s.mode != "booklet" else fake(8), s)   # must plan
     by = {p.builtin: p.to_settings() for p in presets.BUILTIN}
     assert build_plan(fake(2, 90, 50), by["preset_cards"]).per_sheet == 21    # 3 mm bleed
     assert build_plan(fake(2, 85, 55), by["preset_cards"]).per_sheet == 21
@@ -330,6 +334,34 @@ def test_poster_preset_sheet():
 
 
 # --------------------------------------------------------------------------
+# Gang run
+
+def test_gang_allocate():
+    from imprimo.core import gang_allocate
+    assert gang_allocate([100, 100, 100], 24) == [8, 8, 8]
+    assert gang_allocate([500, 100, 100], 24) == [16, 4, 4]
+    assert gang_allocate([10, 10, 10, 10], 24) == [6, 6, 6, 6]   # spare slots spread evenly
+    assert gang_allocate([1000, 1], 21) == [20, 1]
+
+
+def test_gang_plan():
+    from imprimo.core import GangJob
+    s = Settings(mode="gang", duplex=True, bleed=2, gutter_x=4, gutter_y=4)
+    jobs = [GangJob("jana", [0, 1], 100), GangJob("peter", [2, 3], 250), GangJob("eva", [4], 50)]
+    p = build_plan(fake(5, 90, 50), s, jobs)
+    assert p.per_sheet == 24 and p.n_sheets == 17                 # 255 / 15 → 17
+    assert [k for _n, _q, k, _m in p.gang] == [6, 15, 3]
+    assert [it.page for it in p.sides[0].items] == [0] * 6 + [2] * 15 + [4] * 3
+    assert [it.page for it in p.sides[1].items][:7] == [1] * 6 + [3]
+    assert any("C" in w for w in p.warnings)                       # eva has no back
+    try:
+        build_plan(fake(30, 90, 50), s, [GangJob(str(i), [i], 10) for i in range(25)])
+        assert False
+    except Exception as e:
+        assert "25" in str(e)
+
+
+# --------------------------------------------------------------------------
 # Sample files (examples/)
 
 def test_examples():
@@ -352,7 +384,11 @@ def test_examples():
                 assert not bad, (pdf, bad)                     # clean CMYK, embedded font
             if preset:
                 s = next(p for p in presets.BUILTIN if p.builtin == preset).to_settings()
-                build_plan(analyze(src), s)
+                if s.mode == "gang":
+                    from imprimo.core import GangJob
+                    build_plan(analyze(src), s, [GangJob(pdf, [0, 1], 100)])
+                else:
+                    build_plan(analyze(src), s)
     from imprimo.crease import detect_any
     for name, want in (("03_pozvanka_A5_bigy.pdf", [105.0]), ("04_DL_skladacka_bigy.pdf", [100.0, 200.0])):
         with pikepdf.open(os.path.join(d, name)) as src:

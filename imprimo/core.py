@@ -53,7 +53,7 @@ SHEET_PRESETS = {
     "B2 (500 × 707)": (500, 707),
 }
 
-MODES = ("repeat", "sequential", "cutstack", "booklet", "tile")
+MODES = ("repeat", "sequential", "cutstack", "booklet", "tile", "gang")
 
 
 class ImposeError(Exception):
@@ -378,6 +378,8 @@ class Plan:
     cap: tuple | None = None        # what fits (columns, rows); None = sheet sized to content
     gutter: tuple = (0.0, 0.0)
     margin: float = 0.0
+    gang: list = field(default_factory=list)        # gang run: [(name, qty, slots, made)]
+    gang_owner: list = field(default_factory=list)  # gang run: job index of every slot
 
     @property
     def utilization(self):
@@ -388,6 +390,8 @@ class Plan:
             core = t("sum_booklet", n=self.n_sheets * 4)
         elif s.mode == "tile":
             core = t("sum_tile", c=self.cols, r=self.rows, pct=f"{s.tile_scale:g}")
+        elif s.mode == "gang":
+            core = t("sum_gang", n=len(self.gang), N=self.per_sheet)
         else:
             core = f"{self.cols}x{self.rows}={self.per_sheet}"
             if self.rot:
@@ -536,10 +540,16 @@ def _sheet_candidates(s: Settings):
     return [(a, b), (b, a)] if abs(a - b) > EPS else [(a, b)]
 
 
-def build_plan(infos: list[PageInfo], s: Settings) -> Plan:
+def build_plan(infos: list[PageInfo], s: Settings, gang: list | None = None) -> Plan:
+    """gang: [GangJob] for a gang run (mode “gang”) – their pages are in `infos`."""
     if not infos:
         raise ImposeError(t("err_no_pages"))
-    pages = parse_range(s.page_range, len(infos))
+    if s.mode == "gang":
+        if not gang:
+            raise ImposeError(t("err_gang_none"))
+        pages = [j.pages[0] for j in gang if j.pages]
+    else:
+        pages = parse_range(s.page_range, len(infos))
     if not pages:
         raise ImposeError(t("err_none_selected"))
     ref = infos[pages[0]]
@@ -566,6 +576,8 @@ def build_plan(infos: list[PageInfo], s: Settings) -> Plan:
         plan = _plan_booklet(pages, W, H, s, bleed)
     elif s.mode == "tile":
         plan = _plan_tile(pages, W, H, s, bleed)
+    elif s.mode == "gang":
+        plan = _plan_gang(gang, W, H, s, bleed)
     elif s.mode in ("repeat", "sequential", "cutstack"):
         plan = _plan_grid(pages, W, H, s, bleed)
     else:
@@ -578,7 +590,9 @@ def build_plan(infos: list[PageInfo], s: Settings) -> Plan:
     return plan
 
 
-def _plan_grid(pages, W, H, s: Settings, bleed) -> Plan:
+def _grid_geometry(W, H, s: Settings):
+    """Sheet, rotation and cells of a step & repeat grid for pieces of W × H.
+    Returns (N, SW, SH, rot, cols, rows, cells, cap, gx, gy, m)."""
     gx, gy = mm(max(0, s.gutter_x)), mm(max(0, s.gutter_y))
     m = mm(max(0, s.margin))
     rots = {"auto": [0, 90], "0": [0], "90": [90]}.get(str(s.rotation), [0])
@@ -630,6 +644,11 @@ def _plan_grid(pages, W, H, s: Settings, bleed) -> Plan:
     ytop = (SH + block_h) / 2
     cells = [Cell(x0 + c * (cw + gx), ytop - (r + 1) * ch - r * gy, rot, W, H)
              for r in range(rows) for c in range(cols)]
+    return N, SW, SH, rot, cols, rows, cells, cap, gx, gy, m
+
+
+def _plan_grid(pages, W, H, s: Settings, bleed) -> Plan:
+    N, SW, SH, rot, cols, rows, cells, cap, gx, gy, m = _grid_geometry(W, H, s)
 
     if s.duplex:
         items = [(pages[i], pages[i + 1] if i + 1 < len(pages) else None)
@@ -666,6 +685,61 @@ def _plan_grid(pages, W, H, s: Settings, bleed) -> Plan:
         plan.warnings.append(t("warn_cutstack", n=len(items), N=N * len(sheets)))
     if s.duplex and len(pages) % 2:
         plan.warnings.append(t("warn_duplex_odd"))
+    return plan
+
+
+@dataclass
+class GangJob:
+    """One job of a gang run: its pages in the (merged) source and how many pieces."""
+    name: str
+    pages: list            # [front] or [front, back] – page indices in the source
+    qty: int
+
+
+def gang_allocate(qtys: list[int], N: int) -> list[int]:
+    """Slots per job on a sheet of N slots, so that the number of sheets
+    (max over jobs of qty / slots, rounded up) is as small as possible."""
+    n = [1] * len(qtys)
+    for _ in range(N - len(qtys)):
+        need = [math.ceil(max(1, q) / k) for q, k in zip(qtys, n)]
+        # the job that needs most sheets; on a tie the one with fewest slots (spread evenly)
+        j = max(range(len(n)), key=lambda i: (need[i], -n[i], qtys[i]))
+        n[j] += 1
+    return n
+
+
+def gang_letter(j: int) -> str:
+    return tile_name(j, 0)[:-1]                  # A, B … Z, AA …
+
+
+def _plan_gang(jobs: list[GangJob], W, H, s: Settings, bleed) -> Plan:
+    """Several jobs of the same size on one sheet (gang run): every sheet is the same,
+    each job gets a number of slots proportional to its quantity."""
+    N, SW, SH, rot, cols, rows, cells, cap, gx, gy, m = _grid_geometry(W, H, s)
+    if len(jobs) > N:
+        raise ImposeError(t("err_gang_too_many", jobs=len(jobs), n=N))
+    alloc = gang_allocate([j.qty for j in jobs], N)
+    S = max(math.ceil(max(1, j.qty) / k) for j, k in zip(jobs, alloc))
+    slots, owners = [], []
+    for ji, (job, k) in enumerate(zip(jobs, alloc)):
+        front = job.pages[0] if job.pages else None
+        back = job.pages[1] if s.duplex and len(job.pages) > 1 else None
+        slots += [(front, back)] * k
+        owners += [ji] * k
+    sides = []
+    for sheet in range(S):
+        entries = [(cell, fp, bp) for cell, (fp, bp) in zip(cells, slots)]
+        sides += _sheet_sides(sheet + 1, entries, SW, SH, s, bleed, s.duplex, s.back_orientation)
+    plan = Plan(SW, SH, sides, S, N, W, H, cols, rows, rot)
+    plan.cap = cap
+    plan.gutter = (gx, gy)
+    plan.margin = m
+    plan.gang = [(j.name, j.qty, k, k * S) for j, k in zip(jobs, alloc)]
+    plan.gang_owner = owners                     # job index of every slot (reading order)
+    if s.duplex and any(len(j.pages) < 2 for j in jobs):
+        plan.warnings.append(t("warn_gang_no_back",
+                               jobs=", ".join(gang_letter(i) for i, j in enumerate(jobs)
+                                              if len(j.pages) < 2)))
     return plan
 
 
@@ -967,6 +1041,12 @@ def _slug(side: Side, plan: Plan, s: Settings, SW, SH, bleed, filename, stamp, l
     if extra_label:
         label = f"{label} | {extra_label}"
     crease = crease_summary(s, plan.page_w, plan.page_h) if side.crease_segs else ""
+    if plan.gang:                         # which job is where: A 1-7 jana.pdf (100)
+        pos, out = 1, []
+        for i, (name, qty, k, _made) in enumerate(plan.gang):
+            out.append(f"{gang_letter(i)} {pos}-{pos + k - 1}: {name} ({qty})")
+            pos += k
+        crease = " ; ".join(out) + (f" | {crease}" if crease else "")
     text = (f"{filename} | {t('slug_sheet')} {side.sheet_no}/{total} {label} | "
             f"{plan.summary(s)}" + (f" | {crease}" if crease else "") + f" | {stamp}")
     y = by0 - reach - size

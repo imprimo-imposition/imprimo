@@ -25,7 +25,7 @@ from . import APP_NAME, __version__
 from .core import (LAYER_KINDS, MODES, SHEET_PRESETS, ImposeError, Layer, spread_pages,
                    Settings, Source, analyze, build_plan, export_outputs, finalize,
                    layer_display_name, layer_source, output_paths, parse_range, render_sources,
-                   resolve_export, mm, tile_name,
+                   resolve_export, mm, tile_name, GangJob, gang_letter,
                    render, to_mm)
 from . import presets as presets_mod
 from .about import REPO_URL
@@ -1156,6 +1156,13 @@ class MainWindow(QMainWindow):
         self.layer_rows = []
         self.infos = None
         self.infos_key = None
+        self.jobs = []                # gang run: [{"path", "pdf", "qty", "main"}], jobs[0] = open file
+        self.gang_src = None          # gang run: the jobs merged into one PDF (temporary file)
+        self.gang_path = None
+        self.gang_jobs = None         # [core.GangJob]
+        self._gang_key = None
+        self._gang_active = False
+        self.main_findings = None
         self.crease_detected = None   # crease.Detected from the crease PDF or the print PDF
         self.crease_from_print = False
         self._crease_key = None
@@ -1245,6 +1252,22 @@ class MainWindow(QMainWindow):
         self.split.setVisible(False)
         f.addRow(self.split)
         col.addWidget(g)
+
+        # Jobs on the sheet (gang run)
+        self.gang_box = Section(t("gang_group"), "gang")
+        gv = QVBoxLayout(self.gang_box.body)
+        self.jobs_col = QVBoxLayout()
+        self.jobs_col.setSpacing(2)
+        gv.addLayout(self.jobs_col)
+        add = QPushButton(t("gang_add"))
+        add.clicked.connect(self.add_jobs)
+        gv.addWidget(add, 0, Qt.AlignLeft)
+        self.gang_info = hint_label()
+        self.gang_info.setTextFormat(Qt.RichText)
+        gv.addWidget(self.gang_info)
+        gv.addWidget(hint_label(t("gang_hint")))
+        col.addWidget(self.gang_box)
+        self.job_rows = []
 
         # Sheet
         g = Section(t("sheet_group"), "sheet")
@@ -1450,6 +1473,7 @@ class MainWindow(QMainWindow):
 
         # Layers
         g = Section(t("layers_group"), "layers")
+        self.layers_box = g
         lv = QVBoxLayout(g.body)
         self.layers_col = QVBoxLayout()
         lv.addLayout(self.layers_col)
@@ -1618,6 +1642,7 @@ class MainWindow(QMainWindow):
                   self.out_print, self.out_layers, self.out_combined):
             w.toggled.connect(self.changed)
         self._rebuild_layer_rows()
+        self._rebuild_job_rows()
         self.manual_rb.toggled.connect(self._manual_toggled)
         self.range.editingFinished.connect(self.changed)
         self.crease_pos.editingFinished.connect(self.changed)
@@ -1782,6 +1807,138 @@ class MainWindow(QMainWindow):
             icc_profile=self.icc.currentData() if self.icc.currentData() != CHOOSE else "keep",
             **self._crease_settings(),
         )
+
+    # ------------------------------------------------------------ gang run
+    def _reset_jobs(self):
+        for j in self.jobs:
+            if not j.get("main"):
+                try:
+                    j["pdf"].close()
+                except Exception:
+                    pass
+        self.jobs = []
+        self._gang_key = None
+        self._rebuild_job_rows()
+
+    def _ensure_jobs(self):
+        """The open file is always the first job."""
+        if self.src is not None and not self.jobs:
+            self.jobs = [{"path": self.path, "pdf": self.src, "qty": 100, "main": True}]
+            self._rebuild_job_rows()
+
+    def _rebuild_job_rows(self):
+        if not hasattr(self, "jobs_col"):
+            return
+        for w in self.job_rows:
+            w.setParent(None)
+            w.deleteLater()
+        self.job_rows = []
+        for i, job in enumerate(self.jobs):
+            row = QWidget()
+            h = QHBoxLayout(row)
+            h.setContentsMargins(0, 0, 0, 0)
+            letter = QLabel(f"<b>{gang_letter(i)}</b>")
+            letter.setMinimumWidth(18)
+            name = ElidedLabel(os.path.basename(job["path"]))
+            name.setToolTip(job["path"])
+            qty = QSpinBox()
+            qty.setRange(1, 1_000_000)
+            qty.setValue(job["qty"])
+            qty.setSuffix(t("gang_pcs"))
+            qty.setKeyboardTracking(False)
+            qty.valueChanged.connect(lambda v, j=job: (j.__setitem__("qty", v), self.changed()))
+            rm = QToolButton(text="✕")
+            rm.setToolTip(t("gang_remove"))
+            rm.setEnabled(not job.get("main"))
+            rm.clicked.connect(lambda _=False, j=job: self._remove_job(j))
+            for w in (letter, name, qty, rm):
+                h.addWidget(w, 1 if w is name else 0)
+            self.jobs_col.addWidget(row)
+            self.job_rows.append(row)
+
+    def add_jobs(self, paths=None):
+        if self.src is None:
+            QMessageBox.information(self, APP_NAME, t("drop_here"))
+            return
+        if not paths:
+            paths, _ = QFileDialog.getOpenFileNames(self, t("gang_add"), self.last_dir,
+                                                    t("pdf_open_filter"))
+        self._ensure_jobs()
+        for path in paths or []:
+            try:
+                pdf = pikepdf.open(path)
+            except Exception as e:
+                QMessageBox.warning(self, APP_NAME, t("cant_open", err=e))
+                continue
+            self.jobs.append({"path": path, "pdf": pdf, "qty": self.jobs[0]["qty"], "main": False})
+        self._rebuild_job_rows()
+        self.changed()
+
+    def _remove_job(self, job):
+        self.jobs = [j for j in self.jobs if j is not job]
+        try:
+            job["pdf"].close()
+        except Exception:
+            pass
+        self._rebuild_job_rows()
+        self.changed()
+
+    def _gang_build(self, s):
+        """Merges the jobs (their first one or two pages) into one temporary PDF, so the
+        rest of Imprimo – preview, export, preflight – works with a single source."""
+        key = (tuple((j["path"], id(j["pdf"])) for j in self.jobs), s.assume_bleed)
+        if key != self._gang_key:
+            import tempfile
+            merged = pikepdf.new()
+            pages = []
+            for j in self.jobs:
+                start = len(merged.pages)
+                for k in range(min(2, len(j["pdf"].pages))):
+                    merged.pages.append(j["pdf"].pages[k])
+                pages.append(list(range(start, len(merged.pages))))
+            fd, path = tempfile.mkstemp(prefix="imprimo-gang-", suffix=".pdf")
+            os.close(fd)
+            merged.save(path)
+            merged.close()
+            old = (self.gang_src, self.gang_path)
+            self.gang_src = pikepdf.open(path)
+            self.gang_path = path
+            self.gang_pages = pages
+            self.gang_infos = analyze(self.gang_src, s.assume_bleed, False)
+            self.gang_findings = scan(self.gang_src)
+            self.rasters.clear()
+            self._gang_key = key
+            if old[0] is not None:
+                try:
+                    old[0].close()
+                    os.remove(old[1])
+                except Exception:
+                    pass
+        self.gang_jobs = [GangJob(os.path.basename(j["path"]), pg, j["qty"])
+                          for j, pg in zip(self.jobs, self.gang_pages)]
+        return self.gang_jobs
+
+    def _gang_label(self, page):
+        for i, job in enumerate(self.gang_jobs or []):
+            if page in job.pages:
+                return gang_letter(i)
+        return str(page + 1)
+
+    def _update_gang_info(self):
+        if not self._gang_active or self.plan is None or not self.plan.gang:
+            self.gang_info.setText("")
+            return
+        def slots(k):                                     # 1 miesto, 2 miesta, 5 miest
+            form = "1" if k == 1 else "2" if 2 <= k % 100 <= 4 and not 12 <= k % 100 <= 14 else "5"
+            return t(f"gang_slots_{form}", k=k)
+
+        rows = []
+        for i, (name, qty, k, made) in enumerate(self.plan.gang):
+            extra = f" (+{made - qty})" if made > qty else ""
+            rows.append(t("gang_row", l=gang_letter(i), slots=slots(k), made=made, extra=extra))
+        n = self.plan.n_sheets
+        rows.append(t("gang_total", sheets=f"{n} {self._hark(n)}", slots=slots(self.plan.per_sheet)))
+        self.gang_info.setText("<br>".join(rows))
 
     # ------------------------------------------------------------ poster
     def _tile_target_chosen(self, index):
@@ -2234,6 +2391,12 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, e):
         self._store_settings()
+        if self.gang_path:                                # the merged gang-run PDF is temporary
+            try:
+                self.gang_src.close()
+                os.remove(self.gang_path)
+            except Exception:
+                pass
         super().closeEvent(e)
 
     def _preset_changed(self):
@@ -2292,8 +2455,14 @@ class MainWindow(QMainWindow):
         self.mode_hint.setText(t(f"mode_hint_{mode}"))
         self.grid_box.setVisible(not booklet and not tile)
         self.booklet_box.setVisible(booklet)
+        gang = mode == "gang"
         self.tile_box.setVisible(tile)
         self.crease_box.setVisible(not tile)
+        self.gang_box.setVisible(gang)
+        self.layers_box.setVisible(not gang)          # layers follow the pages of one PDF
+        self.range.setEnabled(not gang)
+        if gang:
+            self._ensure_jobs()
         self.duplex.setEnabled(not booklet and not tile)
         self.duplex.setText(t("duplex_booklet") if booklet else t("duplex"))
         two_sided = booklet or self.duplex.isChecked()
@@ -2347,12 +2516,14 @@ class MainWindow(QMainWindow):
         self.last_dir = os.path.dirname(path)
         self.infos = None
         self._crease_key = None
+        self._reset_jobs()
         self.rasters.clear()
         self._clear_layers()
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
             self.profile = detect_profile(pdf)
             self.findings = scan(pdf)
+            self.main_findings = self.findings
         finally:
             QApplication.restoreOverrideCursor()
         self.side_idx = 0
@@ -2420,10 +2591,17 @@ class MainWindow(QMainWindow):
 
     def dropEvent(self, e):
         path = self._dropped_pdf(e)
-        if path:
-            e.acceptProposedAction()
-            # open after the drop returns, so the source app (Finder) is not kept waiting
-            QTimer.singleShot(0, lambda: self.open_file(path))
+        if not path:
+            return
+        e.acceptProposedAction()
+        # in a gang run with a file open, dropped PDFs become more jobs
+        if self.src is not None and self.mode.currentData() == "gang":
+            paths = [u.toLocalFile() for u in e.mimeData().urls()
+                     if u.toLocalFile() and is_pdf(u.toLocalFile())]
+            QTimer.singleShot(0, lambda: self.add_jobs(paths))
+            return
+        # open after the drop returns, so the source app (Finder) is not kept waiting
+        QTimer.singleShot(0, lambda: self.open_file(path))
 
     # ---------------------------------------------------------- preview
     def refresh(self):
@@ -2436,8 +2614,22 @@ class MainWindow(QMainWindow):
             return
         s = self.read_settings()
         try:
+            gang = None
+            if s.mode == "gang":
+                self._ensure_jobs()
+                gang = self._gang_build(s)
+                self.infos, self.infos_key = self.gang_infos, ("gang", self._gang_key)
+                self.findings = self.gang_findings
+                if not self._gang_active:
+                    self.rasters.clear()
+                self._gang_active = True
+            elif self._gang_active:                       # back from a gang run: the open file again
+                self._gang_active = False
+                self.infos = None
+                self.findings = self.main_findings
+                self.rasters.clear()
             key = (s.assume_bleed, s.split_spreads)
-            if self.infos is None or self.infos_key != key:
+            if not self._gang_active and (self.infos is None or self.infos_key != key):
                 self.infos = analyze(self.src, *key)
                 self.infos_key = key
                 for e in self.layers:
@@ -2445,7 +2637,7 @@ class MainWindow(QMainWindow):
             if s.crease == "pdf":
                 self._detect_creases()
                 s = self.read_settings()
-            self.plan = build_plan(self.infos, s)
+            self.plan = build_plan(self.infos, s, gang)
         except ImposeError as e:
             self.plan = None
             self.view.show_message(str(e))
@@ -2469,6 +2661,7 @@ class MainWindow(QMainWindow):
         self.warn.setText("\n".join("⚠ " + w for w in p.warnings))
         self._update_crease_panel()
         self._update_tile_info(s)
+        self._update_gang_info()
         self._update_nav()
         self._update_picker()
         self._update_preflight(s)
@@ -2538,9 +2731,11 @@ class MainWindow(QMainWindow):
         half = lambda i: t("pn_half", page=i.pdf_page + 1,
                            half=t("pn_left") if i.half == "left" else t("pn_right"))
 
+        label = self._gang_label if self._gang_active else None
+
         def paint(p, s2w, dpr, wanted, sync):
             paint_side(p, side, srcs, s2w, dpr, rasters, wanted, sync)
-            paint_numbers(p, side, s2w, infos, blank, half)
+            paint_numbers(p, side, s2w, infos, blank, half, label)
         return paint
 
     def _numbers_toggled(self, on):
@@ -2557,7 +2752,8 @@ class MainWindow(QMainWindow):
         for e in [e for e in visible if e["layer"].position == "below"]:
             ls = layer_source(e["layer"], e["pdf"], e["infos"], key="L")
             out.append(PreviewSource(e["layer"].path, e["infos"], ls.page_for, 0.6, fill))
-        out.append(PreviewSource(self.path, self.infos, fill=fill))
+        out.append(PreviewSource(self.gang_path if self._gang_active else self.path,
+                                 self.infos, fill=fill))
         for e in [e for e in visible if e["layer"].position != "below"]:
             ls = layer_source(e["layer"], e["pdf"], e["infos"], key="L")
             out.append(PreviewSource(e["layer"].path, e["infos"], ls.page_for, 0.6, fill))
@@ -2566,6 +2762,11 @@ class MainWindow(QMainWindow):
     def _side_labels(self):
         out = []
         for sd in self.plan.sides:
+            if self.plan.gang:                            # gang run: “Sheet 1 · front · A×6 B×15”
+                side = t("side_back") if sd.is_back else t("side_front")
+                jobs = " ".join(f"{gang_letter(i)}×{k}" for i, (_n, _q, k, _m) in enumerate(self.plan.gang))
+                out.append(f"{t('slug_sheet')} {sd.sheet_no} · {side} · {jobs}")
+                continue
             if sd.tile:                                   # poster piece: “A1 · page 1”
                 r, c, _rows, _cols = sd.tile
                 pg = sd.items[0].page + 1 if sd.items and sd.items[0].page is not None else 0
@@ -2793,7 +2994,10 @@ class MainWindow(QMainWindow):
             return
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
-            written = export_outputs(self.src, self.infos, self.profile, self.plan, s, layers, path,
+            src = self.gang_src if self._gang_active else self.src
+            if self._gang_active:
+                layers = []                               # layers follow the pages of one PDF
+            written = export_outputs(src, self.infos, self.profile, self.plan, s, layers, path,
                                      want_print, want_layers, want_combined,
                                      filename=os.path.basename(self.path))
         except Exception as e:
