@@ -115,7 +115,7 @@ h1 { font: 800 clamp(40px, 6.4vw, 76px)/1.02 var(--display); letter-spacing: -.0
 .fact span { color: var(--muted); font-size: 15px; }
 
 /* features: text and screenshot side by side, alternating */
-section { padding-block: 72px; scroll-margin-top: 72px; }   /* clear of the sticky header */
+section { padding-block: 72px; }
 .eyebrow { font: 500 13px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
 h2 { font: 800 clamp(30px, 3.6vw, 44px)/1.08 var(--display); margin: 10px 0 0; text-wrap: balance; max-width: 22ch; }
 .intro { color: var(--muted); max-width: 62ch; margin-top: 14px; }
@@ -429,6 +429,30 @@ footer a { color: var(--ink); }
   document.querySelectorAll(".lang button").forEach(function (b) {
     b.addEventListener("click", function () { setLang(b.dataset.lang); });
   });
+  // jumps within the page: the section's label stops the same distance under the sticky
+  // header (which is taller with the CMYK strip); the logo goes back to the very top
+  var header = document.querySelector("header");
+  var smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function goTo(id, push) {
+    var top = 0;
+    if (id && id !== "top") {
+      var sec = document.getElementById(id);
+      if (!sec) return false;
+      var mark = sec.querySelector(".eyebrow") || sec;
+      top = mark.getBoundingClientRect().top + window.scrollY - header.offsetHeight - 32;
+    }
+    window.scrollTo({ top: Math.max(0, top), behavior: smooth ? "smooth" : "auto" });
+    if (push) history.pushState(null, "", id && id !== "top" ? "#" + id : location.pathname);
+    return true;
+  }
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    var id = a.getAttribute("href").slice(1);
+    if (id.indexOf("tab-") === 0 || document.getElementById("tab-" + id)) return;   // tab links
+    if (goTo(id, true)) e.preventDefault();
+  });
+
   // phone menu
   var menuBtn = document.getElementById("menu-btn"), nav = document.getElementById("site-nav");
   function menu(open) { nav.classList.toggle("open", open); menuBtn.setAttribute("aria-expanded", String(open)); }
@@ -459,7 +483,8 @@ footer a { color: var(--ink); }
   });
   function fromHash() {
     var t = document.getElementById("tab-" + location.hash.slice(1));
-    if (t) { select(t); document.getElementById("pre-koho").scrollIntoView(); }
+    if (t) { select(t); goTo("pre-koho"); }
+    else if (location.hash.length > 1) goTo(location.hash.slice(1));
   }
   window.addEventListener("hashchange", fromHash);
   fromHash();
