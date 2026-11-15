@@ -18,7 +18,7 @@ Imprimo ships as portable folders with their own Python 3.12, so users install n
 4. Put the previous release zips in one folder and run (macOS or Linux):
 
    ```bash
-   python3 packaging/package.py 0.7.1 --base ~/Imprimo-releases/0.7.0
+   python3 packaging/package.py 0.7.2 --base ~/Imprimo-releases/0.7.1
    ```
 
    The zips land in `dist/`. The runtimes are taken over from the previous release; only
