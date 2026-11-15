@@ -20,6 +20,8 @@ návody, testy aj web Imprima fungovali ďalej. Hodí sa aj ako úloha pre štud
 | 08 | `08_chybne_pdf_na_preflight.pdf` | ľubovoľný | 1 | **naschvál chybné** – pozri nižšie |
 | 09 | `09_plagat_A2.pdf` | 420 × 594 | 1 | prvky, ktoré prechádzajú cez diely (kontrola lepenia) |
 | 10 | `10_vizitky_jana.pdf`, `10_vizitky_peter.pdf`, `10_vizitky_eva.pdf` | 90 × 50 | 2 každé | tri jasne odlíšené osoby (napr. farbou) |
+| 11 | `11_zbornik_A6_48_stran.pdf` | 105 × 148 | **48** | čísla strán, vyznačená hlava strany |
+| 11 | `11_zbornik_A6_obalka.pdf` | **212,4** × 148 | 1 | roztvorená obálka: zadná · chrbát **2,4 mm** · predná |
 
 Polohy bigov musia sedieť presne – kontrolujú ich testy aj návody k lekciám.
 
@@ -52,7 +54,7 @@ Preflight v Imprime ich má nájsť (lekcia je o hľadaní chýb):
 ## Po dokončení
 
 1. Súbory s rovnakými názvami dať do priečinka `examples/` (alebo poslať).
-2. Spustiť testy: `python tests/test_core.py` – test `test_examples` overí, že lekcie 01–07, 09 a 10
+2. Spustiť testy: `python tests/test_core.py` – test `test_examples` overí, že lekcie 01–07 a 09–11
    prejdú preflightom, 08 nie, a že sa bigy nájdu na správnych miestach.
 3. `make_examples.py` upraviť tak, aby nahradené súbory neprepisoval.
 4. Nové snímky pre web: `tools_web_screenshots.py` (návod je na začiatku skriptu).

@@ -1,4 +1,4 @@
-# Imprimo sample files – 10 lessons
+# Imprimo sample files – 11 lessons
 
 Samples for trying Imprimo and for teaching imposition. Every lesson has a PDF, a preset, steps,
 what to look at and a small exercise. In Imprimo open them via **Help → Sample files…**.
@@ -20,6 +20,7 @@ except lesson 08, which is wrong on purpose. They are built by `make_examples.py
 | 08 | `08_chybne_pdf_na_preflight.pdf` | preflight: find 5 mistakes |
 | 09 | `09_plagat_A2.pdf` | poster in pieces on A4 / A3, overlap, scaling to A1 |
 | 10 | `10_vizitky_jana.pdf`, `…_peter.pdf`, `…_eva.pdf` | several jobs on one sheet (gang run) |
+| 11 | `11_zbornik_A6_48_stran.pdf` + `…_obalka.pdf` | perfect binding: signatures, collation marks, cover with spine |
 
 (File names are Slovak: *vizitky* = business cards, *obojstranne* = double-sided, *bez spadávky* =
 without bleed, *pozvánka* = invitation, *bigy* = creases, *skladačka* = leaflet, *brožúra* = booklet,
@@ -76,3 +77,14 @@ the window). Quantities Jana 100, Peter 250, Eva 50: Imprimo splits the 24 slots
 **17 sheets** (250 / 15 → 17), with 2 + 5 + 1 extra pieces. With *Page numbers* on, the cards show their job letter;
 the info line says which slots hold which job (A 1–6, B 7–21, C 22–24) for sorting after cutting. Printed separately
 it would be 5 + 11 + 3 = 19 sheets. *Exercise:* set Eva to 300 – how do the slots and sheets change?
+
+## 11 – Small A6 book, perfect binding
+Files `11_zbornik_A6_48_stran.pdf` (48 pages A6, a new chapter every 8 pages) and `11_zbornik_A6_obalka.pdf` (the opened
+cover, spine 2.4 mm); preset ★ *Signatures – SRA3, perfect binding*. Imprimo splits the book into **6 signatures of
+8 pages**, one SRA3 sheet each; the front of sheet 1 has 5 and 4 upside down at the top, 8 and 1 below. Pages next to
+each other at the spine always add up to the same number (9 in signature 1, 25 in signature 2). Save with
+**Fold dummy** on, print sheet 1 double-sided and fold it along fold **1** (heads together), then fold **2** – the pages
+must run 1 → 8 with all heads ▲ up. Stack the folded signatures: the black **collation marks** on the spines form a
+staircase. **Tools → Cover with spine…**: 48 pages on 80 g/m² uncoated give a **2.4 mm** spine; *Impose the finished
+cover…* with `11_zbornik_A6_obalka.pdf` opens it with creases at 105 and 107.4 mm. *Exercise:* the spine on 100 g/m²
+paper with bulk 1.2? How many signatures and sheets for a 52-page book?

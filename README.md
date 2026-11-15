@@ -1,4 +1,4 @@
-# Imprimo 0.7.1
+# Imprimo 0.8.0
 
 Imposition of print-ready PDFs for Windows, macOS and Linux – business cards, labels, booklets, cut & stack – with PDF/X export, preflight and extra layers (varnish, white, die-cut, foil).
 
@@ -10,8 +10,9 @@ The user interface is available in Slovak and English (menu *Language*).
 
 ## Sample files
 
-[`examples/`](examples/) has 10 lessons with sample PDFs – business cards, a card without bleed, an invitation
-and a DL leaflet with creases, a booklet, cut & stack tickets, spot varnish, a faulty PDF for the preflight, a poster in pieces and a gang run –
+[`examples/`](examples/) has 11 lessons with sample PDFs – business cards, a card without bleed, an invitation
+and a DL leaflet with creases, a booklet, cut & stack tickets, spot varnish, a faulty PDF for the preflight, a poster in pieces, a gang run
+and a small perfect-bound book with its cover –
 each with a preset, steps and an exercise ([Slovak guide](examples/CITAJ-MA.md), [English](examples/README.md)).
 In Imprimo: **Help → Sample files…** opens a lesson with its preset.
 
@@ -40,6 +41,7 @@ Open a PDF with the button or by dropping it onto the window. The preview update
 | **Sequential (n-up)** | Pages in order: 1, 2, 3, 4 on the first sheet, the rest on the next. |
 | **Cut & stack** | After cutting and stacking the piles, pieces are in order (numbered tickets). |
 | **Saddle-stitch booklet** | Page count padded to a multiple of 4, optional creep. |
+| **Signatures (perfect or sewn binding)** | Folded signatures of 4–32 pages gathered one after another, spine milling, collation marks (see below). |
 | **Poster in pieces** | A page bigger than the sheet is split into overlapping pieces for gluing (see below). |
 | **Several jobs on a sheet (gang run)** | Different PDFs of the same size on one sheet, each with its own quantity (see below). |
 
@@ -72,6 +74,22 @@ quantity; Imprimo splits the slots of the sheet so the number of sheets is as sm
 least one slot, spare slots are spread evenly) and shows how many pieces of each job are printed. Every sheet is the
 same. Page 1 of every PDF is used, double-sided page 1 front and page 2 back. The info line lists which slots hold
 which job (A 1–6, B 7–21…), *Page numbers* show the job letters. Layers are not available in a gang run.
+
+### Signatures and cover with spine
+
+*Signatures* imposes books for perfect binding (V2) or thread sewing. Every sheet is folded into a signature of
+4, 8, 16 or 32 pages – *Automatic* picks the biggest that fits on the sheet; when the page count doesn't split into
+whole signatures, the last ones are smaller (36 = 4 × 8 + 4). The page order comes from folding the sheet virtually
+and matches the usual schemes (F8-7, F16-7). On the sheet: room for **spine milling** (3 mm by default, perfect
+binding only), **fold marks numbered 1, 2, 3** in the order of folding, a black **collation mark** on the spine of
+every signature (a step lower on each next one, so the gathered spines show a staircase) and *Signature 2/6,
+pages 9–16* in the info line. **Fold dummy** (export, also for the saddle-stitch booklet) saves one more PDF with big
+underlined page numbers instead of the content – print it, fold it and check the order.
+
+**Tools → Cover with spine…** works out the spine (leaves × leaf thickness; a list of papers with grammage and bulk,
+or a measured value), optionally with hinge creases. *Save cover template…* writes a PDF of the opened cover
+(back · spine · front) with guides on a non-printing layer for the designer. *Impose the finished cover…* opens the
+designed cover for imposing with creases on the spine; front and back as separate pages are joined automatically.
 
 ### Poster in pieces
 
@@ -164,6 +182,9 @@ main.py                  entry point (splash first, crash report)
 imprimo/
   core.py                geometry, imposition plan, rendering, layers, PDF/X export
   crease.py              crease presets and positions, finding crease lines in a PDF
+  signatures.py          folding schemes of signatures (virtual folding), splitting the pages
+  cover.py               cover with spine: spine width, template, assembling the cover
+  cover_dialog.py        Cover with spine window
   spots.py               spot colour library (Crease, CutContour, …), .ase export
   presets.py             job presets (built-in, user's, .json import / export)
   examples_dialog.py     Help → Sample files (lessons in examples/)
@@ -224,7 +245,8 @@ It writes `imprimo.ico` (Windows, 16–256 px; 16–24 px use a simplified targe
 ## Limitations
 
 - All pages are imposed into a cell the size of the first page; other sizes are centred.
-- Booklets are 2 pages per sheet side; multiple spreads per sheet and signatures are not supported yet.
+- Saddle-stitch booklets are 2 pages per sheet side; signatures use right-angle folds only (no parallel folds,
+  no work & turn yet).
 - No colour conversion or transparency flattening.
 - Preflight doesn't replace a certified one (Acrobat, pdfToolbox).
 - Annotations and form fields are not carried over.

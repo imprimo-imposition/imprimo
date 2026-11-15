@@ -358,8 +358,63 @@ def lesson_10():
         d.save()
 
 
+# 11 – a small book for perfect binding (V2): signatures, collation marks, cover with spine
+
+BOOK_PAGES = 48
+BOOK_SPINE = 2.4          # 48 pages = 24 leaves × 0.1 mm (uncoated 80 g/m², bulk 1.25)
+
+
+def lesson_11():
+    w, h, n = 105, 148, BOOK_PAGES
+    d = Doc("11_zbornik_A6_48_stran.pdf", w, h, 3, "Malý zborník A6, 48 strán")
+    for p in range(1, n + 1):
+        right = p % 2 == 1                                   # odd pages are on the right
+        d.fill(WHITE)
+        if p == 1:
+            d.text(w / 2, 100, "Malý zborník", 18, BLUE, "center")
+            d.text(w / 2, 92, "vzor 11 · väzba V2 (lepená)", 7, GREY, "center")
+        else:
+            chapter = (p - 1) // 8 + 1
+            if (p - 1) % 8 == 0:                             # a new chapter every 8 pages
+                d.fill(TEAL, 0, h - 34, w, 34)
+                d.text(w / 2, h - 22, f"Kapitola {chapter}", 13, WHITE, "center")
+            else:
+                d.text(w / 2, h - 16, f"Kapitola {chapter}", 7, GREY, "center")
+            for k in range(10):                              # some body text lines
+                d.fill(CMYKColor(0, 0, 0, 0.12), 14, 95 - k * 5, w - 28, 1.8)
+        d.text(w / 2, 22, str(p), 30, ORANGE, "center")
+        # the head of the page – after folding all heads must point the same way
+        band = p > 1 and (p - 1) % 8 == 0
+        d.text(w / 2, h - 7, "▲ hlava", 5, WHITE if band else GREY, "center")
+        d.text(w - 4 if not right else 4, 8, "chrbát →" if not right else "← chrbát", 5, GREY,
+               "right" if not right else "left")
+        d.lesson(f"Imprimo · vzor 11 · strana {p} z {n}", GREY, 3)
+        if p < n:
+            d.page()
+    d.save()
+
+    # the opened cover: back | spine | front, spine for 48 pages on uncoated 80 g/m²
+    S = BOOK_SPINE
+    d = Doc("11_zbornik_A6_obalka.pdf", 2 * w + S, h, 3, "Malý zborník – obálka")
+    d.fill(TEAL)
+    d.fill(BLUE, w, -3, S, h + 6)                            # the spine
+    d.text(w + S + w / 2, 100, "Malý zborník", 18, WHITE, "center")
+    d.text(w + S + w / 2, 92, "vzor 11 · obálka", 7, WHITE, "center")
+    d.text(w / 2, 74, "zadná strana obálky", 9, WHITE, "center")
+    d.text(w / 2, 66, f"chrbát {S:g} mm = 24 listov × 0,1 mm".replace(".", ","), 6, WHITE, "center")
+    d.c.saveState()                                          # spine title, top to bottom (ISO 6357)
+    d.c.translate((w + S / 2 - 0.6) * mm, (h / 2) * mm)
+    d.c.rotate(-90)
+    d.c.setFillColor(WHITE)
+    d.c.setFont("DejaVu", 4.5)
+    d.c.drawCentredString(0, 0, "MALÝ ZBORNÍK · vzor 11")
+    d.c.restoreState()
+    d.lesson("Imprimo · vzor 11 · obálka (vonkajšia strana)", WHITE, 3)
+    d.save()
+
+
 if __name__ == "__main__":
     print("Imprimo – vzorové súbory:")
     for f in (lesson_01, lesson_02, lesson_03, lesson_04, lesson_05, lesson_06, lesson_07,
-              lesson_08, lesson_09, lesson_10):
+              lesson_08, lesson_09, lesson_10, lesson_11):
         f()

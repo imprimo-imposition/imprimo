@@ -23,6 +23,7 @@ LESSONS = (
     ("08", "08_chybne_pdf_na_preflight.pdf", None),
     ("09", "09_plagat_A2.pdf", "preset_poster"),
     ("10", "10_vizitky_jana.pdf", "preset_gang_cards"),
+    ("11", "11_zbornik_A6_48_stran.pdf", "preset_signatures"),
 )
 
 

@@ -64,6 +64,9 @@ BUILTIN = (
     _builtin("preset_dl", mode="repeat", duplex=True, gutter_x=6.0, gutter_y=6.0,
              crease="c3", crease_dir="v"),
     _builtin("preset_booklet", mode="booklet"),
+    # signatures for perfect binding: A6 → 8-page signatures on SRA3, spine milled 3 mm
+    _builtin("preset_signatures", mode="signatures", binding="perfect", milling=3.0,
+             collation_marks=True),
     _builtin("preset_tickets", mode="cutstack", gutter_x=6.0, gutter_y=6.0),
     # business cards of several people on one sheet (gang run), 2 mm bleed like preset_cards2
     _builtin("preset_gang_cards", mode="gang", duplex=True, bleed=2.0, gutter_x=4.0, gutter_y=4.0),

@@ -1,4 +1,4 @@
-# Vzorové súbory Imprimo – 10 lekcií
+# Vzorové súbory Imprimo – 11 lekcií
 
 Vzory na vyskúšanie Imprima a na výučbu vyraďovania. Každá lekcia má PDF, predvoľbu,
 postup, na čo sa pozrieť a malú úlohu. V Imprime ich otvoríš cez **Pomocník → Vzorové súbory…**,
@@ -21,6 +21,7 @@ Všetky farby sú CMYK alebo spotové, písmo je vložené – vzory prejdú pre
 | 08 | `08_chybne_pdf_na_preflight.pdf` | preflight: nájdi 5 chýb |
 | 09 | `09_plagat_A2.pdf` | plagát po dieloch na A4 / A3, prekryv, zväčšenie na A1 |
 | 10 | `10_vizitky_jana.pdf`, `…_peter.pdf`, `…_eva.pdf` | viac zákaziek na jednom hárku (gang run) |
+| 11 | `11_zbornik_A6_48_stran.pdf` + `…_obalka.pdf` | väzba V2: zložky, znášacie značky, obálka s chrbtom |
 
 ---
 
@@ -169,6 +170,29 @@ prekryl jeho okraj po **prerušovanú rysku**, a zlep. Šikmé čiary a kruhy mu
 podľa toho sa po rezaní kôpky roztriedia. Bez gang runu by to boli 3 samostatné tlače: 5 + 11 + 3 = 19 hárkov.
 
 **Úloha:** zmeň Evu na 300 ks. Ako sa zmení rozdelenie miest a počet hárkov? Kedy sa gang run neoplatí?
+
+## 11 – Malý zborník A6, väzba V2
+
+**Súbory:** `11_zbornik_A6_48_stran.pdf` – 48 strán A6, každých 8 strán nová kapitola;
+`11_zbornik_A6_obalka.pdf` – roztvorená obálka s chrbtom 2,4 mm.
+**Predvoľba:** ★ *Zložky V2 – SRA3, lepená väzba*
+
+1. Imprimo rozdelí 48 strán do **6 zložiek po 8 stranách** – každá zložka je jeden hárok SRA3 (líc aj rub).
+   Na líci prvého hárku je hore hore nohami 5 a 4, dole 8 a 1.
+2. Zapni *Čísla strán* a *Prehľad hárkov*. Strany vedľa seba pri chrbte majú v každej zložke rovnaký súčet:
+   v 1. zložke 9 (8 + 1, 5 + 4), v 2. zložke 25 (16 + 9).
+3. Pri ukladaní zapni **Vzor na skladanie**, vytlač prvý hárok obojstranne a zlož ho: najprv podľa zlomu **1**
+   (hlavy strán k sebe), potom podľa zlomu **2**. Prelistuj – strany musia ísť 1 → 8 a všetky hlavy ▲ hore.
+4. Na chrbte každej zložky je čierna **znášacia značka**. Polož zložené hárky na seba v poradí –
+   značky tvoria schody. Chýbajúca alebo prehodená zložka hneď vyskočí z radu.
+5. **Nástroje → Obálka s chrbtom…**: 48 strán na ofsete 80 g/m² dá chrbát **2,4 mm**. Klikni
+   *Vyradiť hotovú obálku…* a vyber `11_zbornik_A6_obalka.pdf` – Imprimo ju otvorí s bigmi na chrbte (105 a 107,4 mm).
+
+**Pozri sa:** pri lepenej väzbe sú strany pri chrbte odsunuté od zlomu o 3 mm – toľko sa pri väzbe odfrézuje.
+Prepni *Väzbu* na **Šitá niťou** – strany sa v zlome dotknú.
+
+**Úloha:** aký hrubý by bol chrbát na papieri 100 g/m² s objemom 1,2? Koľko zložiek a hárkov treba na 52-stranový
+zborník a aké budú?
 
 ---
 

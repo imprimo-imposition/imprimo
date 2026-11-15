@@ -390,6 +390,17 @@ def test_examples():
                     build_plan(analyze(src), s, [GangJob(pdf, [0, 1], 100)])
                 else:
                     build_plan(analyze(src), s)
+    # lesson 11: 6 signatures of 8 pages on SRA3, the cover fits the computed 2.4 mm spine
+    import shutil, tempfile
+    from imprimo.cover import caliper, prepare, spine_width
+    with pikepdf.open(os.path.join(d, "11_zbornik_A6_48_stran.pdf")) as src:
+        s = next(p for p in presets.BUILTIN if p.builtin == "preset_signatures").to_settings()
+        assert build_plan(analyze(src), s).signatures == [8] * 6
+    spine = round(spine_width(48, caliper(80, 1.25)), 1)
+    tmp = os.path.join(tempfile.mkdtemp(), "c.pdf")
+    shutil.copy(os.path.join(d, "11_zbornik_A6_obalka.pdf"), tmp)
+    r = prepare(tmp, 105, 148, spine)
+    assert spine == 2.4 and r.path == tmp and not r.warnings
     from imprimo.crease import detect_any
     for name, want in (("03_pozvanka_A5_bigy.pdf", [105.0]), ("04_DL_skladacka_bigy.pdf", [100.0, 200.0])):
         with pikepdf.open(os.path.join(d, name)) as src:
