@@ -241,6 +241,11 @@ with his students. Every change is checked by automated tests.
 
 Found a problem or have an idea? Please [open an issue](https://github.com/imprimo-imposition/imprimo/issues).
 
+## Support the project
+
+Imprimo is free. If it saves you time at school or in your print shop, you can support its development with a
+voluntary donation on **[Ko-fi](https://ko-fi.com/imprimo)** – thank you! (*Help → Support the project…* in the app.)
+
 ## Licence
 
 Imprimo is free software, licensed under the **GNU General Public License v3.0 or later** ([LICENSE](LICENSE)).

@@ -73,6 +73,10 @@ header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; backg
 nav { display: flex; gap: 20px; margin-left: auto; font-size: 15px; flex-wrap: wrap; }
 nav a { text-decoration: none; color: var(--muted); }
 nav a:hover { color: var(--ink); }
+.support { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); text-decoration: none; font: 600 14px/1 var(--text); white-space: nowrap; }
+.support .heart { width: 15px; height: 15px; }
+.support:hover { background: var(--accent); color: var(--accent-ink); }
+.nav-support { display: none; }
 .lang { display: flex; border: 1px solid var(--rule); border-radius: 999px; overflow: hidden; font: 500 13px/1 var(--mono); }
 .lang button { background: none; border: 0; color: var(--muted); padding: 7px 11px; cursor: pointer; font: inherit; }
 .lang button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
@@ -170,6 +174,8 @@ footer a { color: var(--ink); }
   .bar { position: relative; }
   .lang { margin-left: auto; }
   .menu-btn { display: inline-flex; }
+  .support { display: none; }                       /* on a phone it is in the menu */
+  .nav-support { display: block; color: var(--accent) !important; font-weight: 600; }
   /* the menu drops down under the header */
   nav { display: none; position: absolute; top: 100%; left: 0; right: 0; margin: 0; flex-direction: column; gap: 0;
         background: var(--paper); border-bottom: 1px solid var(--rule); box-shadow: var(--shadow);
@@ -203,7 +209,9 @@ footer a { color: var(--ink); }
       <a href="#funkcie"><span lang="sk">Funkcie</span><span lang="en">Features</span></a>
       <a href="#pre-koho"><span lang="sk">Pre koho</span><span lang="en">Who it's for</span></a>
       <a href="https://github.com/imprimo-imposition/imprimo">GitHub</a>
+      <a class="nav-support" href="https://ko-fi.com/imprimo"><span lang="sk">♥ Podporiť projekt</span><span lang="en">♥ Support the project</span></a>
     </nav>
+    <a class="support" href="https://ko-fi.com/imprimo" title="Ko-fi"><svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.6 2.9 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.4h2c.7-1.2 2.2-2.4 4.3-2.4 3.8 0 5.8 4.1 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><span lang="sk">Podporiť</span><span lang="en">Support</span></a>
     <div class="lang" role="group" aria-label="Jazyk / Language">
       <button type="button" id="lang-sk" data-lang="sk" aria-pressed="true">SK</button>
       <button type="button" id="lang-en" data-lang="en" aria-pressed="false">EN</button>
@@ -359,6 +367,8 @@ footer a { color: var(--ink); }
             <h3><span lang="sk">Slobodný softvér, žiadne licencie na stroj</span><span lang="en">Free software, no per-seat licences</span></h3>
             <p><span lang="sk">Vizitky, letáky, brožúry a plagáty na digitálnej tlači – bez predplatného a bez inštalácie na každý počítač.</span><span lang="en">Business cards, leaflets, booklets and posters on a digital press – no subscription, nothing to install on every computer.</span></p>
             <p><a class="textlink" href="https://github.com/imprimo-imposition/imprimo/issues"><span lang="sk">Napíšte nám cez GitHub →</span><span lang="en">Contact us via GitHub →</span></a></p>
+            <p><span lang="sk">Šetrí vám Imprimo čas? Vývoj môžete podporiť dobrovoľným príspevkom.</span><span lang="en">Does Imprimo save you time? You can support its development with a voluntary donation.</span><br>
+              <a class="textlink" href="https://ko-fi.com/imprimo"><span lang="sk">♥ Podporiť na Ko-fi →</span><span lang="en">♥ Support on Ko-fi →</span></a></p>
           </div>
           <ul class="checks">
             <li><span lang="sk">Zadarmo aj na komerčnú tlač – licencia GNU GPL v3.0.</span><span lang="en">Free for commercial print work too – GNU GPL v3.0.</span></li>
@@ -398,7 +408,7 @@ footer a { color: var(--ink); }
       <span lang="sk">navrhol a testuje Maxim Darák so študentmi SOŠ služieb, Košická 20, Prešov, odbor GTM (projekt SOČ). Kód vzniká s pomocou AI (Claude Code).</span>
       <span lang="en">designed and tested by Maxim Darák with students of SOŠ služieb, Košická 20, Prešov, field of study GTM (SOČ project). The code is written with AI assistance (Claude Code).</span>
     </div>
-    <div><a href="https://github.com/imprimo-imposition/imprimo">GitHub</a> · <a href="https://github.com/imprimo-imposition/imprimo/blob/main/LICENSE">GPL-3.0</a></div>
+    <div><a href="https://ko-fi.com/imprimo"><span lang="sk">♥ Podporiť projekt</span><span lang="en">♥ Support the project</span></a> · <a href="https://github.com/imprimo-imposition/imprimo">GitHub</a> · <a href="https://github.com/imprimo-imposition/imprimo/blob/main/LICENSE">GPL-3.0</a></div>
   </div>
 </footer>
 

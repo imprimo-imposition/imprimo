@@ -79,6 +79,6 @@ as spreads, PDFs without TrimBox, rotated pages.
 
 - V2 binding: signatures (folded sections of 8/16/32 pages), collation marks, cover with spine.
 - Custom splash screen from Maxim (PNG 1200 × 720).
-- Donations: GitHub Sponsors or Ko-fi, later possibly an o. z. (2 % of tax); a gift
-  without anything in return – the user sets up the account himself.
+- Donations: live at https://ko-fi.com/imprimo (PayPal, no Stripe – Maxim donates privately, not
+  through his živnosť; never promise anything in return). Later possibly an o. z. (2 % of tax).
 - Windows testing feedback from users.

@@ -28,7 +28,7 @@ from .core import (LAYER_KINDS, MODES, SHEET_PRESETS, ImposeError, Layer, spread
                    resolve_export, mm, tile_name, GangJob, gang_letter,
                    render, to_mm)
 from . import presets as presets_mod
-from .about import REPO_URL
+from .about import REPO_URL, SUPPORT_URL
 from .crease import PRESETS as CREASE_PRESETS, crease_spec, detect_any, format_positions, parse_positions
 from .i18n import LANGUAGES, get_language, set_language, t
 from .theme import THEMES, apply_theme, is_dark
@@ -1723,6 +1723,10 @@ class MainWindow(QMainWindow):
         a = QAction(t("github_action"), self)
         a.setMenuRole(QAction.NoRole)
         a.triggered.connect(lambda: QDesktopServices.openUrl(QUrl(REPO_URL)))
+        menu.addAction(a)
+        a = QAction(t("support_action"), self)
+        a.setMenuRole(QAction.NoRole)
+        a.triggered.connect(lambda: QDesktopServices.openUrl(QUrl(SUPPORT_URL)))
         menu.addAction(a)
 
     def _about(self):

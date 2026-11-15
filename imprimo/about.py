@@ -14,6 +14,7 @@ from .i18n import t
 from .splash import app_icon
 
 REPO_URL = "https://github.com/imprimo-imposition/imprimo"
+SUPPORT_URL = "https://ko-fi.com/imprimo"          # voluntary donations
 LICENSE_URL = "https://www.gnu.org/licenses/gpl-3.0.html"
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -115,7 +116,8 @@ class AboutDialog(QDialog):
         body = QLabel(
             f"<p>{t('about_license', gpl=link(LICENSE_URL, 'GNU GPL v3.0'))}</p>"
             f"<p>{t('about_commercial')}</p>"
-            f"<p>{t('about_repo', link=link(REPO_URL, 'github.com/imprimo-imposition/imprimo'))}</p>")
+            f"<p>{t('about_repo', link=link(REPO_URL, 'github.com/imprimo-imposition/imprimo'))}</p>"
+            f"<p>{t('about_support', link=link(SUPPORT_URL, 'ko-fi.com/imprimo'))}</p>")
         body.setWordWrap(True)
         body.setTextFormat(Qt.RichText)
         body.setOpenExternalLinks(True)
