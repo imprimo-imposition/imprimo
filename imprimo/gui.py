@@ -1087,6 +1087,15 @@ class LayerRow(QFrame):
         self.check.setText("<br>".join(rows))
 
 
+def _drop_widget(layout, w):
+    """Removes a row from its layout for good. It stays hidden inside the panel until it is
+    deleted – setParent(None) would turn a shown widget into a stray top-level window
+    (on macOS it appears as a small floating window until the next event loop pass)."""
+    layout.removeWidget(w)
+    w.hide()
+    w.deleteLater()
+
+
 def guess_kind(path, spots=()):
     """Layer type from the spot colour names in the PDF, then from the file name."""
     from .spots import kind_of
@@ -1830,8 +1839,7 @@ class MainWindow(QMainWindow):
         if not hasattr(self, "jobs_col"):
             return
         for w in self.job_rows:
-            w.setParent(None)
-            w.deleteLater()
+            _drop_widget(self.jobs_col, w)
         self.job_rows = []
         for i, job in enumerate(self.jobs):
             row = QWidget()
@@ -3072,8 +3080,7 @@ class MainWindow(QMainWindow):
         if not hasattr(self, "layers_col"):
             return
         for row in self.layer_rows:
-            row.setParent(None)
-            row.deleteLater()
+            _drop_widget(self.layers_col, row)
         self.layer_rows = []
         for e in self.layers:
             if e["layer"].kind == "crease":         # shown in the Creasing section
