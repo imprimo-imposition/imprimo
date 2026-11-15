@@ -545,6 +545,12 @@ def test_report_info():
     assert txt.startswith("Imprimo ") and "System: " in txt and system_name() in txt
 
 
+def test_page_size_label():
+    from imprimo.preview import page_size_label
+    assert page_size_label(mm(148), mm(210)) == "A5" and page_size_label(mm(210), mm(148)) == "A5"
+    assert page_size_label(mm(99), mm(210)) == "DL" and page_size_label(mm(90), mm(50)) == "90×50"
+
+
 if __name__ == "__main__":
     for k, f in list(globals().items()):
         if k.startswith("test_"):

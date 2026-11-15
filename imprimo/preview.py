@@ -16,9 +16,10 @@ from collections import OrderedDict
 
 import pikepdf
 import pypdfium2 as pdfium
-from PySide6.QtCore import QRectF
+from PySide6.QtCore import QPointF, QRectF
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QBrush, QColor, QFont, QImage, QPainter, QPen, QTransform
+from PySide6.QtGui import (QBrush, QColor, QFont, QFontMetricsF, QImage, QPainter,
+                           QPainterPath, QPen, QTransform)
 
 from .core import bleed_patches, chain, compose, map_rect, translate
 
@@ -244,46 +245,123 @@ def _draw(p, img, i2r, r2w, opacity, *rects):
     p.restore()
 
 
-def paint_numbers(p: QPainter, side, s2w, infos, blank_text="", half_text=None, label=None):
-    """Page number badges in the middle of every page. Each badge is turned like the
-    page content, so an upside-down number shows that the page is upside down."""
+PAGE_NAMES = (("A0", 841, 1189), ("A1", 594, 841), ("A2", 420, 594), ("A3", 297, 420),
+              ("A4", 210, 297), ("A5", 148, 210), ("A6", 105, 148), ("A7", 74, 105),
+              ("DL", 99, 210))
+
+
+def page_size_label(w_pt: float, h_pt: float) -> str:
+    """“A5”, “DL”, or “90×50” – the trimmed page size in mm, either orientation."""
+    w, h = w_pt * 25.4 / 72, h_pt * 25.4 / 72
+    a, b = sorted((w, h))
+    for name, x, y in PAGE_NAMES:
+        if abs(a - x) <= 1.0 and abs(b - y) <= 1.0:
+            return name
+    return f"{w:.0f}×{h:.0f}"
+
+
+TAG_H = 18.0              # px – the tag has the same size on screen at every zoom
+TAG_FONT = 11.0           # px
+TAG_INSET = 4.0           # px from the page corner
+JOB_COLOURS = ((24, 95, 165), (153, 60, 29), (15, 110, 86), (83, 74, 183),
+               (153, 53, 86), (133, 79, 11))     # gang run: one colour per job
+
+
+def paint_numbers(p: QPainter, side, s2w, infos, blank_text="", half_text=None, label=None,
+                  job_of=None):
+    """Page tags: a small dark tag in the top-left corner of every page – ▲ points to the
+    head of the page, then the page number and the page size. The tag is turned with the
+    page, so an upside-down tag means an upside-down page; its size on screen stays the
+    same at every zoom."""
+    scale = math.hypot(s2w[0], s2w[1]) or 1.0           # widget px per pt
     p.save()
     p.setRenderHint(QPainter.Antialiasing, True)
     p.setRenderHint(QPainter.TextAntialiasing, True)
-    font = QFont()
-    font.setBold(True)
+    bold = QFont()
+    bold.setPixelSize(int(TAG_FONT))
+    bold.setWeight(QFont.DemiBold)
+    regular = QFont(bold)
+    regular.setWeight(QFont.Normal)
+    fm_b, fm_r = QFontMetricsF(bold), QFontMetricsF(regular)
     for it in side.items:
-        k = 0.30 * min(it.W, it.H) / 100.0           # badge = 100 units across
-        # text space (y down, origin = page centre) → card → sheet → widget
-        t2w = chain((k, 0, 0, -k, it.W / 2, it.H / 2), it.matrix, s2w)
+        pw, ph = it.W * scale, it.H * scale              # page on screen (px)
+        if min(pw, ph) < TAG_H + 2 * TAG_INSET:
+            continue                                     # too small to label
+        k = 1.0 / scale
+        # tag space: 1 unit = 1 px, y down, origin = top-left corner of the upright page
+        t2w = chain((k, 0, 0, -k, TAG_INSET * k, it.H - TAG_INSET * k), it.matrix, s2w)
         p.setTransform(QTransform(*t2w))
-        p.setPen(QPen(QColor(255, 255, 255, 230), 3))
+        pad, tri, gap = 6.0, 7.0, 5.0
         if it.page is None:
-            p.setBrush(QBrush(QColor(120, 120, 120, 170)))
-            p.drawRoundedRect(QRectF(-75, -22, 150, 44), 22, 22)
-            font.setPixelSize(22)
-            p.setFont(font)
-            p.drawText(QRectF(-75, -22, 150, 44), Qt.AlignCenter, blank_text)
+            txt = blank_text
+            w = pad * 2 + fm_r.horizontalAdvance(txt)
+            if w > pw - 2 * TAG_INSET:
+                continue
+            r = QRectF(0, 0, w, TAG_H)
+            p.setPen(QPen(QColor(110, 110, 110, 230), 1, Qt.DashLine))
+            p.setBrush(QBrush(QColor(255, 255, 255, 215)))
+            p.drawRoundedRect(r, 4, 4)
+            p.setFont(regular)
+            p.setPen(QColor(90, 90, 90))
+            p.drawText(r, Qt.AlignCenter, txt)
             continue
-        p.setBrush(QBrush(QColor(0, 102, 204, 200)))
-        p.drawEllipse(QRectF(-50, -50, 100, 100))
         num = label(it.page) if label else str(it.page + 1)
-        font.setPixelSize(52 if len(num) < 3 else 38)
-        p.setFont(font)
-        p.drawText(QRectF(-50, -54, 100, 100), Qt.AlignCenter, num)
-        # underline: tells 6 from 9 and shows where the bottom of the page is
-        p.setPen(QPen(QColor(255, 255, 255, 230), 4, Qt.SolidLine, Qt.RoundCap))
-        p.drawLine(-14 * len(num), 26, 14 * len(num), 26)
-        info = infos[it.page] if it.page < len(infos) else None
+        size = page_size_label(it.W, it.H)
+        w_num = fm_b.horizontalAdvance(num)
+        w_size = fm_r.horizontalAdvance(size)
+        full = pad + tri + gap + w_num + gap + 1 + gap + w_size + pad
+        short = pad + tri + gap + w_num + pad
+        avail = pw - 2 * TAG_INSET
+        if full <= avail:
+            w, with_size = full, True
+        elif short <= avail:
+            w, with_size = short, False
+        else:
+            continue
+        colour = QColor(28, 28, 30, 230)
+        if job_of is not None:
+            j = job_of(it.page)
+            if j is not None:
+                c = JOB_COLOURS[j % len(JOB_COLOURS)]
+                colour = QColor(*c, 235)
+        p.setPen(QPen(QColor(255, 255, 255, 140), 1))
+        p.setBrush(QBrush(colour))
+        p.drawRoundedRect(QRectF(0, 0, w, TAG_H), 4, 4)
+        # ▲ = the head of the page
+        x = pad
+        cy = TAG_H / 2
+        path = QPainterPath()
+        path.moveTo(x, cy + tri * 0.42)
+        path.lineTo(x + tri / 2, cy - tri * 0.5)
+        path.lineTo(x + tri, cy + tri * 0.42)
+        path.closeSubpath()
+        p.setPen(Qt.NoPen)
+        p.setBrush(QBrush(QColor(255, 255, 255)))
+        p.drawPath(path)
+        x += tri + gap
+        p.setFont(bold)
+        p.setPen(QColor(255, 255, 255))
+        p.drawText(QRectF(x, 0, w_num + 1, TAG_H), Qt.AlignVCenter | Qt.AlignLeft, num)
+        x += w_num + gap
+        if with_size:
+            p.setPen(QPen(QColor(255, 255, 255, 90), 1))
+            p.drawLine(QPointF(x, 4), QPointF(x, TAG_H - 4))
+            x += 1 + gap
+            p.setFont(regular)
+            p.setPen(QColor(255, 255, 255, 185))
+            p.drawText(QRectF(x, 0, w_size + 1, TAG_H), Qt.AlignVCenter | Qt.AlignLeft, size)
+        info = infos[it.page] if infos and it.page < len(infos) else None
         if info is not None and info.half and half_text:
-            font.setPixelSize(15)
-            p.setFont(font)
-            r = QRectF(-90, 54, 180, 26)
-            p.setPen(Qt.NoPen)
-            p.setBrush(QBrush(QColor(0, 0, 0, 150)))
-            p.drawRoundedRect(r, 8, 8)
-            p.setPen(QColor(255, 255, 255))
-            p.drawText(r, Qt.AlignCenter, half_text(info))
+            txt = half_text(info)
+            hw = pad * 2 + fm_r.horizontalAdvance(txt)
+            if hw <= avail and ph > 2 * TAG_H + 3 * TAG_INSET:
+                r = QRectF(0, TAG_H + 3, hw, TAG_H)
+                p.setPen(Qt.NoPen)
+                p.setBrush(QBrush(QColor(28, 28, 30, 150)))
+                p.drawRoundedRect(r, 4, 4)
+                p.setFont(regular)
+                p.setPen(QColor(255, 255, 255))
+                p.drawText(r, Qt.AlignCenter, txt)
     p.restore()
 
 

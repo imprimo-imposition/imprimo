@@ -2082,6 +2082,12 @@ class MainWindow(QMainWindow):
                           for j, pg in zip(self.jobs, self.gang_pages)]
         return self.gang_jobs
 
+    def _gang_job_of(self, page):
+        for i, job in enumerate(self.gang_jobs or []):
+            if page in job.pages:
+                return i
+        return None
+
     def _gang_label(self, page):
         for i, job in enumerate(self.gang_jobs or []):
             if page in job.pages:
@@ -2911,10 +2917,11 @@ class MainWindow(QMainWindow):
                            half=t("pn_left") if i.half == "left" else t("pn_right"))
 
         label = self._gang_label if self._gang_active else None
+        job_of = self._gang_job_of if self._gang_active else None
 
         def paint(p, s2w, dpr, wanted, sync):
             paint_side(p, side, srcs, s2w, dpr, rasters, wanted, sync)
-            paint_numbers(p, side, s2w, infos, blank, half, label)
+            paint_numbers(p, side, s2w, infos, blank, half, label, job_of)
         return paint
 
     def _numbers_toggled(self, on):

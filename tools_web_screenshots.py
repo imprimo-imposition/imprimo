@@ -9,6 +9,12 @@ and a Python with pyobjc-framework-Quartz (to find the window id).
     for L in sk en; do for T in light dark; do
       .venv/bin/python tools_web_screenshots.py /tmp/shots $L $T /tmp/qv/bin/python; done; done
     then convert to WebP (1600 px hero, 1300 px others) into docs/mac/
+
+Run it with the Python of the packaged Imprimo.app, not the .venv one: macOS draws the
+window frame and title bar per app bundle, so a window of the development Python looks
+different from the released app. Unzip dist/Imprimo-X.Y.Z-macOS.zip and use
+    Imprimo.app/Contents/MacOS/python tools_web_screenshots.py /tmp/shots sk light /tmp/qv/bin/python
+(the script imports imprimo from this repository, the runtime comes from the app).
 """
 import sys, os, time, subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
