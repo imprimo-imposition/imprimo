@@ -42,6 +42,8 @@ imprimo/gui.py          MainWindow, SheetView (zoom/pan), OverviewView (all shee
                         Space/middle-button hand tool), collapsible sections, LayerRow
 imprimo/crease.py       crease presets/positions (mm on the product), crease line detection
 imprimo/signatures.py   signatures (V2 / sewn): folding schemes by virtual folding, splitting pages
+imprimo/cover.py        cover with spine: spine width, template PDF, assembling the cover
+                        (cover_dialog.py = window, Tools menu and the Signatures section)
 imprimo/spots.py        spot colour library + aliases, .ase writer (spots_dialog.py = window)
 imprimo/presets.py      job presets: built-ins, user presets (QSettings "job_presets"), .json files
 examples/               lesson PDFs (built by make_examples.py, committed), CITAJ-MA.md + README.md;
@@ -80,7 +82,7 @@ as spreads, PDFs without TrimBox, rotated pages.
 ## Plans (not started)
 
 - V2 binding: phase 1 done (signatures 4–32, milling, collation marks, fold dummy); phase 2 cover
-  with spine (calculator, template, imposing); phase 3 lesson 11, preset, website, 0.8.0.
+  with spine done; phase 3 lesson 11, preset, website, 0.8.0.
 - Custom splash screen from Maxim (PNG 1200 × 720).
 - Donations: live at https://ko-fi.com/imprimo (PayPal, no Stripe – Maxim donates privately, not
   through his živnosť; never promise anything in return). Later possibly an o. z. (2 % of tax).

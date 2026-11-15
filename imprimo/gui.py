@@ -1406,6 +1406,9 @@ class MainWindow(QMainWindow):
         f.addRow(self.collation)
         f.addRow(t("blanks"), self.sig_blanks)
         f.addRow(hint_label(t("sig_hint")))
+        cover_btn = QPushButton(t("cover_action"))
+        cover_btn.clicked.connect(self.show_cover)
+        f.addRow(cover_btn)
         self.sig_form = f
         col.addWidget(self.sig_box)
 
@@ -1749,6 +1752,10 @@ class MainWindow(QMainWindow):
         a.setMenuRole(QAction.NoRole)
         a.triggered.connect(self.show_spots)
         menu.addAction(a)
+        a = QAction(t("cover_action"), self)
+        a.setMenuRole(QAction.NoRole)
+        a.triggered.connect(self.show_cover)
+        menu.addAction(a)
 
         # Help: on macOS “About Imprimo” moves to the application menu (AboutRole)
         menu = mb.addMenu(t("help_menu"))
@@ -1796,6 +1803,34 @@ class MainWindow(QMainWindow):
                 self.job.setCurrentIndex(i)
                 self._job_chosen(i)
                 break
+
+    def show_cover(self):
+        """Cover with spine – book size and page count from the open file."""
+        from .cover_dialog import CoverDialog
+        w, h, pages = 148.0, 210.0, 64
+        if self.plan is not None and self.mode.currentData() in ("booklet", "signatures"):
+            w, h = to_mm(self.plan.page_w), to_mm(self.plan.page_h)
+            pages = self.plan.pages or self.plan.n_sheets * 4
+        elif self.infos:
+            w, h, pages = to_mm(self.infos[0].vis_w), to_mm(self.infos[0].vis_h), len(self.infos)
+        CoverDialog(self, round(w, 1), round(h, 1), pages, self.bleed.value(), self.last_dir).exec()
+
+    def open_cover(self, path, creases, two_sided):
+        """Opens an assembled cover for imposing: one per sheet position, creases on the spine."""
+        self.open_file(path)
+        if self.src is None:
+            return
+        was, self._loading = self._loading, True
+        self.mode.setCurrentIndex(self.mode.findData("repeat"))
+        self.split.setChecked(False)              # the opened cover is no spread of two pages
+        self.duplex.setChecked(two_sided)
+        self.crease.setCurrentIndex(self.crease.findData("custom"))
+        self.crease_dir.setCurrentIndex(self.crease_dir.findData("v"))
+        self.crease_pos.setText(format_positions(creases))
+        self.crease_marks.setChecked(True)
+        self._loading = was
+        self.changed()
+        self.statusBar().showMessage(t("cover_status", pos=format_positions(creases)), 15000)
 
     def show_spots(self):
         from .spots_dialog import SpotColorsDialog

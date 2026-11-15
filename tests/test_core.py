@@ -460,6 +460,72 @@ def test_signatures_render_dummy():
     assert "0 0 0 1 k" in first and "(1) Tj" in first
 
 
+def _pdf_pages(path, sizes_mm, bleed_mm=3):
+    """A PDF with pages of the given trim sizes, bleed around, a different fill per page."""
+    import pikepdf
+    pdf = pikepdf.new()
+    for k, (w, h) in enumerate(sizes_mm):
+        b = mm(bleed_mm)
+        W, H = mm(w) + 2 * b, mm(h) + 2 * b
+        pg = pdf.add_blank_page(page_size=(W, H))
+        pg.obj.TrimBox = pikepdf.Array([b, b, W - b, H - b])
+        pg.obj.BleedBox = pikepdf.Array([0, 0, W, H])
+        pg.obj.Contents = pdf.make_stream(f"{0.2 * k} 0 0 0 k 0 0 {W} {H} re f".encode())
+    pdf.save(path)
+
+
+def test_cover():
+    import tempfile, pikepdf
+    from imprimo.cover import assemble, caliper, crease_positions, spine_width, write_template
+    from imprimo.core import ImposeError, analyze
+    assert abs(caliper(80, 1.25) - 0.1) < 1e-9
+    assert abs(spine_width(128, 0.1) - 6.4) < 1e-9 and abs(spine_width(127, 0.1) - 6.4) < 1e-9
+    assert crease_positions(148, 6.4) == [148, 154.4]
+    assert crease_positions(148, 6.4, 7) == [141, 148, 154.4, 161.4]
+    d = tempfile.mkdtemp()
+    tpl = os.path.join(d, "tpl.pdf")
+    write_template(tpl, 148, 210, 6.4, 3, 7, "info")
+    with pikepdf.open(tpl) as pdf:
+        pg = pdf.pages[0]
+        assert abs(float(pg.TrimBox[2]) - float(pg.TrimBox[0]) - mm(302.4)) < 0.01
+        assert abs(float(pg.MediaBox[2]) - mm(308.4)) < 0.01
+        assert "/OCProperties" in pdf.Root
+    # front + back as pages of the book size
+    src = os.path.join(d, "fb.pdf")
+    _pdf_pages(src, [(148, 210)] * 2)
+    out = os.path.join(d, "fb_cover.pdf")
+    r = assemble(src, out, 148, 210, 6.4)
+    assert r.blank_spine and not r.two_sided and r.spine_mm == 6.4
+    with pikepdf.open(out) as pdf:
+        info = analyze(pdf)[0]
+        assert abs(info.vis_w - mm(302.4)) < 0.01 and abs(info.vis_h - mm(210)) < 0.01
+        body = pdf.pages[0].Contents.read_bytes().decode()
+        # back (page 2) on the left, front (page 1) on the right
+        assert body.index("/P1 Do") < body.index("/P0 Do")
+    # 4 pages: printed inside too
+    _pdf_pages(src, [(148, 210)] * 4)
+    r = assemble(src, out, 148, 210, 6.4)
+    assert r.two_sided
+    # the whole cover as one page: its spine is used, with a warning when it differs
+    _pdf_pages(src, [(300.0, 210)])
+    r = assemble(src, out, 148, 210, 6.4)
+    assert not r.blank_spine and r.spine_mm == 4.0 and r.warnings
+    # one step: a whole cover is used as it is, separate pages are joined next to it
+    from imprimo.cover import prepare
+    r = prepare(src, 148, 210, 4.0)
+    assert r.path == src and not r.blank_spine
+    _pdf_pages(src, [(148, 210)] * 2)
+    r1, r2 = prepare(src, 148, 210, 4.0), prepare(src, 148, 210, 4.0)
+    assert r1.blank_spine and os.path.dirname(r1.path) == d and r1.path != r2.path
+    # wrong size
+    _pdf_pages(src, [(105, 148)] * 2)
+    try:
+        assemble(src, out, 148, 210, 6.4)
+        assert False
+    except ImposeError:
+        pass
+
+
 if __name__ == "__main__":
     for k, f in list(globals().items()):
         if k.startswith("test_"):
