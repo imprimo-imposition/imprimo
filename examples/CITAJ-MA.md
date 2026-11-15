@@ -4,6 +4,8 @@ Vzory na vyskúšanie Imprima a na výučbu vyraďovania. Každá lekcia má PDF
 postup, na čo sa pozrieť a malú úlohu. V Imprime ich otvoríš cez **Pomocník → Vzorové súbory…**,
 na GitHube sú v priečinku [`examples/`](.).
 
+Chceš vzory navrhnúť graficky po svojom? Technické požiadavky sú v [ZADANIE.md](ZADANIE.md).
+
 Všetky farby sú CMYK alebo spotové, písmo je vložené – vzory prejdú preflightom
 (okrem lekcie 08, tá je chybná naschvál). Vytvára ich skript `make_examples.py`.
 
