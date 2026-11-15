@@ -81,8 +81,8 @@ as spreads, PDFs without TrimBox, rotated pages.
 
 ## Plans (not started)
 
-- V2 binding: phase 1 done (signatures 4–32, milling, collation marks, fold dummy); phase 2 cover
-  with spine done; phase 3 lesson 11, preset, website, 0.8.0.
+- V2 binding follow-ups (0.8.0 has signatures, fold dummy, cover with spine): nested signatures
+  for thick saddle-stitched magazines, work & turn, parallel folds.
 - Custom splash screen from Maxim (PNG 1200 × 720).
 - Donations: live at https://ko-fi.com/imprimo (PayPal, no Stripe – Maxim donates privately, not
   through his živnosť; never promise anything in return). Later possibly an o. z. (2 % of tax).
