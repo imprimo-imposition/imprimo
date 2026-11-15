@@ -1198,13 +1198,7 @@ class MainWindow(QMainWindow):
         # keyboard shortcuts (created once – survive a language switch)
         QShortcut(QKeySequence(Qt.Key_Left), self, activated=lambda: self.step(-1))
         QShortcut(QKeySequence(Qt.Key_Right), self, activated=lambda: self.step(+1))
-        QShortcut(QKeySequence.Open, self, activated=self.choose_file)
-        QShortcut(QKeySequence.Save, self, activated=self.save)
-        QShortcut(QKeySequence.ZoomIn, self, activated=lambda: self._zoom(1.25))
-        QShortcut(QKeySequence("Ctrl+="), self, activated=lambda: self._zoom(1.25))
-        QShortcut(QKeySequence.ZoomOut, self, activated=lambda: self._zoom(0.8))
-        QShortcut(QKeySequence("Ctrl+0"), self, activated=lambda: self._zoom_fit())
-        QShortcut(QKeySequence("Ctrl+1"), self, activated=lambda: self._zoom_actual())
+        # open, save and zoom shortcuts belong to the File and View menus (_build_menu)
 
         qs = store()
         lang = qs.value("language", "")
@@ -1712,26 +1706,28 @@ class MainWindow(QMainWindow):
         self._update_nav()
 
     def _build_menu(self):
+        """File · Presets · Tools · View · Help – what is used most comes first."""
         mb = self.menuBar()
         mb.clear()
-        menu = mb.addMenu(t("language"))
-        grp = QActionGroup(self)
-        for code, name in LANGUAGES.items():
-            a = QAction(name, self, checkable=True)
-            a.setChecked(code == get_language())
-            a.triggered.connect(lambda _=False, c=code: self.switch_language(c))
-            grp.addAction(a)
-            menu.addAction(a)
 
-        menu = mb.addMenu(t("appearance"))
-        grp = QActionGroup(self)
-        current = store().value("theme", "system")
-        for code in THEMES:
-            a = QAction(t(f"theme_{code}"), self, checkable=True)
-            a.setChecked(code == current)
-            a.triggered.connect(lambda _=False, c=code: self.switch_theme(c))
-            grp.addAction(a)
+        def act(menu, text, slot, keys=(), role=QAction.NoRole):
+            a = QAction(text, self)
+            a.setMenuRole(role)
+            if keys:
+                a.setShortcuts([QKeySequence(k) for k in keys])
+            a.triggered.connect(slot)
             menu.addAction(a)
+            return a
+
+        menu = mb.addMenu(t("file_menu"))
+        act(menu, t("open_action"), self.choose_file, [QKeySequence.Open])
+        self.recent_menu = menu.addMenu(t("recent_menu"))
+        self.recent_menu.aboutToShow.connect(self._fill_recent)
+        self._fill_recent()                 # macOS shows the menu only when it has items
+        menu.addSeparator()
+        act(menu, t("save_action"), self.save, [QKeySequence.Save])
+        menu.addSeparator()
+        act(menu, t("quit_action"), self.close, [QKeySequence.Quit], QAction.QuitRole)
 
         menu = mb.addMenu(t("jobs_menu"))
         for item in ((t("job_save_action"), self.save_job_preset),
@@ -1757,6 +1753,33 @@ class MainWindow(QMainWindow):
         a.triggered.connect(self.show_cover)
         menu.addAction(a)
 
+        menu = mb.addMenu(t("view_menu"))
+        act(menu, t("view_sheet"), lambda: self._menu_view("sheet"))
+        act(menu, t("view_overview"), lambda: self._menu_view("all"))
+        menu.addSeparator()
+        act(menu, t("zoom_in"), lambda: self._zoom(1.25), [QKeySequence.ZoomIn, "Ctrl+="])
+        act(menu, t("zoom_out"), lambda: self._zoom(0.8), [QKeySequence.ZoomOut])
+        act(menu, t("zoom_fit"), self._zoom_fit, ["Ctrl+0"])
+        act(menu, t("zoom_100"), self._zoom_actual, ["Ctrl+1"])
+        menu.addSeparator()
+        sub = menu.addMenu(t("language"))
+        grp = QActionGroup(self)
+        for code, name in LANGUAGES.items():
+            a = QAction(name, self, checkable=True)
+            a.setChecked(code == get_language())
+            a.triggered.connect(lambda _=False, c=code: self.switch_language(c))
+            grp.addAction(a)
+            sub.addAction(a)
+        sub = menu.addMenu(t("appearance"))
+        grp = QActionGroup(self)
+        current = store().value("theme", "system")
+        for code in THEMES:
+            a = QAction(t(f"theme_{code}"), self, checkable=True)
+            a.setChecked(code == current)
+            a.triggered.connect(lambda _=False, c=code: self.switch_theme(c))
+            grp.addAction(a)
+            sub.addAction(a)
+
         # Help: on macOS “About Imprimo” moves to the application menu (AboutRole)
         menu = mb.addMenu(t("help_menu"))
         a = QAction(t("ex_action"), self)
@@ -1780,6 +1803,41 @@ class MainWindow(QMainWindow):
         a.setMenuRole(QAction.NoRole)
         a.triggered.connect(lambda: QDesktopServices.openUrl(QUrl(SUPPORT_URL)))
         menu.addAction(a)
+
+    # ------------------------------------------------------- recent files
+    RECENT_MAX = 10
+
+    def _recent(self) -> list:
+        v = store().value("recent_files", [])
+        if isinstance(v, str):
+            v = [v]
+        return [p for p in (v or []) if isinstance(p, str)]
+
+    def _add_recent(self, path):
+        path = os.path.abspath(path)
+        lst = [path] + [p for p in self._recent() if p != path]
+        store().setValue("recent_files", lst[:self.RECENT_MAX])
+
+    def _fill_recent(self):
+        m = self.recent_menu
+        m.clear()
+        files = [p for p in self._recent() if os.path.exists(p)]
+        if not files:
+            a = m.addAction(t("recent_empty"))
+            a.setEnabled(False)
+            return
+        for p in files:
+            a = m.addAction(os.path.basename(p))
+            a.setToolTip(p)
+            a.setStatusTip(p)
+            a.triggered.connect(lambda _=False, f=p: self.open_file(f))
+        m.addSeparator()
+        m.addAction(t("recent_clear")).triggered.connect(
+            lambda: store().setValue("recent_files", []))
+
+    def _menu_view(self, mode):
+        (self.mode_all if mode == "all" else self.mode_sheet).setChecked(True)
+        self.set_view_mode(mode)
 
     def _about(self):
         from .about import AboutDialog
@@ -2623,6 +2681,7 @@ class MainWindow(QMainWindow):
             self.src.close()
         self.src, self.path = pdf, path
         self.last_dir = os.path.dirname(path)
+        self._add_recent(path)
         self.infos = None
         self._crease_key = None
         self._reset_jobs()

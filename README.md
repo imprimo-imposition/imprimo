@@ -4,7 +4,7 @@ Imposition of print-ready PDFs for Windows, macOS and Linux – business cards, 
 
 Pages are placed as vector Form XObjects: fonts, CMYK, spot colours and gradients stay exactly as they were, nothing is rasterised.
 
-The user interface is available in Slovak and English (menu *Language*).
+The user interface is available in Slovak and English (*View → Language*).
 
 **Website:** https://imprimo-imposition.github.io/imprimo/ · **Download:** [latest release](https://github.com/imprimo-imposition/imprimo/releases/latest)
 
