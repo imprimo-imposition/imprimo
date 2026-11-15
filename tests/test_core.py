@@ -537,6 +537,14 @@ def test_cover():
         pass
 
 
+def test_report_info():
+    from imprimo.report_dialog import changed_settings, info_text, system_name
+    assert changed_settings(Settings()) == "–"
+    assert changed_settings(Settings(mode="signatures", bleed=2.0)) == "mode=signatures, bleed=2"
+    txt = info_text(None, with_log=False)
+    assert txt.startswith("Imprimo ") and "System: " in txt and system_name() in txt
+
+
 if __name__ == "__main__":
     for k, f in list(globals().items()):
         if k.startswith("test_"):

@@ -1,0 +1,27 @@
+name: "Problém / Bug report"
+description: "Niečo nefunguje alebo sa správa inak, než by malo. / Something doesn't work or behaves unexpectedly."
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **SK:** Najrýchlejšie: v Imprime *Pomocník → Nahlásiť problém…* – vyplní verziu, systém a nastavenia za teba.
+        **EN:** Quickest: in Imprimo *Help → Report a problem…* – it fills in the version, system and settings for you.
+  - type: textarea
+    id: description
+    attributes:
+      label: "Čo si robil a čo sa stalo? / What did you do and what happened?"
+      description: "Postup krok za krokom a čo si čakal, že sa stane. / Steps, and what you expected instead."
+    validations:
+      required: true
+  - type: textarea
+    id: system
+    attributes:
+      label: "Informácie z Imprima / Information from Imprimo"
+      description: "Verzia, systém, nastavenia (Pomocník → Nahlásiť problém… → Kopírovať). / Version, system, settings (Help → Report a problem… → Copy)."
+      render: text
+  - type: textarea
+    id: files
+    attributes:
+      label: "PDF alebo snímka obrazovky / PDF or screenshot"
+      description: "Ak sa problém týka konkrétneho PDF a nie je dôverné, priložte ho (pretiahnite sem). / If it's about a particular PDF that isn't confidential, attach it (drag it here)."

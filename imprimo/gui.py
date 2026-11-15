@@ -1795,6 +1795,10 @@ class MainWindow(QMainWindow):
         a.setMenuRole(QAction.NoRole)
         a.triggered.connect(lambda: self._about().show_license())
         menu.addAction(a)
+        a = QAction(t("report_action"), self)
+        a.setMenuRole(QAction.NoRole)
+        a.triggered.connect(self.show_report)
+        menu.addAction(a)
         a = QAction(t("github_action"), self)
         a.setMenuRole(QAction.NoRole)
         a.triggered.connect(lambda: QDesktopServices.openUrl(QUrl(REPO_URL)))
@@ -1842,6 +1846,10 @@ class MainWindow(QMainWindow):
     def _about(self):
         from .about import AboutDialog
         return AboutDialog(self)
+
+    def show_report(self):
+        from .report_dialog import ReportDialog
+        ReportDialog(self).exec()
 
     def show_about(self):
         self._about().exec()
@@ -3299,7 +3307,7 @@ def _excepthook(etype, value, tb):
     if sys.stderr:
         sys.stderr.write(text)
     try:
-        QMessageBox.critical(None, APP_NAME, text[-2000:])
+        QMessageBox.critical(None, APP_NAME, text[-2000:] + "\n\n" + t("report_after_crash"))
     except Exception:
         pass
 

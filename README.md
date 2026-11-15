@@ -190,6 +190,7 @@ imprimo/
   examples_dialog.py     Help → Sample files (lessons in examples/)
   gui.py                 user interface (PySide6)
   about.py               About dialog (licence, versions)
+  report_dialog.py       Help → Report a problem (system info, prefilled GitHub issue)
   spots_dialog.py        Spot colours window
   preview.py             cached page bitmaps and sheet composition for the preview
   splash.py              QApplication, icon, splash screen, macOS app name
@@ -250,6 +251,12 @@ It writes `imprimo.ico` (Windows, 16–256 px; 16–24 px use a simplified targe
 - No colour conversion or transparency flattening.
 - Preflight doesn't replace a certified one (Acrobat, pdfToolbox).
 - Annotations and form fields are not carried over.
+
+## Reporting problems
+
+**Help → Report a problem…** adds the version, system, imposition settings and the last error record to your
+description; copy it or open a prefilled [GitHub issue](https://github.com/imprimo-imposition/imprimo/issues/new/choose).
+Nothing is sent automatically. If the problem is about a particular PDF that isn't confidential, attach it.
 
 ## How Imprimo is made
 
