@@ -1117,6 +1117,18 @@ def guess_kind(path, spots=()):
     return "varnish"
 
 
+def _sig_desc(sizes):
+    """[16, 16, 16, 8] → “3 × 16 + 8”."""
+    out, i = [], 0
+    while i < len(sizes):
+        j = i
+        while j < len(sizes) and sizes[j] == sizes[i]:
+            j += 1
+        out.append(f"{j - i} × {sizes[i]}" if j - i > 1 else str(sizes[i]))
+        i = j
+    return " + ".join(out)
+
+
 def mm_spin(val, lo=0.0, hi=2000.0, step=0.5, dec=1, suffix=" mm"):
     sp = QDoubleSpinBox()
     sp.setRange(lo, hi)
@@ -1369,6 +1381,34 @@ class MainWindow(QMainWindow):
         f.addRow(t("blanks"), self.blanks)
         col.addWidget(self.booklet_box)
 
+        # Signatures (perfect / sewn binding)
+        self.sig_box = Section(t("sig_group"), "signatures")
+        f = QFormLayout(self.sig_box.body)
+        self.sig_pages = QComboBox()
+        self.sig_pages.addItem(t("sig_auto"), 0)
+        for k in (4, 8, 16, 32):
+            self.sig_pages.addItem(str(k), k)
+        self.sig_pages.setToolTip(t("sig_pages_tip"))
+        self.binding = QComboBox()
+        self.binding.addItem(t("binding_perfect"), "perfect")
+        self.binding.addItem(t("binding_sewn"), "sewn")
+        self.milling = mm_spin(3, 0, 10, 0.5, 1)
+        self.milling.setToolTip(t("milling_tip"))
+        self.collation = QCheckBox(t("collation"))
+        self.collation.setToolTip(t("collation_tip"))
+        self.sig_blanks = QComboBox()
+        self.sig_blanks.addItem(t("blanks_end"), "end")
+        self.sig_blanks.addItem(t("blanks_before"), "before_back")
+        f.addRow(t("sig_pages"), self.sig_pages)
+        f.addRow(hint_label(t("sig_pages_tip")))
+        f.addRow(t("binding"), self.binding)
+        f.addRow(t("milling"), self.milling)
+        f.addRow(self.collation)
+        f.addRow(t("blanks"), self.sig_blanks)
+        f.addRow(hint_label(t("sig_hint")))
+        self.sig_form = f
+        col.addWidget(self.sig_box)
+
         # Poster in pieces
         self.tile_box = Section(t("tile_group"), "tile")
         f = QFormLayout(self.tile_box.body)
@@ -1515,8 +1555,10 @@ class MainWindow(QMainWindow):
         self.out_print = QCheckBox(t("out_print"))
         self.out_layers = QCheckBox(t("out_layers"))
         self.out_combined = QCheckBox(t("out_combined"))
+        self.out_dummy = QCheckBox(t("out_dummy"))
+        self.out_dummy.setToolTip(t("out_dummy_tip"))
         f.addRow(QLabel(f"<b>{t('out_label')}</b>"))
-        for w in (self.out_print, self.out_layers, self.out_combined):
+        for w in (self.out_print, self.out_layers, self.out_combined, self.out_dummy):
             f.addRow(w)
         self.preflight = QLabel()
         self.preflight.setWordWrap(True)
@@ -1641,14 +1683,17 @@ class MainWindow(QMainWindow):
 
         # signals → recalculation
         for w in (self.mode, self.orientation, self.rotation, self.blanks,
-                  self.flip, self.back_or, self.crease, self.crease_dir, self.bleed_fill):
+                  self.flip, self.back_or, self.crease, self.crease_dir, self.bleed_fill,
+                  self.sig_pages, self.binding, self.sig_blanks):
             w.currentIndexChanged.connect(self.changed)
         for w in (self.sheet_w, self.sheet_h, self.margin, self.cols, self.rows,
                   self.gutter_x, self.gutter_y, self.creep, self.bleed, self.assume,
-                  self.mark_off, self.mark_len, self.mark_w, self.tile_scale, self.tile_overlap):
+                  self.mark_off, self.mark_len, self.mark_w, self.tile_scale, self.tile_overlap,
+                  self.milling):
             w.valueChanged.connect(self.changed)
         for w in (self.duplex, self.crop, self.reg, self.slug, self.manual_rb, self.crease_marks,
-                  self.out_print, self.out_layers, self.out_combined):
+                  self.out_print, self.out_layers, self.out_combined, self.collation,
+                  self.out_dummy):
             w.toggled.connect(self.changed)
         self._rebuild_layer_rows()
         self._rebuild_job_rows()
@@ -1810,7 +1855,13 @@ class MainWindow(QMainWindow):
             reg_marks=self.reg.isChecked(),
             slug=self.slug.isChecked(),
             creep=self.creep.value(),
-            blanks=self.blanks.currentData(),
+            blanks=(self.sig_blanks if self.mode.currentData() == "signatures"
+                    else self.blanks).currentData(),
+            sig_pages=self.sig_pages.currentData() or 0,
+            binding=self.binding.currentData() or "perfect",
+            milling=self.milling.value(),
+            collation_marks=self.collation.isChecked(),
+            export_dummy=self.out_dummy.isChecked(),
             page_range=self.range.text(),
             split_spreads=self.split.isChecked(),
             export_print=self.out_print.isChecked(),
@@ -2079,7 +2130,7 @@ class MainWindow(QMainWindow):
 
     def _update_crease_panel(self):
         preset = self.crease.currentData() or "off"
-        booklet = self.mode.currentData() == "booklet"
+        booklet = self.mode.currentData() in ("booklet", "signatures")
         on = preset != "off" and not booklet
         from_pdf = on and preset == "pdf"
         det = self.crease_detected if from_pdf else None
@@ -2187,6 +2238,12 @@ class MainWindow(QMainWindow):
         self.slug.setChecked(s.slug)
         self.creep.setValue(s.creep)
         setc(self.blanks, s.blanks)
+        setc(self.sig_blanks, s.blanks)
+        setc(self.sig_pages, s.sig_pages if s.sig_pages in (4, 8, 16, 32) else 0)
+        setc(self.binding, s.binding)
+        self.milling.setValue(s.milling)
+        self.collation.setChecked(s.collation_marks)
+        self.out_dummy.setChecked(s.export_dummy)
         setc(self.crease, s.crease if s.crease in CREASE_PRESETS else "off")
         setc(self.crease_dir, s.crease_dir)
         self.crease_pos.setText(s.crease_pos if s.crease == "custom" else "")
@@ -2452,7 +2509,7 @@ class MainWindow(QMainWindow):
 
     def _layout_label(self):
         p = self.plan
-        if p is None or self.mode.currentData() == "booklet":
+        if p is None or self.mode.currentData() in ("booklet", "signatures"):
             self.picker_label.setText(t("picker_hint"))
             return
         txt = t("layout_result", c=p.cols, r=p.rows, n=p.per_sheet)
@@ -2462,11 +2519,16 @@ class MainWindow(QMainWindow):
 
     def _update_visibility(self):
         mode = self.mode.currentData()
+        sig = mode == "signatures"
+        self.sig_box.setVisible(sig)
+        self.sig_form.setRowVisible(self.milling, self.binding.currentData() == "perfect")
+        self.out_dummy.setEnabled(mode in ("booklet", "signatures"))
         booklet = mode == "booklet"
         tile = mode == "tile"
         self.mode_hint.setText(t(f"mode_hint_{mode}"))
-        self.grid_box.setVisible(not booklet and not tile)
+        self.grid_box.setVisible(not booklet and not tile and not sig)
         self.booklet_box.setVisible(booklet)
+        booklet = booklet or sig                 # both: always double-sided, no grid
         gang = mode == "gang"
         self.tile_box.setVisible(tile)
         self.crease_box.setVisible(not tile)
@@ -2663,6 +2725,9 @@ class MainWindow(QMainWindow):
         harky = self._hark(p.n_sheets)
         if s.mode == "booklet":
             head = t("info_booklet", pages=p.n_sheets * 4, sheets=p.n_sheets, harky=harky)
+        elif s.mode == "signatures":
+            head = t("info_signatures", pages=p.pages, desc=_sig_desc(p.signatures),
+                     sheets=p.n_sheets, harky=harky)
         else:
             head = t("info_grid", n=p.per_sheet, c=p.cols, r=p.rows,
                      rot=t("info_rot") if p.rot else "", sheets=p.n_sheets, harky=harky,
@@ -2681,7 +2746,7 @@ class MainWindow(QMainWindow):
 
     def _update_picker(self):
         p = self.plan
-        if p is None or self.mode.currentData() == "booklet" or not p.cols:
+        if p is None or self.mode.currentData() in ("booklet", "signatures") or not p.cols:
             # without a plan show at least an empty grid
             self.picker.set_data(None, (85, 55), (0, 0), (0, 0), (0, 0))
             self._layout_label()
@@ -2976,6 +3041,7 @@ class MainWindow(QMainWindow):
         want_print = s.export_print or not layers
         want_layers = bool(layers) and s.export_layers
         want_combined = bool(layers) and s.export_combined
+        want_dummy = s.export_dummy and s.mode in ("booklet", "signatures")
         if not (want_print or want_layers or want_combined):
             QMessageBox.warning(self, APP_NAME, t("out_none"))
             return
@@ -2991,7 +3057,8 @@ class MainWindow(QMainWindow):
         paths = output_paths(path, [ly for ly, _, _ in layers])
         targets = ([paths["print"]] if want_print else []) + \
                   (paths["layers"] if want_layers else []) + \
-                  ([paths["combined"]] if want_combined else [])
+                  ([paths["combined"]] if want_combined else []) + \
+                  ([paths["dummy"]] if want_dummy else [])
         src_abs = {os.path.abspath(self.path)} | {os.path.abspath(e["layer"].path) for e in self.layers}
         if any(os.path.abspath(p) in src_abs for p in targets):
             QMessageBox.warning(self, APP_NAME, t("no_overwrite"))
@@ -3011,7 +3078,7 @@ class MainWindow(QMainWindow):
                 layers = []                               # layers follow the pages of one PDF
             written = export_outputs(src, self.infos, self.profile, self.plan, s, layers, path,
                                      want_print, want_layers, want_combined,
-                                     filename=os.path.basename(self.path))
+                                     filename=os.path.basename(self.path), want_dummy=want_dummy)
         except Exception as e:
             QApplication.restoreOverrideCursor()
             QMessageBox.critical(self, APP_NAME, t("save_fail", err=e))

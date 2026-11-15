@@ -33,13 +33,15 @@ technically precise and practical. Private notes (not in git): `CLAUDE.local.md`
 ```
 main.py                 entry point (splash first, crash report)
 imprimo/core.py         geometry, PageInfo/analyze (incl. splitting spreads), Settings,
-                        plan (modes repeat/sequential/cutstack/booklet), rendering with
+                        plan (modes repeat/sequential/cutstack/booklet/signatures/tile/gang),
+                        fold dummy, rendering with
                         pikepdf, marks, layers (OCG), PDF/X export
 imprimo/preview.py      fast preview: cached pdfium page bitmaps composed with QPainter,
                         JPEG-downscaled proxies for heavy pages, page number badges
 imprimo/gui.py          MainWindow, SheetView (zoom/pan), OverviewView (all sheets,
                         Space/middle-button hand tool), collapsible sections, LayerRow
 imprimo/crease.py       crease presets/positions (mm on the product), crease line detection
+imprimo/signatures.py   signatures (V2 / sewn): folding schemes by virtual folding, splitting pages
 imprimo/spots.py        spot colour library + aliases, .ase writer (spots_dialog.py = window)
 imprimo/presets.py      job presets: built-ins, user presets (QSettings "job_presets"), .json files
 examples/               lesson PDFs (built by make_examples.py, committed), CITAJ-MA.md + README.md;
@@ -77,7 +79,8 @@ as spreads, PDFs without TrimBox, rotated pages.
 
 ## Plans (not started)
 
-- V2 binding: signatures (folded sections of 8/16/32 pages), collation marks, cover with spine.
+- V2 binding: phase 1 done (signatures 4–32, milling, collation marks, fold dummy); phase 2 cover
+  with spine (calculator, template, imposing); phase 3 lesson 11, preset, website, 0.8.0.
 - Custom splash screen from Maxim (PNG 1200 × 720).
 - Donations: live at https://ko-fi.com/imprimo (PayPal, no Stripe – Maxim donates privately, not
   through his živnosť; never promise anything in return). Later possibly an o. z. (2 % of tax).

@@ -396,6 +396,70 @@ def test_examples():
             assert detect_any(src, analyze(src)).vertical == want
 
 
+def test_signature_schemes():
+    from imprimo.signatures import scheme, split
+    for n in (4, 8, 16, 32):
+        sc = scheme(n)
+        pages = sorted([p.front for p in sc.panels] + [p.back for p in sc.panels])
+        assert pages == list(range(1, n + 1))
+        for b in sc.spine_cols:                 # across a spine fold: n + 1
+            for r in range(sc.rows):
+                assert sc.at(b - 1, r).front + sc.at(b, r).front == n + 1
+        assert max(f for _, _, f in sc.fold_order) == len(sc.folds)
+    # the usual schemes F8-7 and F16-7 (top row upside down)
+    sc = scheme(8)
+    assert [sc.at(c, 1).front for c in range(2)] == [5, 4] and [sc.at(c, 0).front for c in range(2)] == [8, 1]
+    assert all(sc.at(c, 1).rot == 180 and sc.at(c, 0).rot == 0 for c in range(2))
+    sc = scheme(16)
+    assert [sc.at(c, 0).front for c in range(4)] == [4, 13, 16, 1]
+    assert [sc.at(c, 1).front for c in range(4)] == [5, 12, 9, 8]
+    assert sc.spine_cols == [1, 3]
+    assert split(104, 16) == [16] * 6 + [8] and split(12, 32) == [8, 4] and split(4, 16) == [4]
+
+
+def test_signatures_plan():
+    # A5 on SRA3: only 4-page signatures fit; spine milled 3 mm, no crop marks there
+    s = Settings(mode="signatures", sheet_w=320, sheet_h=450, bleed=3, milling=3)
+    p = build_plan(fake(12), s)
+    assert p.signatures == [4, 4, 4] and p.n_sheets == 3 and len(p.sides) == 6
+    assert order(p, 0) == [4, 1] and sorted(order(p, 1)) == [2, 3] and order(p, 2) == [8, 5]
+    a, b = sorted(p.sides[0].items, key=lambda it: it.trim[0])
+    assert abs((b.trim[0] - a.trim[2]) - mm(6)) < 0.01          # 2 × milling
+    spine = p.sides[0].spine_x[0]
+    assert all(abs(x - spine) > mm(3) for x in p.sides[0].cuts_x)
+    assert p.sides[0].collation and p.sides[1].collation is None
+    assert abs((p.sides[0].collation[0] + p.sides[0].collation[2]) / 2 - spine) < 0.01
+    # collation marks step down from one signature to the next
+    assert p.sides[2].collation[3] < p.sides[0].collation[3]
+    # sewn: pages meet at the fold
+    s.binding, s.sig_pages = "sewn", 4
+    a, b = sorted(build_plan(fake(12), s).sides[0].items, key=lambda it: it.trim[0])
+    assert abs(b.trim[0] - a.trim[2]) < 0.01
+    # B2: 16-page signatures, the rest in a smaller one; a forced size that does not fit = error
+    s = Settings(mode="signatures", sheet_w=500, sheet_h=700)
+    p = build_plan(fake(20), s)
+    assert p.signatures == [16, 4] and p.pages == 20
+    s = Settings(mode="signatures", sheet_w=320, sheet_h=450, sig_pages=16)
+    try:
+        build_plan(fake(32), s)
+        assert False, "16 pages A5 must not fit on SRA3"
+    except Exception as e:
+        assert "16" in str(e)
+
+
+def test_signatures_render_dummy():
+    import pikepdf
+    from imprimo.core import render_sources
+    s = Settings(mode="signatures", sheet_w=500, sheet_h=700)
+    p = build_plan(fake(16), s)
+    nos = sorted(it.no for sd in p.sides for it in sd.items)
+    assert nos == list(range(1, 17))
+    out = render_sources([], p, s, dummy=True, label="dummy")
+    assert len(out.pages) == len(p.sides)
+    first = out.pages[0].Contents.read_bytes().decode("latin-1")
+    assert "0 0 0 1 k" in first and "(1) Tj" in first
+
+
 if __name__ == "__main__":
     for k, f in list(globals().items()):
         if k.startswith("test_"):

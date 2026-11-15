@@ -53,7 +53,7 @@ SHEET_PRESETS = {
     "B2 (500 × 707)": (500, 707),
 }
 
-MODES = ("repeat", "sequential", "cutstack", "booklet", "tile", "gang")
+MODES = ("repeat", "sequential", "cutstack", "booklet", "signatures", "tile", "gang")
 
 
 class ImposeError(Exception):
@@ -100,6 +100,11 @@ class Settings:
     crease_marks: bool = True        # crease marks at the sheet edge (manual creaser with a stop)
     tile_scale: float = 100.0        # tile (poster) mode: scale of the page in %
     tile_overlap: float = 10.0       # tile mode: mm each piece overlaps the next one (glue strip)
+    sig_pages: int = 0               # signatures: pages per signature 4 | 8 | 16 | 32, 0 = auto
+    binding: str = "perfect"         # signatures: perfect (V2, spine milled) | sewn (no milling)
+    milling: float = 3.0             # perfect binding: mm milled off the spine of every page
+    collation_marks: bool = True     # signatures: black step mark on the spine of every signature
+    export_dummy: bool = False       # booklet / signatures: also a fold dummy with page numbers
 
 
 # --------------------------------------------------------------------------
@@ -337,6 +342,7 @@ class Item:
     trim: tuple         # trim on the sheet
     W: float
     H: float
+    no: int | None = None   # booklet / signatures: page number in the finished book
 
 
 @dataclass
@@ -351,6 +357,10 @@ class Side:
     folds_y: list
     crease_segs: list = field(default_factory=list)   # crease lines on this side (sheet coords)
     tile: tuple | None = None       # poster piece: (row, column, rows, columns)
+    spine_x: list = field(default_factory=list)     # signatures: spine folds (sheet x)
+    fold_nums: list = field(default_factory=list)   # signatures: [(axis, position, fold number)]
+    collation: tuple | None = None  # signatures: collation mark rectangle (sheet coords)
+    note: str = ""                  # extra text for the slug line
 
     @property
     def creases_x(self):
@@ -381,6 +391,8 @@ class Plan:
     gang: list = field(default_factory=list)        # gang run: [(name, qty, slots, made)]
     gang_owner: list = field(default_factory=list)  # gang run: job index of every slot
     area_used: float = 0.0                          # poster: printed poster area (all pages)
+    pages: int = 0                                  # signatures: pages in the book (with blanks)
+    signatures: list = field(default_factory=list)  # signatures: pages of every signature
 
     @property
     def utilization(self):
@@ -391,6 +403,8 @@ class Plan:
     def summary(self, s: Settings) -> str:
         if s.mode == "booklet":
             core = t("sum_booklet", n=self.n_sheets * 4)
+        elif s.mode == "signatures":
+            core = t("sum_signatures", n=self.pages, k=self.per_sheet * 2)
         elif s.mode == "tile":
             core = t("sum_tile", c=self.cols, r=self.rows, pct=f"{s.tile_scale:g}")
         elif s.mode == "gang":
@@ -506,7 +520,8 @@ def _sheet_sides(sheet_no, entries, SW, SH, s: Settings, bleed, duplex,
         clip = (rect[0] - L, rect[1] - B, rect[2] + R, rect[3] + T)
         P = cell.matrix
         front.append(Item(fp, P, clip, rect, cell.W, cell.H))
-        spec = crease_spec(s, cell.W, cell.H) if s.mode != "booklet" and fp is not None else None
+        spec = (crease_spec(s, cell.W, cell.H)
+                if s.mode not in ("booklet", "signatures") and fp is not None else None)
         if spec is not None:
             for a, b in card_segments(spec, cell.W, cell.H):
                 creases.append((apply(P, *a), apply(P, *b)))
@@ -577,6 +592,8 @@ def build_plan(infos: list[PageInfo], s: Settings, gang: list | None = None) -> 
 
     if s.mode == "booklet":
         plan = _plan_booklet(pages, W, H, s, bleed)
+    elif s.mode == "signatures":
+        plan = _plan_signatures(pages, W, H, s, bleed)
     elif s.mode == "tile":
         plan = _plan_tile(pages, W, H, s, bleed)
     elif s.mode == "gang":
@@ -859,14 +876,151 @@ def _plan_booklet(pages, W, H, s: Settings, bleed) -> Plan:
         right = Cell(x0 + W, y0, 0, W, H, dx=-d)
         entries = [(left, padded[P - 1 - 2 * k], padded[P - 2 - 2 * k]),
                    (right, padded[2 * k], padded[2 * k + 1])]
-        sides += _sheet_sides(k + 1, entries, SW, SH, s, bleed, True, FLIP_BOOK,
-                              folds_x=[x0 + W])
+        new = _sheet_sides(k + 1, entries, SW, SH, s, bleed, True, FLIP_BOOK,
+                           folds_x=[x0 + W])
+        for side, nos in zip(new, ((P - 2 * k, 2 * k + 1), (P - 1 - 2 * k, 2 * k + 2))):
+            for it, no in zip(side.items, nos):
+                it.no = no
+        sides += new
     plan = Plan(SW, SH, sides, S, 2, W, H, 2, 1, 0, blanks)
     if blanks:
         key = "warn_blanks_before" if s.blanks == "before_back" else "warn_blanks_end"
         plan.warnings.append(t(key, n=blanks))
     if crp > bleed + EPS:
         plan.warnings.append(t("warn_creep"))
+    return plan
+
+
+# --------------------------------------------------------------------------
+# Signatures (perfect binding V2, sewn binding): folded sheets gathered one after another
+
+COLLATION_W = 4.0        # mm, collation mark width (centred on the spine fold)
+COLLATION_H = 8.0        # mm, its height = the step between two signatures
+COLLATION_TOP = 5.0      # mm from the head to the first mark
+
+
+def _sig_geometry(sc, W, H, bleed, mill):
+    """Lower-left corners of the panels (relative to the block) and the block size."""
+    def gaps(n, spine):
+        return [0.0] + [2 * mill if b in spine else 2 * bleed for b in range(1, n)]
+    gx, gy = gaps(sc.cols, sc.spine_cols), gaps(sc.rows, ())
+    xs, ys, x, y = [], [], 0.0, 0.0
+    for c in range(sc.cols):
+        x += gx[c]
+        xs.append(x)
+        x += W
+    for r in range(sc.rows):
+        y += gy[r]
+        ys.append(y)
+        y += H
+    return xs, ys, x, y, gx, gy
+
+
+def _plan_signatures(pages, W, H, s: Settings, bleed) -> Plan:
+    from .signatures import SIZES, scheme, split
+    P0 = len(pages)
+    P = max(4, math.ceil(P0 / 4) * 4)
+    blanks = P - P0
+    if s.blanks == "before_back" and P0 > 1:
+        padded = pages[:-1] + [None] * blanks + [pages[-1]]
+    else:
+        padded = pages + [None] * blanks
+    m = mm(max(0, s.margin))
+    mill = mm(max(0.0, s.milling)) if s.binding == "perfect" else 0.0
+
+    def sheet_for(k):
+        sc = scheme(k)
+        _, _, bw, bh, _, _ = _sig_geometry(sc, W, H, bleed, mill)
+        if s.fit_sheet:
+            return bw + 2 * m, bh + 2 * m
+        for sw, sh in _sheet_candidates(s):
+            if bw <= sw - 2 * m + EPS and bh <= sh - 2 * m + EPS:
+                return sw, sh
+        return None
+
+    if s.sig_pages in SIZES:
+        size = s.sig_pages
+        if sheet_for(size) is None:
+            fits = [k for k in SIZES if k < size and sheet_for(k)]
+            raise ImposeError(t("err_sig_size", k=size, sw=f"{s.sheet_w:g}", sh=f"{s.sheet_h:g}",
+                                fits=fits[0] if fits else "–"))
+    else:                                   # auto: the biggest that fits and isn't mostly empty
+        size = next((k for k in SIZES if k <= P and sheet_for(k)), None)
+        if size is None:
+            raise ImposeError(t("err_sig_none", w=f"{to_mm(W):.0f}", h=f"{to_mm(H):.0f}",
+                                sw=f"{s.sheet_w:g}", sh=f"{s.sheet_h:g}"))
+    sizes = split(P, size)
+    size = sizes[0]                         # a forced size bigger than the book shrinks
+    SW, SH = sheet_for(size)
+
+    portrait = SW <= SH
+    mirror_x = (s.duplex_flip == "long") == portrait
+    sides, start = [], 0
+    main = scheme(size)
+    for no, k in enumerate(sizes, 1):
+        sc = scheme(k)
+        xs, ys, bw, bh, gx, gy = _sig_geometry(sc, W, H, bleed, mill)
+        x0, y0 = (SW - bw) / 2, (SH - bh) / 2
+        entries, nos = [], []
+        for pn in sc.panels:
+            cell = Cell(x0 + xs[pn.col], y0 + ys[pn.row], pn.rot, W, H)
+            entries.append((cell, padded[start + pn.front - 1], padded[start + pn.back - 1]))
+            nos.append((start + pn.front, start + pn.back))
+        fold_x = {b: x0 + xs[b] - gx[b] / 2 for b in range(1, sc.cols)}
+        fold_y = {b: y0 + ys[b] - gy[b] / 2 for b in range(1, sc.rows)}
+        new = _sheet_sides(no, entries, SW, SH, s, bleed, True, FLIP_BOOK,
+                           folds_x=sorted(fold_x.values()), folds_y=sorted(fold_y.values()))
+        spine = [fold_x[b] for b in sc.spine_cols]
+        nums = [(ax, fold_x[b] if ax == "x" else fold_y[b], n) for ax, b, n in sc.fold_order]
+
+        # collation mark: on the outer spine fold, between the first and the last page
+        first = next(i for i, pn in enumerate(sc.panels) if pn.front == 1)
+        pn1 = sc.panels[first]
+        sx = next(fold_x[b] for b in sc.spine_cols if b in (pn1.col, pn1.col + 1)
+                  and {sc.at(b - 1, pn1.row).front, sc.at(b, pn1.row).front} == {1, k})
+        cy0, cy1 = y0 + ys[pn1.row], y0 + ys[pn1.row] + H
+        step, top = mm(COLLATION_H), mm(COLLATION_TOP)
+        slots = max(1, int((H - 2 * top) // step))
+        d = top + ((no - 1) % slots) * step
+        if pn1.rot == 0:                    # head at the top of the panel
+            ya, yb = cy1 - d - step, cy1 - d
+        else:
+            ya, yb = cy0 + d, cy0 + d + step
+        cw = mm(COLLATION_W) / 2
+        collation = (sx - cw, ya, sx + cw, yb)
+
+        note = t("slug_signature", no=no, n=len(sizes), a=start + 1, b=start + k)
+        for side in new:
+            back = side.is_back
+            if back and mirror_x:
+                fx = lambda v: SW - v
+                fy = lambda v: v
+            elif back:
+                fx = lambda v: v
+                fy = lambda v: SH - v
+            else:
+                fx = fy = lambda v: v
+            side.spine_x = sorted(fx(v) for v in spine)
+            side.fold_nums = [(ax, fx(v) if ax == "x" else fy(v), n) for ax, v, n in nums]
+            # the milled strip at the spine is no cut
+            side.cuts_x = [x for x in side.cuts_x
+                           if not any(abs(x - f) <= mill + EPS for f in side.spine_x)]
+            side.collation = collation if not back and s.collation_marks else None
+            side.note = note
+            for it, (a, b) in zip(side.items, nos):
+                it.no = b if back else a
+        sides += new
+        start += k
+
+    plan = Plan(SW, SH, sides, len(sizes), size // 2, W, H, main.cols, main.rows, 0, blanks)
+    plan.pages = P
+    plan.signatures = sizes
+    if blanks:
+        key = "warn_blanks_before" if s.blanks == "before_back" else "warn_blanks_end"
+        plan.warnings.append(t(key, n=blanks))
+    if len(set(sizes)) > 1:
+        rest = " + ".join(str(k) for k in sizes if k != size)
+        plan.warnings.append(t("info_sig_rest", rest=rest))
     return plan
 
 
@@ -1019,6 +1173,28 @@ def _crease_labels(side: Side, s: Settings, SW, SH, bleed):
     return out
 
 
+def _fold_labels(side: Side, s: Settings, SW, SH, bleed):
+    """Signatures: the fold number (1, 2, 3…) at the outer end of every fold mark."""
+    size = 6.0
+    bx0, by0, bx1, by1 = side.block
+    off = max(mm(s.mark_offset), bleed)
+    L = mm(s.mark_length)
+    out = []
+
+    def put(x, y, n):
+        if 0 <= x <= SW - size and 0 <= y <= SH - size:
+            out.append(f"BT /F1 {_n(size)} Tf {_n(x)} {_n(y)} Td ({n}) Tj ET")
+
+    for ax, v, n in side.fold_nums:
+        if ax == "x":
+            put(v + 1.2, by1 + off + L - size, n)
+            put(v + 1.2, by0 - off - L, n)
+        else:
+            put(bx0 - off - L, v + 1.2, n)
+            put(bx1 + off + L - size * 0.6, v + 1.2, n)
+    return out
+
+
 def crease_summary(s: Settings, W: float, H: float) -> str:
     """“Big: 99 / 198 mm zľava” – for the info line and the panel."""
     spec = crease_spec(s, W, H)
@@ -1042,6 +1218,8 @@ def _slug(side: Side, plan: Plan, s: Settings, SW, SH, bleed, filename, stamp, l
     if side.tile:
         r, c, rows, cols = side.tile
         label = t("slug_tile", name=tile_name(r, c), rows=rows, cols=cols, ov=f"{s.tile_overlap:g}")
+    if side.note:
+        label = f"{side.note} {label}"
     if extra_label:
         label = f"{label} | {extra_label}"
     crease = crease_summary(s, plan.page_w, plan.page_h) if side.crease_segs else ""
@@ -1120,6 +1298,28 @@ def layer_source(layer: Layer, pdf: pikepdf.Pdf, infos, key, ocg=None, alpha=Non
     return Source(pdf, infos, pm, ocg=ocg, overprint=layer.overprint, alpha=alpha, key=key)
 
 
+def _dummy_ops(side: Side):
+    """Fold dummy: a frame, a big page number and a head bar for every page."""
+    ops = ["q 0.6 w 0 0 0 1 K"]
+    for it in side.items:
+        if it.no is None:
+            continue
+        W, H = it.W, it.H
+        txt = font_encode(str(it.no)).decode("latin-1")
+        size = min(W, H) * 0.42
+        tw = size * 0.55 * len(str(it.no))
+        m = " ".join(_n(v) for v in it.matrix)
+        ops.append(f"q {m} cm 0 0 {_n(W)} {_n(H)} re S")
+        bar = min(W, H) * 0.25           # the head: a bar under the top edge
+        ops.append(f"0 0 0 0.35 k {_n((W - bar) / 2)} {_n(H - mm(6))} {_n(bar)} {_n(mm(2))} re f")
+        ty = (H - size * 0.7) / 2
+        ops.append(f"0 0 0 1 k BT /F1 {_n(size)} Tf {_n((W - tw) / 2)} {_n(ty)} Td ({txt}) Tj ET")
+        # underlined, so an upside-down 6 is never read as 9
+        ops.append(f"{_n((W - tw) / 2)} {_n(ty - size * 0.12)} {_n(tw)} {_n(size * 0.05)} re f Q")
+    ops.append("Q")
+    return ops
+
+
 def render(src: pikepdf.Pdf, infos: list[PageInfo], plan: Plan, s: Settings,
            side_indices=None, guides=False, filename="", extra=None) -> pikepdf.Pdf:
     """Print only (plus optional extra sources, e.g. layers in the preview)."""
@@ -1128,9 +1328,11 @@ def render(src: pikepdf.Pdf, infos: list[PageInfo], plan: Plan, s: Settings,
 
 
 def render_sources(sources: list[Source], plan: Plan, s: Settings, side_indices=None,
-                   guides=False, filename="", label=None, layered=False) -> pikepdf.Pdf:
+                   guides=False, filename="", label=None, layered=False,
+                   dummy=False) -> pikepdf.Pdf:
     """Draw the given sources in order onto the sheets of `plan`.
-    layered=True wraps each source with an `ocg` name into its own PDF layer."""
+    layered=True wraps each source with an `ocg` name into its own PDF layer.
+    dummy=True draws big page numbers instead of the pages (a fold dummy)."""
     out = pikepdf.new()
     SW, SH = plan.sheet_w, plan.sheet_h
     bleed = mm(max(0.0, s.bleed))
@@ -1153,7 +1355,8 @@ def render_sources(sources: list[Source], plan: Plan, s: Settings, side_indices=
                                       C1=[1, 1, 1, 1], N=1))
     cs_reg = out.make_indirect(Array([Name.Separation, Name("/All"), Name.DeviceCMYK, fn]))
     has_creases = s.crease_marks and any(sd.crease_segs for sd in plan.sides)
-    font = make_font(out) if (s.slug or has_creases) else None
+    has_folds = s.crop_marks and any(sd.fold_nums for sd in plan.sides)
+    font = make_font(out) if (s.slug or has_creases or has_folds or dummy) else None
 
     gstates = Dictionary()
     if any(src.overprint for src in sources):
@@ -1219,6 +1422,10 @@ def render_sources(sources: list[Source], plan: Plan, s: Settings, side_indices=
             else:
                 ops += body
 
+        if dummy:
+            ops += _dummy_ops(side)
+        if side.collation and (label is None or dummy):     # print only, not on layers
+            ops.append(f"q 0 0 0 1 k {_re(side.collation)} f Q")
         mark_ops = _marks(side, s, SW, SH, bleed)
         if mark_ops:
             ops.append(f"q /CSReg CS 1 SCN {_n(s.mark_weight)} w 0 J")
@@ -1228,6 +1435,12 @@ def render_sources(sources: list[Source], plan: Plan, s: Settings, side_indices=
             ops.append("q /CSReg CS 1 SCN /CSReg cs 0.35 scn")
             ops += tile_map_ops(side, SW, SH, s, bleed)
             ops.append("Q")
+        if font is not None and s.crop_marks and side.fold_nums:
+            lbl = _fold_labels(side, s, SW, SH, bleed)
+            if lbl:
+                ops.append("q /CSReg cs 1 scn")
+                ops += lbl
+                ops.append("Q")
         if font is not None and s.crease_marks and side.crease_segs:
             lbl = _crease_labels(side, s, SW, SH, bleed)
             if lbl:
@@ -1466,7 +1679,8 @@ def output_paths(base_path: str, layers: list[Layer]):
             sfx, n = f"{ly.suffix}-{n}", n + 1
         used.add(sfx)
         layer_paths.append(f"{stem}_{sfx}{ext}")
-    return {"print": stem + ext, "layers": layer_paths, "combined": f"{stem}_layers{ext}"}
+    return {"print": stem + ext, "layers": layer_paths, "combined": f"{stem}_layers{ext}",
+            "dummy": f"{stem}_dummy{ext}"}
 
 
 def layer_display_name(ly: Layer) -> str:
@@ -1474,7 +1688,8 @@ def layer_display_name(ly: Layer) -> str:
 
 
 def export_outputs(src, infos, prof, plan, s: Settings, layers: list, base_path: str,
-                   want_print=True, want_layers=True, want_combined=False, filename=""):
+                   want_print=True, want_layers=True, want_combined=False, filename="",
+                   want_dummy=False):
     """Write the selected outputs. `layers` = [(Layer, pikepdf.Pdf, infos)].
     Returns the list of written paths."""
     paths = output_paths(base_path, [ly for ly, _, _ in layers])
@@ -1498,6 +1713,10 @@ def export_outputs(src, infos, prof, plan, s: Settings, layers: list, base_path:
         srcs.append(Source(src, infos, ocg=t("layer_print")))
         srcs += [layer_source(ly, p, i, key=f"A{k}", ocg=layer_display_name(ly)) for k, (ly, p, i) in enumerate(above)]
         save(render_sources(srcs, plan, s, filename=filename, layered=layered), paths["combined"])
+    if want_dummy:
+        out = render_sources([], plan, s, filename=filename, label=t("dummy_label"), dummy=True)
+        out.save(paths["dummy"])        # a test print only: no PDF/X
+        written.append(paths["dummy"])
     return written
 
 

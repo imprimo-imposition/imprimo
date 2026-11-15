@@ -264,6 +264,51 @@ def make_crease_samples():
         pdf.save(q)
 
 
+def make_book(name, w_mm, h_mm, n):
+    """A book for signatures (V2): big page numbers, the head, the spine side and a
+    tab on the fore-edge that steps down page by page – easy to check after folding."""
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    pdfmetrics.registerFont(TTFont("DejaVu", os.path.join(ASSETS, "DejaVuSansCondensed.ttf")))
+    p = os.path.join(OUT, name)
+    w, h, b = w_mm*mm, h_mm*mm, 3*mm
+    c = canvas.Canvas(p, pagesize=(w + 2*b, h + 2*b))
+    k = h_mm / 210
+    for i in range(1, n + 1):
+        c.setFillColor(CMYKColor(0.04, 0, 0.02, 0))
+        c.rect(0, 0, w + 2*b, h + 2*b, stroke=0, fill=1)
+        left_spine = i % 2 == 1                       # odd = right-hand page, spine on its left
+        # spine strip (into the bleed, so milling and gaps are visible)
+        c.setFillColor(CMYKColor(0.7, 0.1, 0, 0))
+        sx = 0 if left_spine else b + w - 4*mm
+        c.rect(sx, 0, b + 4*mm, h + 2*b, stroke=0, fill=1)
+        # fore-edge tab, a step lower on every page
+        steps = 12
+        th = h / steps
+        ty = b + h - th * (1 + (i - 1) % steps)
+        c.setFillColor(CMYKColor(0, 0.8, 0.9, 0))
+        tx = b + w - 6*mm if left_spine else 0
+        c.rect(tx, ty, b + 6*mm, th, stroke=0, fill=1)
+        # head
+        c.setFillColor(CMYKColor(0, 0, 0, 1))
+        c.setFont("DejaVu", 12 * k)
+        c.drawCentredString(b + w/2, b + h - 12*mm*k, "▲ HLAVA / HEAD")
+        c.setFont("DejaVu", 9 * k)
+        c.drawCentredString(b + w/2, b + h - 19*mm*k, "Vzorový zborník · Imprimo")
+        # page number
+        c.setFont("DejaVu", 150 * k)
+        c.drawCentredString(b + w/2, b + h/2 - 50*k, str(i))
+        c.setLineWidth(3 * k)
+        c.line(b + w/2 - 30*mm*k, b + h/2 - 62*k, b + w/2 + 30*mm*k, b + h/2 - 62*k)
+        c.setFont("DejaVu", 10 * k)
+        side = "chrbát vľavo ◀" if left_spine else "▶ chrbát vpravo"
+        c.drawCentredString(b + w/2, b + h/2 - 90*k, f"strana {i} z {n} · {side}")
+        c.drawCentredString(b + w/2, b + 10*mm*k, "päta / foot")
+        c.showPage()
+    c.save()
+    boxes(p, 3)
+
+
 if __name__ == "__main__":
     make_cards()
     make_booklet(10)
@@ -273,4 +318,6 @@ if __name__ == "__main__":
     make_layer_samples()
     make_crease_samples()
     make_no_bleed()
+    make_book("zbornik_A5_36_stran.pdf", 148, 210, 36)
+    make_book("kniha_A6_24_stran.pdf", 105, 148, 24)
     print(sorted(os.listdir(OUT)))
