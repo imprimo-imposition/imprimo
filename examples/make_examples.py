@@ -413,8 +413,19 @@ def lesson_11():
     d.save()
 
 
+# Lessons whose PDFs were redesigned by hand (Affinity, Illustrator… – see ZADANIE.md):
+# the script no longer overwrites them. Add a lesson number when its new PDFs arrive.
+DESIGNED = {"01"}
+
+
 if __name__ == "__main__":
+    import sys
+    force = "--all" in sys.argv          # rebuild even the designed ones (old generated look)
     print("Imprimo – vzorové súbory:")
     for f in (lesson_01, lesson_02, lesson_03, lesson_04, lesson_05, lesson_06, lesson_07,
               lesson_08, lesson_09, lesson_10, lesson_11):
+        num = f.__name__[-2:]
+        if num in DESIGNED and not force:
+            print(f"   {num}: navrhnuté ručne – preskočené (--all ich prepíše)")
+            continue
         f()

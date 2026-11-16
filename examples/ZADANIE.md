@@ -56,6 +56,6 @@ Preflight v Imprime ich má nájsť (lekcia je o hľadaní chýb):
 1. Súbory s rovnakými názvami dať do priečinka `examples/` (alebo poslať).
 2. Spustiť testy: `python tests/test_core.py` – test `test_examples` overí, že lekcie 01–07 a 09–11
    prejdú preflightom, 08 nie, a že sa bigy nájdu na správnych miestach.
-3. `make_examples.py` upraviť tak, aby nahradené súbory neprepisoval.
+3. Číslo lekcie pridať do `DESIGNED` v `make_examples.py` – skript ju potom neprepíše (hotové: 01).
 4. Nové snímky pre web: `tools_web_screenshots.py` (návod je na začiatku skriptu).
 5. Ak sa niečo v lekcii zmenilo (texty, farby), upraviť `CITAJ-MA.md` a `README.md`.
