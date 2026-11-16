@@ -551,6 +551,22 @@ def test_page_size_label():
     assert page_size_label(mm(99), mm(210)) == "DL" and page_size_label(mm(90), mm(50)) == "90×50"
 
 
+def test_updates():
+    import json, tempfile
+    from imprimo import updates
+    assert updates.is_newer("0.8.1", "0.8.0") and updates.is_newer("0.10.0", "0.9.9")
+    assert not updates.is_newer("0.8.0", "0.8.0") and not updates.is_newer("v0.7.9", "0.8.0")
+    info = {"version": "9.0.0", "downloads": {"win": "W", "mac": "M", "linux": "L"},
+            "notes": {"sk": ["novinka"], "en": ["news"]}}
+    assert updates.download_url(info) in ("W", "M", "L")
+    assert updates.notes(info, "sk") == ["novinka"] and updates.notes(info, "de") == ["news"]
+    if updates._curl():                    # the fallback used by the packaged app
+        p = os.path.join(tempfile.mkdtemp(), "latest.json")
+        with open(p, "w") as f:
+            json.dump(info, f)
+        assert json.loads(updates._via_curl("file://" + p, 5))["version"] == "9.0.0"
+
+
 if __name__ == "__main__":
     for k, f in list(globals().items()):
         if k.startswith("test_"):

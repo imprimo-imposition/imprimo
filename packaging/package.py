@@ -202,9 +202,18 @@ def main():
         latest = {"version": V, "downloads": {
             "win": base_url + f"Imprimo-{V}-windows.zip",
             "mac": base_url + f"Imprimo-{V}-macOS.zip",
-            "linux": base_url + f"Imprimo-{V}-linux-x86_64.zip"}}
+            "linux": base_url + f"Imprimo-{V}-linux-x86_64.zip"},
+            "page": f"https://github.com/imprimo-imposition/imprimo/releases/tag/v{V}"}
+        # what's new, shown by Help → Check for updates: packaging/notes/X.Y.Z.json
+        # = {"sk": ["…", …], "en": ["…", …]}
+        notes_file = os.path.join(ROOT, "packaging", "notes", f"{V}.json")
+        if os.path.exists(notes_file):
+            with open(notes_file, encoding="utf-8") as f:
+                latest["notes"] = json.load(f)
+        else:
+            print(f"note: no {os.path.relpath(notes_file, ROOT)} – the update dialog shows no list of changes")
         with open(os.path.join(ROOT, "docs", "latest.json"), "w", encoding="utf-8") as f:
-            json.dump(latest, f, indent=2)
+            json.dump(latest, f, indent=2, ensure_ascii=False)
             f.write("\n")
         print("website downloads → docs/latest.json")
 

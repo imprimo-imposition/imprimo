@@ -11,7 +11,8 @@ from collections import OrderedDict
 
 import pikepdf
 import pypdfium2 as pdfium
-from PySide6.QtCore import QEvent, QLocale, QPointF, QRectF, QSettings, Qt, QTimer, QUrl, Signal
+from PySide6.QtCore import (QEvent, QLocale, QObject, QPointF, QRectF, QSettings, Qt, QTimer, QUrl,
+                            Signal)
 from PySide6.QtGui import (QAction, QActionGroup, QColor, QDesktopServices, QImage,
                            QCursor, QKeySequence, QPainter, QPen, QShortcut)
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QCheckBox, QComboBox, QStackedWidget,
@@ -1194,6 +1195,7 @@ class MainWindow(QMainWindow):
 
         self.timer = QTimer(self, singleShot=True, interval=180)
         self.timer.timeout.connect(self.refresh)
+        QTimer.singleShot(4000, lambda: self.check_updates(auto=True))
 
         # keyboard shortcuts (created once – survive a language switch)
         QShortcut(QKeySequence(Qt.Key_Left), self, activated=lambda: self.step(-1))
@@ -1795,6 +1797,10 @@ class MainWindow(QMainWindow):
         a.setMenuRole(QAction.NoRole)
         a.triggered.connect(lambda: self._about().show_license())
         menu.addAction(a)
+        a = QAction(t("upd_action"), self)
+        a.setMenuRole(QAction.NoRole)
+        a.triggered.connect(lambda: self.check_updates(auto=False))
+        menu.addAction(a)
         a = QAction(t("report_action"), self)
         a.setMenuRole(QAction.NoRole)
         a.triggered.connect(self.show_report)
@@ -1846,6 +1852,90 @@ class MainWindow(QMainWindow):
     def _about(self):
         from .about import AboutDialog
         return AboutDialog(self)
+
+    # ------------------------------------------------------------- updates
+    def check_updates(self, auto=False):
+        """Reads latest.json in a background thread; auto = at start, at most once a day,
+        silent unless there is a newer version the user hasn't skipped."""
+        import datetime
+        import threading
+        from . import updates
+        qs = store()
+        if auto:
+            if not qs.value("updates/auto", True, type=bool):
+                return
+            today = datetime.date.today().isoformat()
+            if qs.value("updates/last", "") == today:
+                return
+            qs.setValue("updates/last", today)
+        relay = _UpdateRelay(self)
+        # a bound method of the window (not a lambda): Qt then queues the result to the
+        # GUI thread – the dialog must never be built in the worker thread
+        relay.done.connect(self._on_update_done)
+        self._upd_relay, self._upd_auto = relay, auto
+        if not auto:
+            self.statusBar().showMessage(t("upd_checking"), 5000)
+
+        def work():
+            try:
+                relay.done.emit(updates.fetch(), None)
+            except Exception as e:
+                relay.done.emit(None, str(e))
+        threading.Thread(target=work, daemon=True).start()
+
+    def _on_update_done(self, info, err):
+        self._update_result(info, err, self._upd_auto)
+
+    def _update_result(self, info, err, auto):
+        from . import __version__, updates
+        qs = store()
+        box = QMessageBox(self)
+        box.setWindowTitle(t("upd_title"))
+        auto_cb = QCheckBox(t("upd_auto"))
+        auto_cb.setChecked(qs.value("updates/auto", True, type=bool))
+        box.setCheckBox(auto_cb)
+        if err or not info or not info.get("version"):
+            if auto:
+                return
+            box.setIcon(QMessageBox.Warning)
+            box.setText(t("upd_failed"))
+            box.setDetailedText(err or "latest.json")
+            web = box.addButton(t("upd_open_web"), QMessageBox.AcceptRole)
+            box.addButton(t("close"), QMessageBox.RejectRole)
+            box.exec()
+            qs.setValue("updates/auto", auto_cb.isChecked())
+            if box.clickedButton() is web:
+                QDesktopServices.openUrl(QUrl(updates.WEBSITE))
+            return
+        latest = str(info["version"])
+        if not updates.is_newer(latest, __version__):
+            if auto:
+                return
+            box.setIcon(QMessageBox.Information)
+            box.setText(t("upd_current", v=__version__))
+            box.addButton(t("close"), QMessageBox.AcceptRole)
+            box.exec()
+            qs.setValue("updates/auto", auto_cb.isChecked())
+            return
+        if auto and qs.value("updates/skipped", "") == latest:
+            return
+        items = updates.notes(info, get_language())
+        more = ""
+        if items:
+            more += "<ul>" + "".join(f"<li>{html_escape(n)}</li>" for n in items) + "</ul>"
+        more += f"<p style='color:gray'>{t('upd_how')}</p>"
+        box.setTextFormat(Qt.RichText)
+        box.setText(t("upd_new", v=latest, cur=__version__))
+        box.setInformativeText(more)              # normal weight under the bold headline
+        dl = box.addButton(t("upd_download"), QMessageBox.AcceptRole)
+        box.addButton(t("upd_later"), QMessageBox.RejectRole)
+        skip = box.addButton(t("upd_skip"), QMessageBox.DestructiveRole) if auto else None
+        box.exec()
+        qs.setValue("updates/auto", auto_cb.isChecked())
+        if box.clickedButton() is dl:
+            QDesktopServices.openUrl(QUrl(updates.download_url(info)))
+        elif skip is not None and box.clickedButton() is skip:
+            qs.setValue("updates/skipped", latest)
 
     def show_report(self):
         from .report_dialog import ReportDialog
@@ -3298,6 +3388,15 @@ def _offer_linux_menu(win):
             store().setValue("linux/menu_declined", True)
     except Exception:
         pass
+
+
+class _UpdateRelay(QObject):
+    """Carries the update check result from its thread to the GUI thread."""
+    done = Signal(object, object)
+
+
+def html_escape(s: str) -> str:
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def _excepthook(etype, value, tb):

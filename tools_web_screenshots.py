@@ -26,6 +26,7 @@ app, splash = start()
 splash.close()
 from imprimo import gui, i18n, theme
 gui.store = lambda: QSettings(OUT + "/../mac_settings.ini", QSettings.IniFormat)
+gui.store().setValue("updates/auto", False)          # no update dialog in the screenshots
 theme.apply_theme(THEME)
 w = gui.MainWindow(); i18n.set_language(LANG); w._build_ui(); w._build_menu(); w._load_settings()
 w.resize(1440, 900); w.move(80, 60); w.show(); w.raise_(); w.activateWindow()

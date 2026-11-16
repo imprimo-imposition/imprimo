@@ -191,6 +191,7 @@ imprimo/
   gui.py                 user interface (PySide6)
   about.py               About dialog (licence, versions)
   report_dialog.py       Help → Report a problem (system info, prefilled GitHub issue)
+  updates.py             Help → Check for updates (reads latest.json from the website)
   spots_dialog.py        Spot colours window
   preview.py             cached page bitmaps and sheet composition for the preview
   splash.py              QApplication, icon, splash screen, macOS app name
@@ -257,6 +258,13 @@ It writes `imprimo.ico` (Windows, 16–256 px; 16–24 px use a simplified targe
 **Help → Report a problem…** adds the version, system, imposition settings and the last error record to your
 description; copy it or open a prefilled [GitHub issue](https://github.com/imprimo-imposition/imprimo/issues/new/choose).
 Nothing is sent automatically. If the problem is about a particular PDF that isn't confidential, attach it.
+
+## Updates
+
+**Help → Check for updates…** – and at start, at most once a day, unless turned off in that window – reads
+[`latest.json`](https://imprimo-imposition.github.io/imprimo/latest.json) from the website. When there is a newer
+version, Imprimo shows what's new and *Download* opens the zip for your system; unzip it and replace the old folder
+or app – settings and presets stay. Nothing about you or your files is sent.
 
 ## How Imprimo is made
 
