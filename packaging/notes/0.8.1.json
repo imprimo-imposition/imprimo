@@ -1,12 +1,19 @@
 {
   "sk": [
+    "Prehľadnejší bočný panel: kroky Zdroj · Hárok a rozloženie · Príprava a dokončovanie · Výstup a pri každej sekcii súhrn nastavení, aj keď je zatvorená",
     "Nové menu: Súbor (aj nedávne súbory) · Predvoľby · Nástroje · Zobrazenie · Pomocník",
     "Čísla strán v náhľade: štítok v rohu strany so šípkou ku hlave a formátom strany",
-    "Pomocník → Nahlásiť problém… a Skontrolovať aktualizácie…"
+    "Pomocník → Nahlásiť problém… a Skontrolovať aktualizácie…",
+    "Nové vzorové súbory k lekciám (01–04 navrhnuté v Illustratore, texty v angličtine)",
+    "PDF/X z Illustratora: výstupný profil „Custom“ s Coated FOGRA39 sa vo vyimpozovanom PDF zapíše ako FOGRA39"
   ],
   "en": [
+    "Clearer side panel: steps Source · Sheet and layout · Prepress and finishing · Output, and every section shows a summary of its settings even when closed",
     "New menus: File (with recent files) · Presets · Tools · View · Help",
     "Page numbers in the preview: a tag in the page corner with an arrow to the head and the page size",
-    "Help → Report a problem… and Check for updates…"
+    "Help → Report a problem… and Check for updates…",
+    "New sample files for the lessons (01–04 designed in Illustrator, English texts)",
+    "PDF/X from Illustrator: the output intent “Custom” with Coated FOGRA39 is written as FOGRA39 in the imposed PDF",
+    "English texts use US spelling"
   ]
 }
