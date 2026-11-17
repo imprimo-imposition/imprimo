@@ -110,7 +110,7 @@ def apply_theme(mode: str):
         hints = app.styleHints()
         dark = _system_is_dark(app) if _mode == "system" else _mode == "dark"
 
-        # Qt 6.8+: colour scheme of the title bar / window decorations
+        # Qt 6.8+: color scheme of the title bar / window decorations
         if hasattr(hints, "setColorScheme"):
             if _mode == "system" and not sys.platform.startswith("linux"):
                 scheme = Qt.ColorScheme.Unknown          # macOS, Windows follow the system natively

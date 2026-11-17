@@ -2,7 +2,7 @@
 
 Imposition of print-ready PDFs for Windows, macOS and Linux – business cards, labels, booklets, cut & stack – with PDF/X export, preflight and extra layers (varnish, white, die-cut, foil).
 
-Pages are placed as vector Form XObjects: fonts, CMYK, spot colours and gradients stay exactly as they were, nothing is rasterised.
+Pages are placed as vector Form XObjects: fonts, CMYK, spot colors and gradients stay exactly as they were, nothing is rasterized.
 
 The user interface is available in Slovak and English (*View → Language*).
 
@@ -53,9 +53,9 @@ Open a PDF with the button or by dropping it onto the window. The preview update
 
 - Sheet presets (SRA3, A3+, A3, SRA4, A4, B3, SRA2, B2), custom size or *fit to content*.
 - *Automatic* layout fits as many pieces as possible, rotating them by 90° when that helps. *Let me choose* offers a clickable miniature sheet and *across / down* fields.
-- Bleed is taken from the PDF (TrimBox/BleedBox). If neighbouring pieces are closer than 2× bleed, the gap is split so bleeds never overlap. *= 2× bleed* sets gaps for double cuts.
+- Bleed is taken from the PDF (TrimBox/BleedBox). If neighboring pieces are closer than 2× bleed, the gap is split so bleeds never overlap. *= 2× bleed* sets gaps for double cuts.
 - PDFs without a TrimBox: *Trim without TrimBox* says how much bleed surrounds the page.
-- **Missing bleed** can be generated: *mirroring the edge* (photos, patterns) or *stretching the edge* (flat colours, gradients). Only the sides that lack bleed get it; the page itself is not changed – mirrored or stretched copies of its edge are drawn under it, in the preview and in the export.
+- **Missing bleed** can be generated: *mirroring the edge* (photos, patterns) or *stretching the edge* (flat colors, gradients). Only the sides that lack bleed get it; the page itself is not changed – mirrored or stretched copies of its edge are drawn under it, in the preview and in the export.
 - PDFs exported as spreads (e.g. from Affinity or InDesign with *Export as spreads*) are detected: pages about twice as wide as the single pages are split into a left and a right page, so a booklet gets the correct page order. *Split spreads into pages* turns this off.
 
 ### Double-sided printing
@@ -64,7 +64,7 @@ Open a PDF with the button or by dropping it onto the window. The preview update
 
 ### Marks
 
-Crop marks, dashed fold marks, registration targets and an info line (file, sheet, date). Marks use the Registration colour (Separation /All). Targets shrink to fit a narrow margin; if they don't fit at all, Imprimo warns.
+Crop marks, dashed fold marks, registration targets and an info line (file, sheet, date). Marks use the Registration color (Separation /All). Targets shrink to fit a narrow margin; if they don't fit at all, Imprimo warns.
 
 ### Gang run
 
@@ -106,13 +106,13 @@ For invitations, cards and folded leaflets (section *Creasing*):
 
 - **Presets** – *in half*, *Z-fold* (3 equal panels), *roll (C) fold* (the inner panel 3 mm narrower, e.g. A4 → 100 / 100 / 97 mm), *custom positions* (`99; 198`) or *from the PDF*.
 - Positions are in mm on the **finished product** (without bleed): vertical creases from the left edge, horizontal ones from the top. Imprimo carries them to every copy on the sheet – rotated pieces and the back side included.
-- **Crease marks at the sheet edge** – dash-dot marks labelled *B* (Slovak *big*) / *CR* outside the bleed, for setting the stop of a manual creaser. The positions are also printed in the info line.
-- **From a crease PDF** – Imprimo finds straight lines in the spot colour **Crease** (or an alias such as *Big*, *Bigovanie*, *Score*) and fills in the positions. *Source* is the PDF exported from the crease layer (*Choose PDF…*); without it, Imprimo looks in the print PDF and warns that a digital press would print the lines. A PDF with Crease lines added under *Layers* is moved to the Creasing section automatically. Direction and positions appear once creases are found.
+- **Crease marks at the sheet edge** – dash-dot marks labeled *B* (Slovak *big*) / *CR* outside the bleed, for setting the stop of a manual creaser. The positions are also printed in the info line.
+- **From a crease PDF** – Imprimo finds straight lines in the spot color **Crease** (or an alias such as *Big*, *Bigovanie*, *Score*) and fills in the positions. *Source* is the PDF exported from the crease layer (*Choose PDF…*); without it, Imprimo looks in the print PDF and warns that a digital press would print the lines. A PDF with Crease lines added under *Layers* is moved to the Creasing section automatically. Direction and positions appear once creases are found.
 - The preview shows the creases as green dash-dot lines (with *Guides*). A booklet is creased at the fold, so creasing is off there.
 
-### Spot colours
+### Spot colors
 
-*Tools → Spot colours…* lists the technical spot colours Imprimo works with and saves them as an **Adobe Swatch Exchange (.ase)** palette for Illustrator, InDesign, Photoshop, Affinity, CorelDRAW or Scribus. The palette is also in [`spot-colors/`](spot-colors/).
+*Tools → Spot colors…* lists the technical spot colors Imprimo works with and saves them as an **Adobe Swatch Exchange (.ase)** palette for Illustrator, InDesign, Photoshop, Affinity, CorelDRAW or Scribus. The palette is also in [`spot-colors/`](spot-colors/).
 
 | Name | Use | Printed |
 |---|---|---|
@@ -124,21 +124,21 @@ For invitations, cards and folded leaflets (section *Creasing*):
 | **Varnish** | spot varnish | yes |
 | **Foil** | hot foil | yes |
 
-Names are matched regardless of case, spaces and accents; Slovak names (*Big*, *Výsek*, *Lak*, *Biela*, …) are recognised too.
+Names are matched regardless of case, spaces and accents; Slovak names (*Big*, *Výsek*, *Lak*, *Biela*, …) are recognized too.
 
 ### Layers (varnish, white, die-cut, foil, crease)
 
 *+ Add layer (PDF)* adds a PDF that is imposed exactly like the print (positions, rotation, back side, creep). Per layer:
 
 - **Type** – varnish, white, die-cut, foil, crease or custom; sets the defaults below and the file suffix. A crease PDF is handled in the Creasing section; with *Layers separately* it is also exported as `name_imposed_crease.pdf` (e.g. for a plotter), never printed.
-- **Spot colour** – *Read from PDF* (default) lists the spot colours used in the layer PDF. If the printer requires a specific name, turn it off and enter the name – Imprimo checks that the layer uses it.
+- **Spot color** – *Read from PDF* (default) lists the spot colors used in the layer PDF. If the printer requires a specific name, turn it off and enter the name – Imprimo checks that the layer uses it.
 - **Position** – above the print, or below it (white underprint).
 - **Overprint** – forces overprint for the whole layer so it doesn't knock out the print.
 - **Pages** – page *n* of the layer goes with page *n* of the print, or page 1 is used for all.
 
-The layer type is guessed from the spot colour names in the PDF, then from the file name. The check under each layer reports a missing or different spot colour, missing overprint, a different size or page count. In the preview, layers are shown semi-transparent.
+The layer type is guessed from the spot color names in the PDF, then from the file name. The check under each layer reports a missing or different spot color, missing overprint, a different size or page count. In the preview, layers are shown semi-transparent.
 
-A RIP ignores PDF layers when printing – what makes a separate plate or channel is a **spot colour with overprint**. That is why Imprimo checks for it.
+A RIP ignores PDF layers when printing – what makes a separate plate or channel is a **spot color with overprint**. That is why Imprimo checks for it.
 
 ### Export
 
@@ -154,7 +154,7 @@ Imprimo **does not change page content**: no RGB → CMYK conversion, no transpa
 
 ### Preflight
 
-After opening, Imprimo shows how the PDF was exported (standard, output intent, PDF version, creator application) and checks it against the chosen standard: embedded fonts, RGB and Lab colour, spot colours, transparency, JPEG 2000, layers, image resolution (warning below 250 ppi) and a different output intent. If the source doesn't comply, Imprimo asks before saving.
+After opening, Imprimo shows how the PDF was exported (standard, output intent, PDF version, creator application) and checks it against the chosen standard: embedded fonts, RGB and Lab color, spot colors, transparency, JPEG 2000, layers, image resolution (warning below 250 ppi) and a different output intent. If the source doesn't comply, Imprimo asks before saving.
 
 ### Preview
 
@@ -185,14 +185,14 @@ imprimo/
   signatures.py          folding schemes of signatures (virtual folding), splitting the pages
   cover.py               cover with spine: spine width, template, assembling the cover
   cover_dialog.py        Cover with spine window
-  spots.py               spot colour library (Crease, CutContour, …), .ase export
+  spots.py               spot color library (Crease, CutContour, …), .ase export
   presets.py             job presets (built-in, user's, .json import / export)
   examples_dialog.py     Help → Sample files (lessons in examples/)
   gui.py                 user interface (PySide6)
-  about.py               About dialog (licence, versions)
+  about.py               About dialog (license, versions)
   report_dialog.py       Help → Report a problem (system info, prefilled GitHub issue)
   updates.py             Help → Check for updates (reads latest.json from the website)
-  spots_dialog.py        Spot colours window
+  spots_dialog.py        Spot colors window
   preview.py             cached page bitmaps and sheet composition for the preview
   splash.py              QApplication, icon, splash screen, macOS app name
   preflight.py           source and layer checks
@@ -205,8 +205,8 @@ imprimo/
   assets/                font, ICC profile, icons
 tests/
   make_samples.py        sample PDFs (needs reportlab and pillow)
-  test_core.py           page order, PDF/X export, layers, creasing, spot colours
-spot-colors/             Imprimo spot colour palette (.ase) and how to import it
+  test_core.py           page order, PDF/X export, layers, creasing, spot colors
+spot-colors/             Imprimo spot color palette (.ase) and how to import it
 examples/                sample PDFs (lessons), guides, make_examples.py
 packaging/
   package.py             builds the release zips (see packaging/README.md)
@@ -246,10 +246,10 @@ It writes `imprimo.ico` (Windows, 16–256 px; 16–24 px use a simplified targe
 
 ## Limitations
 
-- All pages are imposed into a cell the size of the first page; other sizes are centred.
+- All pages are imposed into a cell the size of the first page; other sizes are centered.
 - Saddle-stitch booklets are 2 pages per sheet side; signatures use right-angle folds only (no parallel folds,
   no work & turn yet).
-- No colour conversion or transparency flattening.
+- No color conversion or transparency flattening.
 - Preflight doesn't replace a certified one (Acrobat, pdfToolbox).
 - Annotations and form fields are not carried over.
 
@@ -283,22 +283,22 @@ Found a problem or have an idea? Please [open an issue](https://github.com/impri
 Imprimo is free. If it saves you time at school or in your print shop, you can support its development with a
 voluntary donation on **[Ko-fi](https://ko-fi.com/imprimo)** – thank you! (*Help → Support the project…* in the app.)
 
-## Licence
+## License
 
 Imprimo is free software, licensed under the **GNU General Public License v3.0 or later** ([LICENSE](LICENSE)).
 You may use it free of charge – at school, at home and in companies, also for commercial print work –
 share it and change it. If you distribute a modified version, it has to be under the GPL too, with its source code.
 
-**Commercial licence:** companies that want to build Imprimo into a closed-source product, or need other
-terms, can get a separate licence from the author – open an issue on GitHub.
+**Commercial license:** companies that want to build Imprimo into a closed-source product, or need other
+terms, can get a separate license from the author – open an issue on GitHub.
 
 **Contributions:** by sending a pull request you agree that your contribution is licensed under
-GPL-3.0-or-later and may also be included in the author's commercial licence.
+GPL-3.0-or-later and may also be included in the author's commercial license.
 
 ## Bundled files
 
-Third-party libraries and their licences: [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
-Assets – see `imprimo/assets/README-assets.txt`: DejaVu Sans Condensed (Bitstream Vera / DejaVu licence) and the FOGRA39L Coated ICC profile (free of known copyright restrictions).
+Third-party libraries and their licenses: [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
+Assets – see `imprimo/assets/README-assets.txt`: DejaVu Sans Condensed (Bitstream Vera / DejaVu license) and the FOGRA39L Coated ICC profile (free of known copyright restrictions).
 
 ---
 Author: Maxim Darák, with students of SOŠ služieb, Košická 20, Prešov, field of study GTM · developed with AI assistance (Claude Code)

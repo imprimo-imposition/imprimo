@@ -1,4 +1,4 @@
-"""Window with the Imprimo spot colour library and the .ase export."""
+"""Window with the Imprimo spot color library and the .ase export."""
 from __future__ import annotations
 
 import os

@@ -1,8 +1,8 @@
-"""Imprimo spot colour library: technical spot colours for finishing (crease, die-cut, …).
+"""Imprimo spot color library: technical spot colors for finishing (crease, die-cut, …).
 
 The same names are used by the designer (Illustrator, InDesign, Affinity – imported from the
 .ase file), by Imprimo (detection, layers) and by the printer / finishing machines.
-The CMYK values are only the alternate colour for the screen; each spot colour becomes its
+The CMYK values are only the alternate color for the screen; each spot color becomes its
 own separation.
 """
 from __future__ import annotations
@@ -16,8 +16,8 @@ from dataclasses import dataclass
 class Spot:
     name: str               # exact name to use in the design programs
     kind: str               # crease | cut | perf | fold | white | varnish | foil
-    cmyk: tuple             # alternate colour, 0..100
-    aliases: tuple = ()     # other names Imprimo recognises (any case, spaces / - / _ ignored)
+    cmyk: tuple             # alternate color, 0..100
+    aliases: tuple = ()     # other names Imprimo recognizes (any case, spaces / - / _ ignored)
     technical: bool = True  # a line for finishing – must not be printed
 
 
@@ -57,7 +57,7 @@ for _s in SPOTS:
 
 
 def spot_for(name: str) -> Spot | None:
-    """The library spot a colour name stands for (case, accents, spaces ignored), or None."""
+    """The library spot a color name stands for (case, accents, spaces ignored), or None."""
     if not name:
         return None
     return _LOOKUP.get(_norm(name.lstrip("/")))

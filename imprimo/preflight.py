@@ -1,4 +1,4 @@
-"""Source PDF check (preflight): fonts, colour spaces, transparency, image
+"""Source PDF check (preflight): fonts, color spaces, transparency, image
 resolution, JPEG 2000, layers. Results are kept per page so they can be
 evaluated for the selected pages only."""
 from __future__ import annotations
@@ -65,7 +65,7 @@ class _Scanner:
         self.res_seen = set()
         self.cs_cache = {}
 
-    # -- colour spaces
+    # -- color spaces
     def classify(self, cs, depth=0):
         tags = set()
         if cs is None or depth > 6:
@@ -337,7 +337,7 @@ def evaluate(F: Findings, family: str | None, selected_pages: set, src_intent_id
     else:
         out.append(("ok", t("pf_fonts_ok")))
 
-    # colours
+    # colors
     if hit(F.rgb_device):
         lvl = "error" if std else "warn"
         out.append((lvl, t("pf_rgb_device") + _pages(F.rgb_device, sel)))
@@ -353,7 +353,7 @@ def evaluate(F: Findings, family: str | None, selected_pages: set, src_intent_id
     spots = sorted(n for n, pp in F.spots.items() if hit(pp))
     if spots:
         out.append(("info", t("pf_spots", spots=", ".join(spots[:8]))))
-    # technical colours (crease, die-cut…) belong in a layer of their own, not in the print
+    # technical colors (crease, die-cut…) belong in a layer of their own, not in the print
     from .spots import spot_for
     for n in spots:
         sp = spot_for(n)

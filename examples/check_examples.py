@@ -2,6 +2,7 @@
 
     python examples/check_examples.py            # all lessons
     python examples/check_examples.py 03 04      # only these lessons
+    python examples/check_examples.py some/file.pdf
 
 Prints for every PDF: app, PDF/X + output intent, trim size to 3 decimals, bleed, fonts,
 preflight warnings and crease positions; flags anything that does not match the brief.
@@ -74,8 +75,13 @@ def check(path):
     else:
         if prof.pdfx != "PDF/X-4":
             bad.append("not PDF/X-4")
-        if not oi or oi.identifier != "FOGRA39":
+        icc_id = oi.icc.condition_id if oi and oi.icc else None
+        if not oi or (oi.identifier != "FOGRA39"
+                      and not (oi.identifier in ("", "Custom") and icc_id == "FOGRA39")):
             bad.append("output intent is not FOGRA39 (Color Settings → Europe Prepress 3)")
+        elif oi.identifier != "FOGRA39":     # Illustrator: identifier "Custom", profile FOGRA39
+            print("   note: identifier \"Custom\" with the Coated FOGRA39 profile – fine, "
+                  "Imprimo writes FOGRA39 into the imposed PDF")
         layer = name.endswith(("_bigy.pdf", "_lak.pdf"))     # Crease / Varnish on purpose
         if warn and not layer:
             bad.append("preflight warnings")
@@ -85,10 +91,14 @@ def check(path):
 
 def main(args):
     i18n.set_language("sk")
-    files = sorted(f for f in os.listdir(HERE) if f.endswith(".pdf"))
-    if args:
-        files = [f for f in files if f[:2] in args]
-    ok = [check(os.path.join(HERE, f)) for f in files]
+    paths = [a for a in args if a.lower().endswith(".pdf")]
+    lessons = [a for a in args if a not in paths]
+    if lessons or not paths:
+        files = sorted(f for f in os.listdir(HERE) if f.endswith(".pdf"))
+        if lessons:
+            files = [f for f in files if f[:2] in lessons]
+        paths += [os.path.join(HERE, f) for f in files]
+    ok = [check(p) for p in paths]
     print(f"\n{sum(ok)} / {len(ok)} OK")
 
 

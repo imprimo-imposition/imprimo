@@ -7,7 +7,7 @@ Slovak version: [CITAJ-MA.md](CITAJ-MA.md).
 > **Using Affinity?** Its exported PDF may have an inexact page size (e.g. 50.038 mm instead of 50).
 > Why and how to avoid it: [affinity-page-size.md](affinity-page-size.md).
 
-All colours are CMYK or spot colours and the font is embedded, so the samples pass the preflight –
+All colors are CMYK or spot colors and the font is embedded, so the samples pass the preflight –
 except lesson 08, which is wrong on purpose. They are built by `make_examples.py`
 (`pip install reportlab pillow`, `python examples/make_examples.py`).
 
@@ -19,7 +19,7 @@ except lesson 08, which is wrong on purpose. They are built by `make_examples.py
 | 04 | `04_DL_skladacka_zavinovacia.pdf` + `…_bigy.pdf` | roll fold 100/100/97, creases from a PDF |
 | 05 | `05_brozura_A5_12_stran.pdf` | saddle stitching, page order, creep |
 | 06 | `06_vstupenky_cut_and_stack.pdf` | cut & stack – numbers in order after cutting |
-| 07 | `07_vizitka_s_lakom.pdf` + `07_vizitka_lak.pdf` | layers, spot colour, overprint |
+| 07 | `07_vizitka_s_lakom.pdf` + `07_vizitka_lak.pdf` | layers, spot color, overprint |
 | 08 | `08_chybne_pdf_na_preflight.pdf` | preflight: find 5 mistakes |
 | 09 | `09_plagat_A2.pdf` | poster in pieces on A4 / A3, overlap, scaling to A1 |
 | 10 | `10_vizitky_jana.pdf`, `…_peter.pdf`, `…_eva.pdf` | several jobs on one sheet (gang run) |
@@ -37,11 +37,11 @@ PDF gives 24. In *All sheets* with *Page numbers* on, the back is mirrored so it
 ## 02 – A card without bleed
 The warning says the PDF has 0 mm bleed; zoomed in, there is white between the pieces. Try
 *Bleed → Missing: Generate by mirroring the edge*, then *by stretching*. *Exercise:* which method suits a photo,
-which a flat colour – and why is exporting with bleed still best?
+which a flat color – and why is exporting with bleed still best?
 
 ## 03 – Invitation A5 folded in half
 Preset ★ *Invitation folded in half*: a crease at 105 mm, crease marks **B** at the sheet edge, green guides.
-Then *Crease → From a crease PDF* with `03_pozvanka_A5_bigy.pdf` (a line in the **Crease** spot colour) –
+Then *Crease → From a crease PDF* with `03_pozvanka_A5_bigy.pdf` (a line in the **Crease** spot color) –
 the same result. *Exercise:* open the crease PDF as the print PDF – what does the preflight say?
 
 ## 04 – DL roll (C) fold leaflet
@@ -60,17 +60,17 @@ the numbers run 001 → 028. *Exercise:* type `1-24` into *Pages* – what does 
 
 ## 07 – Card with spot varnish
 Open the print PDF, *+ Add layer (PDF)…* → `07_vizitka_lak.pdf` (spot **Varnish** with overprint). Save with
-*Layers separately*: `…_imposed.pdf` and `…_imposed_varnish.pdf`. *Exercise:* why isn't varnish just a CMYK colour
+*Layers separately*: `…_imposed.pdf` and `…_imposed_varnish.pdf`. *Exercise:* why isn't varnish just a CMYK color
 in the print PDF?
 
 ## 08 – A faulty PDF for the preflight
-Find the 5 mistakes in the preflight (section *PDF export*): RGB colour, no bleed, a 27 ppi image, a font that
+Find the 5 mistakes in the preflight (section *PDF export*): RGB color, no bleed, a 27 ppi image, a font that
 isn't embedded, and a crease line in the print PDF.
 
 ## 09 – Poster A2 in pieces
 Preset ★ *Poster in pieces – A4*: 8 A4 pieces (2 × 4), shown assembled in *All sheets*. Pieces are named A1, A2, B1…
 (rows by letters, columns by numbers) with a small map in the margin. Change the sheet to A3, or set *Final size* to
-A1 – the scale is set automatically. Cut each piece at the crop marks (left and top), lay it over its neighbour's
+A1 – the scale is set automatically. Cut each piece at the crop marks (left and top), lay it over its neighbor's
 overlap up to the dashed mark and glue; the diagonal lines and circles must continue without a step.
 *Exercise:* how many A4 and how many A3 sheets for an A1 poster?
 

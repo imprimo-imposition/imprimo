@@ -272,7 +272,7 @@ class SheetView(ZoomView):
         self.hires_key = None
         self.wanted = set()
         self.zoom: float | None = None       # px per point; None = whole sheet
-        self.cx = self.cy = 0.0              # view centre in points (y from the top)
+        self.cx = self.cy = 0.0              # view center in points (y from the top)
         self.message = t("drop_here")
         self.hires_timer = QTimer(self, singleShot=True, interval=120)
         self.hires_timer.timeout.connect(self._render_hires)
@@ -490,7 +490,7 @@ class OverviewView(ZoomView):
     Thumbnails use the same cached page bitmaps as the sheet view.
 
     Zoom and pan as in the sheet view (see ZoomView), up to MAX_ZOOM; a click
-    opens the sheet. Content smaller than the window is centred and shifted so
+    opens the sheet. Content smaller than the window is centered and shifted so
     the point under the cursor stays put while zooming. Marks are rendered in
     tiles, only for the visible part, so a deep zoom over many sheets stays
     light on memory."""
@@ -519,7 +519,7 @@ class OverviewView(ZoomView):
         self.cells = []                  # (QRectF, side index)
         self.wanted = set()
         self.scroll_area = None          # the QScrollArea around this widget (for panning)
-        self.shift = QPointF()           # offset from centre while the grid is smaller than the window
+        self.shift = QPointF()           # offset from center while the grid is smaller than the window
         self.timer = QTimer(self, singleShot=True, interval=30)
         self.timer.timeout.connect(self._render_some)
         self._update_cursor()
@@ -600,7 +600,7 @@ class OverviewView(ZoomView):
         nr = self.rect_of(i)
         if nr is not None:
             want = QPointF(nr.x() + fx * nr.width(), nr.y() + fy * nr.height())
-            # scroll where the area can scroll, shift the centred grid where it can't
+            # scroll where the area can scroll, shift the centered grid where it can't
             dx = dy = 0.0
             if h is not None and h.maximum() > 0:
                 h.setValue(round(want.x() - on_screen.x()))
@@ -644,7 +644,7 @@ class OverviewView(ZoomView):
             cols = 2 if two else max(1, int((avail + g) // (tw + g)))
             if tile:
                 cols = tile[3]
-        if not two and not tile:         # no empty columns – keeps the grid centred
+        if not two and not tile:         # no empty columns – keeps the grid centered
             cols = max(1, min(cols, len(self.plan.sides)))
         th = tw * SH / SW
         grid_w = cols * tw + (cols - 1) * g
@@ -653,7 +653,7 @@ class OverviewView(ZoomView):
         need_h = int(g + rows * (th + self.LABEL_H + g))
         width = max(vw, need_w) if self.scroll_area is not None else self.width()
         height = max(vh, need_h) if self.scroll_area is not None else self.height()
-        # centred; while it fits the window, shifted by self.shift (kept inside the window)
+        # centered; while it fits the window, shifted by self.shift (kept inside the window)
         free_x = max(0.0, width - grid_w - 2 * g)
         free_y = max(0.0, height - need_h)
         sx = max(-free_x / 2, min(free_x / 2, self.shift.x()))
@@ -1098,7 +1098,7 @@ def _drop_widget(layout, w):
 
 
 def guess_kind(path, spots=()):
-    """Layer type from the spot colour names in the PDF, then from the file name."""
+    """Layer type from the spot color names in the PDF, then from the file name."""
     from .spots import kind_of
     lib = {"crease": "crease", "cut": "diecut", "perf": "diecut", "white": "white",
            "varnish": "varnish", "foil": "foil"}
@@ -2341,7 +2341,7 @@ class MainWindow(QMainWindow):
         form.setRowVisible(self.crease_pos, not from_pdf or found)
         self.crease_dir.setEnabled(on and preset != "pdf")
         self.crease_pos.setReadOnly(preset != "custom")
-        self.crease_pos.setEnabled(on and preset == "custom")    # computed values: greyed
+        self.crease_pos.setEnabled(on and preset == "custom")    # computed values: grayed
         self.crease_marks.setEnabled(on and (not from_pdf or found))
         if from_pdf:
             if ce is not None:

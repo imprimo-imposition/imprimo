@@ -47,7 +47,7 @@ Trimming that keeps the packages small:
   needs; QML, designer tools and unused libraries removed.
 - Tests, headers, static libraries and unused standard-library parts removed.
 - macOS: universal2 binaries thinned to arm64 (`lipo -thin arm64`). The app is neither
-  signed nor notarised; users remove the quarantine as described in `docs/mac-README.txt`.
+  signed nor notarized; users remove the quarantine as described in `docs/mac-README.txt`.
 - Python files are precompiled with `--invalidation-mode checked-hash`.
 
 To update a dependency, unpack the latest release, `pip install --target` the new wheel

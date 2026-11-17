@@ -32,7 +32,7 @@ PROXY_STEPS = ((2.0, 1200), (99.0, 2400))
 
 def _downscale_jpegs(pdf: pikepdf.Pdf, cap: int) -> bool:
     """Replaces JPEG images larger than `cap` px with downscaled Flate images
-    in the same colour space. Returns True if anything was changed."""
+    in the same color space. Returns True if anything was changed."""
     from PIL import Image, ImageChops
     changed = False
     for obj in pdf.objects:
@@ -264,7 +264,7 @@ TAG_H = 18.0              # px – the tag has the same size on screen at every 
 TAG_FONT = 11.0           # px
 TAG_INSET = 4.0           # px from the page corner
 JOB_COLOURS = ((24, 95, 165), (153, 60, 29), (15, 110, 86), (83, 74, 183),
-               (153, 53, 86), (133, 79, 11))     # gang run: one colour per job
+               (153, 53, 86), (133, 79, 11))     # gang run: one color per job
 
 
 def paint_numbers(p: QPainter, side, s2w, infos, blank_text="", half_text=None, label=None,
@@ -318,14 +318,14 @@ def paint_numbers(p: QPainter, side, s2w, infos, blank_text="", half_text=None, 
             w, with_size = short, False
         else:
             continue
-        colour = QColor(28, 28, 30, 230)
+        color = QColor(28, 28, 30, 230)
         if job_of is not None:
             j = job_of(it.page)
             if j is not None:
                 c = JOB_COLOURS[j % len(JOB_COLOURS)]
-                colour = QColor(*c, 235)
+                color = QColor(*c, 235)
         p.setPen(QPen(QColor(255, 255, 255, 140), 1))
-        p.setBrush(QBrush(colour))
+        p.setBrush(QBrush(color))
         p.drawRoundedRect(QRectF(0, 0, w, TAG_H), 4, 4)
         # ▲ = the head of the page
         x = pad

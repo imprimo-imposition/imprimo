@@ -4,7 +4,7 @@ IMPRIMO {V} for macOS (test version, Apple Silicon, macOS 15 or newer)
 Install
 -------
 1. Move Imprimo.app to the Applications folder.
-2. First start: the app isn't notarised by Apple, so macOS blocks it.
+2. First start: the app isn't notarized by Apple, so macOS blocks it.
    - Click Imprimo.app → in the message choose "Done".
    - System Settings → Privacy & Security → next to "Imprimo" click
      "Open Anyway" and confirm with your password.
@@ -18,8 +18,8 @@ right-click → Open With → Imprimo.
 If it doesn't start, run this in Terminal and send the output:
   /Applications/Imprimo.app/Contents/MacOS/Imprimo
 
-Licence
+License
 -------
 Imprimo is free software under the GNU GPL v3.0 or later (LICENSE.txt).
-Bundled libraries and their licences: THIRD-PARTY-NOTICES.txt.
+Bundled libraries and their licenses: THIRD-PARTY-NOTICES.txt.
 Source code and new versions: https://github.com/imprimo-imposition/imprimo

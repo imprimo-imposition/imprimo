@@ -14,7 +14,7 @@ def small_icon(size, master):
     ss = 8
     S = size * ss
     bg = master.resize((S, S), Image.LANCZOS)
-    # clear the centre – the symbol is redrawn
+    # clear the center – the symbol is redrawn
     clean = Image.new("RGBA", (S, S), (0, 0, 0, 0))
     mask = bg.getchannel("A")
     dark = master.crop((60, 60, 160, 964)).resize((S, S), Image.LANCZOS)
@@ -56,7 +56,7 @@ def padded(master, scale):
 
 
 def mac_master(master):
-    """Apple grid: 824 × 824 px body centred on 1024, soft shadow."""
+    """Apple grid: 824 × 824 px body centered on 1024, soft shadow."""
     S, body = 1024, 824
     icon = master.resize((body, body), Image.LANCZOS)
     off = (S - body) // 2

@@ -1,5 +1,5 @@
 DejaVuSansCondensed.ttf
-  DejaVu Sans Condensed font (Bitstream Vera / DejaVu licence, see LICENSE-DejaVu.txt).
+  DejaVu Sans Condensed font (Bitstream Vera / DejaVu license, see LICENSE-DejaVu.txt).
   Imprimo embeds a subset of it into the PDF for the info line.
 
 FOGRA39L_coated.icc

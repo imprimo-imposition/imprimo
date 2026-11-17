@@ -178,7 +178,7 @@ def make_layer_samples():
         c.showPage()
     c.save()
     boxes(p, 3)
-    # plain black "varnish" without spot colour and overprint – wrong
+    # plain black "varnish" without spot color and overprint – wrong
     p = os.path.join(OUT, "card_varnish_wrong_black.pdf")
     c = canvas.Canvas(p, pagesize=(w + 2*b, h + 2*b))
     c.setFillColor(CMYKColor(0, 0, 0, 1))
@@ -189,12 +189,12 @@ def make_layer_samples():
 
 
 def make_no_bleed():
-    """Business card with colour up to the trim but no bleed – for generated bleed."""
+    """Business card with color up to the trim but no bleed – for generated bleed."""
     p = os.path.join(OUT, "card_no_bleed.pdf")
     w, h = 85*mm, 55*mm
     c = canvas.Canvas(p, pagesize=(w, h))
     n = 24
-    for i in range(n):                       # diagonal colour stripes touching every edge
+    for i in range(n):                       # diagonal color stripes touching every edge
         c.setFillColor(CMYKColor(i / n, 0.6 - 0.5 * i / n, 0.2 + 0.6 * (i % 3) / 3, 0))
         p_ = c.beginPath()
         x0 = -h + i * (w + h) / n
@@ -212,8 +212,8 @@ def make_no_bleed():
         pdf.save(p)
 
 
-def _crease_line(c, x, top, colour):
-    c.setStrokeColor(colour)
+def _crease_line(c, x, top, color):
+    c.setStrokeColor(color)
     c.setStrokeOverprint(True)
     c.setLineWidth(0.25)
     c.line(x, 0, x, top)

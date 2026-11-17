@@ -5,7 +5,7 @@ Imprimo itself is licensed under the GNU General Public License v3.0 or later
 (see LICENSE). Copyright (C) Maxim Darák.
 
 Imprimo uses and, in the release packages, bundles the components listed below.
-Each remains under its own licence. Licence texts of the Python packages are in
+Each remains under its own license. License texts of the Python packages are in
 their *.dist-info/licenses folders inside the bundled runtime (site-packages) and
 at the project pages given here. The full text of the GNU LGPL v3.0, which covers
 Qt and PySide6, is at the end of this file; the GNU GPL v3.0 it refers to is in
@@ -26,18 +26,18 @@ PySide6 (PySide6-Essentials) and shiboken6 – Qt for Python
 pikepdf – MPL-2.0
   https://github.com/pikepdf/pikepdf
   Includes QPDF (Apache-2.0, https://github.com/qpdf/qpdf), libjpeg-turbo
-  (IJG / BSD-3-Clause) and zlib (zlib licence).
+  (IJG / BSD-3-Clause) and zlib (zlib license).
 
 pypdfium2 – Apache-2.0 or BSD-3-Clause
   https://github.com/pypdfium2-team/pypdfium2
   Includes PDFium (BSD-3-Clause, https://pdfium.googlesource.com/pdfium/) and its
   dependencies (FreeType, libjpeg-turbo, OpenJPEG, Little CMS, zlib, Abseil, AGG
-  and others); their licences are in pypdfium2's BUILD_LICENSES folder.
+  and others); their licenses are in pypdfium2's BUILD_LICENSES folder.
 
 Pillow – MIT-CMU (HPND)
   https://github.com/python-pillow/Pillow
   Includes libjpeg-turbo, libpng, libtiff, libwebp, OpenJPEG, FreeType, Little CMS,
-  HarfBuzz, zlib and others under their own permissive licences.
+  HarfBuzz, zlib and others under their own permissive licenses.
 
 fontTools – MIT
   https://github.com/fonttools/fonttools
@@ -57,14 +57,14 @@ Runtime (release packages)
 Python 3.12 – Python Software Foundation License
   https://www.python.org  ·  https://docs.python.org/3/license.html
   Built by conda-forge (https://conda-forge.org) together with: bzip2 (bzip2
-  licence), expat (MIT), libffi (MIT), xz / liblzma (0BSD), zlib (zlib licence);
+  license), expat (MIT), libffi (MIT), xz / liblzma (0BSD), zlib (zlib license);
   on macOS also ncurses (MIT-style) and libc++ (Apache-2.0 WITH LLVM-exception).
 
 
 Files in imprimo/assets
 -----------------------
 
-DejaVu Sans Condensed font – Bitstream Vera / DejaVu licence
+DejaVu Sans Condensed font – Bitstream Vera / DejaVu license
   https://dejavu-fonts.github.io  ·  text: imprimo/assets/LICENSE-DejaVu.txt
 
 FOGRA39L Coated ICC profile – "free of known copyright restrictions"

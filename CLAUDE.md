@@ -14,17 +14,17 @@ technically precise and practical. Private notes (not in git): `CLAUDE.local.md`
 
 ## Rules
 
-- Code, comments, file names, README.md, CLAUDE.md: **English**.
+- Code, comments, file names, README.md, CLAUDE.md: **English**, US spelling (color, center, gray, license).
 - User interface: Slovak and English, all texts in `imprimo/i18n.py`. Every key must exist
   in both languages (check: the SK and EN key sets are equal).
 - Package readmes: `README.txt` (EN) + `CITAJ-MA.txt` (SK), sources in `packaging/docs/`.
-- Licence: GPL-3.0-or-later (`LICENSE`). A new or updated bundled dependency must be
+- License: GPL-3.0-or-later (`LICENSE`). A new or updated bundled dependency must be
   listed in `THIRD-PARTY-NOTICES.txt` (shipped in every release zip).
 - Exported file suffix: `_imposed` (layers: `_imposed_varnish`, …, `_imposed_layers`).
 - Releases: zips named with the version – `Imprimo-X.Y.Z-windows.zip`, `-macOS.zip`,
   `-linux-x86_64.zip`, source `imprimo-X.Y.Z.zip`. Bump `__version__` in
   `imprimo/__init__.py` and the README heading with every release.
-- Page content is never changed: vector Form XObjects, no rasterising, no colour
+- Page content is never changed: vector Form XObjects, no rasterizing, no color
   conversion, no transparency flattening.
 - The preview must never crash the app; heavy work must not freeze the UI.
 
@@ -44,7 +44,7 @@ imprimo/crease.py       crease presets/positions (mm on the product), crease lin
 imprimo/signatures.py   signatures (V2 / sewn): folding schemes by virtual folding, splitting pages
 imprimo/cover.py        cover with spine: spine width, template PDF, assembling the cover
                         (cover_dialog.py = window, Tools menu and the Signatures section)
-imprimo/spots.py        spot colour library + aliases, .ase writer (spots_dialog.py = window)
+imprimo/spots.py        spot color library + aliases, .ase writer (spots_dialog.py = window)
 imprimo/presets.py      job presets: built-ins, user presets (QSettings "job_presets"), .json files
 examples/               lesson PDFs (built by make_examples.py, committed), CITAJ-MA.md + README.md;
                         examples_dialog.py opens them; packaged into the app folder

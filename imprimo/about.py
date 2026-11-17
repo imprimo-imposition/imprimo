@@ -1,4 +1,4 @@
-"""About dialog: version, licence (GPL-3.0-or-later), third-party notices."""
+"""About dialog: version, license (GPL-3.0-or-later), third-party notices."""
 from __future__ import annotations
 
 import os
@@ -57,7 +57,7 @@ def component_versions() -> str:
 
 
 class TextDialog(QDialog):
-    """Read-only text (the licence or the third-party notices)."""
+    """Read-only text (the license or the third-party notices)."""
 
     def __init__(self, parent, title, path, missing_url):
         super().__init__(parent)
@@ -125,8 +125,8 @@ class AboutDialog(QDialog):
 
         ver = QLabel(component_versions())
         ver.setWordWrap(True)
-        grey = self.palette().color(QPalette.PlaceholderText).name()
-        ver.setStyleSheet(f"color: {grey}; font-size: 9pt")
+        gray = self.palette().color(QPalette.PlaceholderText).name()
+        ver.setStyleSheet(f"color: {gray}; font-size: 9pt")
         ver.setTextInteractionFlags(Qt.TextSelectableByMouse)  # copy for bug reports
         lay.addWidget(ver)
 

@@ -106,7 +106,7 @@ def test_layers_export():
 
 
 # --------------------------------------------------------------------------
-# Creasing and spot colours
+# Creasing and spot colors
 
 SAMPLES = os.path.join(os.path.dirname(__file__), "samples")
 
@@ -220,7 +220,7 @@ def test_bleed_patches():
 
 
 def _pixel_outside_trim(method):
-    """Colour 1.5 mm left of the first card's trim on the exported sheet."""
+    """Color 1.5 mm left of the first card's trim on the exported sheet."""
     import tempfile
     import pypdfium2 as pdfium
     from imprimo.core import impose_file
@@ -312,7 +312,7 @@ def test_tile_plan():
     assert round(p.sheet_w / mm(1)) == 297
     a1, a2 = p.sides[0], p.sides[1]
     assert a1.tile == (0, 0, 4, 2) and a2.tile == (0, 1, 4, 2)
-    # neighbouring pieces show the poster shifted by (area − overlap) = 267 mm
+    # neighboring pieces show the poster shifted by (area − overlap) = 267 mm
     shift = a1.items[0].matrix[4] - a2.items[0].matrix[4]
     assert abs(shift / mm(1) - 267) < 0.01
     assert a1.folds_x and not a2.folds_x                     # glue mark only where a piece follows

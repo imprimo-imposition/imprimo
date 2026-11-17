@@ -92,14 +92,14 @@ def card_segments(spec: CreaseSpec, W: float, H: float) -> list:
 
 
 # --------------------------------------------------------------------------
-# Finding crease lines in a PDF page (spot colour “Crease” and its aliases)
+# Finding crease lines in a PDF page (spot color “Crease” and its aliases)
 
 @dataclass
 class Detected:
     vertical: list = field(default_factory=list)     # mm from the left edge
     horizontal: list = field(default_factory=list)   # mm from the top edge
-    other: int = 0                                  # slanted lines / curves in the crease colour
-    spot: str = ""                                  # the colour name found
+    other: int = 0                                  # slanted lines / curves in the crease color
+    spot: str = ""                                  # the color name found
 
     @property
     def found(self):
@@ -124,7 +124,7 @@ def _pt(m, x, y):
 
 
 def _cs_spot(cs, res, depth=0):
-    """The crease colour name if the colour space `cs` is (or contains) a crease spot."""
+    """The crease color name if the color space `cs` is (or contains) a crease spot."""
     if depth > 4 or cs is None:
         return None
     try:

@@ -99,7 +99,7 @@ def write_docs(prefix, target, version, crlf):
             text = text.replace("\r\n", "\n").replace("\n", "\r\n")
         with open(os.path.join(target, f"{name}.txt"), "w", encoding="utf-8", newline="") as f:
             f.write(text)
-    # licence files next to the readmes
+    # license files next to the readmes
     for name, out in (("LICENSE", "LICENSE.txt"), ("THIRD-PARTY-NOTICES.txt", "THIRD-PARTY-NOTICES.txt")):
         with open(os.path.join(ROOT, name), encoding="utf-8") as f:
             text = f.read()

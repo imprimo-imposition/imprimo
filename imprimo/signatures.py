@@ -67,7 +67,7 @@ _MY = (1, 0, 0, -1)
 
 def scheme(pages: int) -> Scheme:
     cols, rows, folds = FOLDS[pages]
-    # every panel: centre in packet units, linear map front face → packet, layer (0 = bottom)
+    # every panel: center in packet units, linear map front face → packet, layer (0 = bottom)
     st = {(c, r): [c + .5, r + .5, _I, 0] for c in range(cols) for r in range(rows)}
     w, h, n = cols, rows, 1
     for f in folds:
@@ -124,7 +124,7 @@ def scheme(pages: int) -> Scheme:
     panels.sort(key=lambda p: (p.row, p.col))
 
     sch = Scheme(pages, cols, rows, folds, panels, [], [])
-    # spine folds: neighbours across them add up to n + 1
+    # spine folds: neighbors across them add up to n + 1
     for b in range(1, cols):
         if sch.at(b - 1, 0).front + sch.at(b, 0).front == pages + 1:
             sch.spine_cols.append(b)

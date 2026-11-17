@@ -112,13 +112,13 @@ def write_template(path: str, W_mm: float, H_mm: float, spine_mm: float, bleed_m
             ops.append(f"{_n(x)} 0 m {_n(x)} {_n(H + 2 * b)} l S")
     ops.append("[] 0 d")
 
-    def text(x, y, size, s, centre=True, rot=False):
+    def text(x, y, size, s, center=True, rot=False):
         s = font_encode(s).decode("latin-1")
         w = size * 0.5 * len(s)
-        if rot:                                     # bottom to top, centred on (x, y)
+        if rot:                                     # bottom to top, centered on (x, y)
             return (f"BT /F1 {_n(size)} Tf 0 1 -1 0 {_n(x + size * 0.35)} {_n(y - w / 2)} Tm "
                     f"({s}) Tj ET")
-        return f"BT /F1 {_n(size)} Tf {_n(x - w / 2 if centre else x)} {_n(y)} Td ({s}) Tj ET"
+        return f"BT /F1 {_n(size)} Tf {_n(x - w / 2 if center else x)} {_n(y)} Td ({s}) Tj ET"
 
     ops.append("0 0 0 0.55 k")
     ops.append(text(x_back + W / 2, b + H / 2, 14, t("cover_tpl_back")))
@@ -127,7 +127,7 @@ def write_template(path: str, W_mm: float, H_mm: float, spine_mm: float, bleed_m
     ops.append(text(x_spine + S / 2, b + H / 2, size,
                     t("cover_tpl_spine", s=_num(spine_mm)), rot=True))
     if info:
-        ops.append(text(x_back + safe, b + safe + 2, 6, info, centre=False))
+        ops.append(text(x_back + safe, b + safe + 2, 6, info, center=False))
     ops.append("Q EMC")
 
     page.obj.Resources = Dictionary(Font=Dictionary(F1=font),

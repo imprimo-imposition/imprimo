@@ -1,7 +1,7 @@
 """Imposition core: sheet geometry and writing the output PDF.
 
 Source pages are placed as vector Form XObjects, so nothing is lost – fonts,
-CMYK, spot colours and gradients stay exactly as they were. All internal
+CMYK, spot colors and gradients stay exactly as they were. All internal
 calculations are in points (pt), settings are in mm.
 
 Coordinate systems:
@@ -418,8 +418,8 @@ class Plan:
 
 
 def _side_bleeds(rect, rects, bleed):
-    """Bleed on each side of a cell; if a neighbour is closer than 2× bleed,
-    the gap is split in half so neighbouring bleeds don't overlap."""
+    """Bleed on each side of a cell; if a neighbor is closer than 2× bleed,
+    the gap is split in half so neighboring bleeds don't overlap."""
     x0, y0, x1, y1 = rect
     L = B = R = T = bleed
     for o in rects:
@@ -782,7 +782,7 @@ def _tile_grid(PW, PH, aw, ah, ov):
 def _plan_tile(pages, W, H, s: Settings, bleed) -> Plan:
     """A poster bigger than the sheet, split into pieces that overlap by tile_overlap.
     Each piece is cut at its left and top edge and glued onto the overlap of its
-    neighbour (dashed marks show how far)."""
+    neighbor (dashed marks show how far)."""
     k = max(1.0, s.tile_scale) / 100.0
     PW, PH = W * k, H * k
     m = mm(max(0, s.margin))
@@ -894,7 +894,7 @@ def _plan_booklet(pages, W, H, s: Settings, bleed) -> Plan:
 # --------------------------------------------------------------------------
 # Signatures (perfect binding V2, sewn binding): folded sheets gathered one after another
 
-COLLATION_W = 4.0        # mm, collation mark width (centred on the spine fold)
+COLLATION_W = 4.0        # mm, collation mark width (centered on the spine fold)
 COLLATION_H = 8.0        # mm, its height = the step between two signatures
 COLLATION_TOP = 5.0      # mm from the head to the first mark
 
@@ -1061,7 +1061,7 @@ REG_PAD = mm(0.5)          # clearance from the sheet edge and the bleed
 def _reg_targets(side: Side, s: Settings, SW, SH, bleed):
     """Registration targets in the middle of each sheet margin.
     Returns ([(x, y, radius, arm)], number skipped). In a narrow margin the target
-    shrinks and is centred in the free space between the sheet edge and the bleed."""
+    shrinks and is centered in the free space between the sheet edge and the bleed."""
     bx0, by0, bx1, by1 = side.block
     off = max(mm(s.mark_offset), bleed)
     L = mm(s.mark_length) if s.crop_marks else 0.0
@@ -1517,7 +1517,9 @@ def resolve_export(s: Settings, prof: SourceProfile) -> ExportPlan:
     choice = s.icc_profile or "keep"
     if choice == "keep" and src_oi is not None:
         ex.intent = "copy"
-        ex.intent_id = src_oi.identifier or (src_oi.icc.condition_id if src_oi.icc else None)
+        ex.intent_id = src_oi.identifier
+        if ex.intent_id in (None, "", "Custom") and src_oi.icc:
+            ex.intent_id = src_oi.icc.condition_id       # Illustrator writes "Custom" for FOGRA39
         ex.icc_desc = src_oi.label()
         if ex.label and src_oi.icc is None and ex.family == "x4":
             ex.warnings.append(t("ex_no_icc_in_src"))
@@ -1573,7 +1575,14 @@ def finalize(out: pikepdf.Pdf, src: pikepdf.Pdf, prof: SourceProfile, s: Setting
         for oi in src.Root.get("/OutputIntents", []):
             try:
                 o = oi if oi.is_indirect else src.make_indirect(oi)
-                arr.append(out.copy_foreign(o))
+                o = out.copy_foreign(o)
+                # our copy only (the source stays as it is): a registered profile gets its
+                # identifier, e.g. Illustrator's "Custom" with Coated FOGRA39 → FOGRA39
+                ident = str(o.get("/OutputConditionIdentifier", ""))
+                if ident in ("", "Custom") and ex.intent_id not in (None, "", "Custom"):
+                    o.OutputConditionIdentifier = pikepdf.String(ex.intent_id)
+                    o.RegistryName = pikepdf.String("http://www.color.org")
+                arr.append(o)
             except Exception:
                 pass
         if len(arr):

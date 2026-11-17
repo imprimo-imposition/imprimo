@@ -27,8 +27,8 @@ Nothing is installed. Settings are stored in the user registry
 
 Requirements: Windows 10 or 11, 64-bit.
 
-Licence
+License
 -------
 Imprimo is free software under the GNU GPL v3.0 or later (LICENSE.txt).
-Bundled libraries and their licences: THIRD-PARTY-NOTICES.txt.
+Bundled libraries and their licenses: THIRD-PARTY-NOTICES.txt.
 Source code and new versions: https://github.com/imprimo-imposition/imprimo

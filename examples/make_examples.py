@@ -3,7 +3,7 @@
     pip install reportlab pillow
     python examples/make_examples.py
 
-All colours are CMYK (or spot colours), text uses the bundled DejaVu font (embedded),
+All colors are CMYK (or spot colors), text uses the bundled DejaVu font (embedded),
 so the samples pass the preflight – except lesson 08, which is wrong on purpose.
 """
 import io
@@ -22,7 +22,7 @@ pdfmetrics.registerFont(TTFont("DejaVu", FONT))
 
 K = CMYKColor(0, 0, 0, 1)
 WHITE = CMYKColor(0, 0, 0, 0)
-GREY = CMYKColor(0, 0, 0, 0.45)
+GRAY = CMYKColor(0, 0, 0, 0.45)
 BLUE = CMYKColor(0.85, 0.35, 0, 0)
 TEAL = CMYKColor(0.75, 0, 0.35, 0)
 ORANGE = CMYKColor(0, 0.55, 0.9, 0)
@@ -45,26 +45,26 @@ class Doc:
         self.c.setAuthor("Imprimo – vzorové súbory")
         self.c.translate(bleed * mm, bleed * mm)
 
-    def fill(self, colour, x=None, y=None, w=None, h=None):
+    def fill(self, color, x=None, y=None, w=None, h=None):
         """A filled rectangle; without coordinates the whole page including the bleed."""
         if x is None:
             x, y, w, h = -self.b, -self.b, self.w + 2 * self.b, self.h + 2 * self.b
-        self.c.setFillColor(colour)
+        self.c.setFillColor(color)
         self.c.rect(x * mm, y * mm, w * mm, h * mm, stroke=0, fill=1)
 
-    def text(self, x, y, s, size=10, colour=K, align="left"):
-        self.c.setFillColor(colour)
+    def text(self, x, y, s, size=10, color=K, align="left"):
+        self.c.setFillColor(color)
         self.c.setFont("DejaVu", size)
         draw = {"left": self.c.drawString, "center": self.c.drawCentredString,
                 "right": self.c.drawRightString}[align]
         draw(x * mm, y * mm, s)
 
-    def lesson(self, s, colour=GREY, y=None):
-        """Small grey line saying which lesson / page this is."""
-        self.text(4, 3 if y is None else y, s, 6, colour)
+    def lesson(self, s, color=GRAY, y=None):
+        """Small gray line saying which lesson / page this is."""
+        self.text(4, 3 if y is None else y, s, 6, color)
 
-    def line(self, x0, y0, x1, y1, colour, width=0.25, overprint=False):
-        self.c.setStrokeColor(colour)
+    def line(self, x0, y0, x1, y1, color, width=0.25, overprint=False):
+        self.c.setStrokeColor(color)
         self.c.setStrokeOverprint(overprint)
         self.c.setLineWidth(width)
         self.c.line(x0 * mm, y0 * mm, x1 * mm, y1 * mm)
@@ -86,12 +86,12 @@ class Doc:
         print("  ", os.path.basename(self.path))
 
 
-def stripes(d, colours, angle_from=0.0):
-    """Diagonal colour stripes over the whole page including the bleed."""
-    n = len(colours)
+def stripes(d, colors, angle_from=0.0):
+    """Diagonal color stripes over the whole page including the bleed."""
+    n = len(colors)
     W, H, b = d.w + 2 * d.b, d.h + 2 * d.b, d.b
     step = (W + H) / n
-    for i, col in enumerate(colours):
+    for i, col in enumerate(colors):
         p = d.c.beginPath()
         x0 = -b - H + i * step + angle_from
         p.moveTo(x0 * mm, -b * mm)
@@ -104,7 +104,7 @@ def stripes(d, colours, angle_from=0.0):
 
 
 def ramp(n, a, b):
-    """n CMYK colours between a and b (tuples)."""
+    """n CMYK colors between a and b (tuples)."""
     return [CMYKColor(*[a[k] + (b[k] - a[k]) * i / max(1, n - 1) for k in range(4)])
             for i in range(n)]
 
@@ -114,7 +114,7 @@ def ramp(n, a, b):
 
 def lesson_01():
     d = Doc("01_vizitky_90x50_obojstranne.pdf", 90, 50, 3, "Vizitka 90×50 – líc a rub")
-    d.fill(BLUE)                                             # front: colour up to the bleed
+    d.fill(BLUE)                                             # front: color up to the bleed
     d.fill(TEAL, 62, -3, 31, 56)
     d.text(7, 30, "Jana Nováková", 15, WHITE)
     d.text(7, 24, "grafička tlačových médií", 8, WHITE)
@@ -139,8 +139,8 @@ def lesson_02():
     stripes(d, ramp(18, (0.1, 0.8, 0.2, 0), (0.85, 0.1, 0.5, 0)))
     d.fill(WHITE, 6, 14, 52, 22)
     d.text(9, 28, "Bez spadávky", 13)
-    d.text(9, 22, "farba končí presne na oreze", 7, GREY)
-    d.text(9, 17.5, "→ Spadávka: Doplniť zrkadlením", 7, GREY)
+    d.text(9, 22, "farba končí presne na oreze", 7, GRAY)
+    d.text(9, 17.5, "→ Spadávka: Doplniť zrkadlením", 7, GRAY)
     d.lesson("Imprimo · vzor 02", WHITE)
     d.save()
 
@@ -154,15 +154,15 @@ def lesson_03():
     d.fill(PINK, 105, -3, 108, 154)
     d.text(157.5, 84, "Pozvánka", 30, WHITE, "center")
     d.text(157.5, 70, "na stužkovú slávnosť", 11, WHITE, "center")
-    d.text(52.5, 20, "zadná strana", 9, GREY, "center")
+    d.text(52.5, 20, "zadná strana", 9, GRAY, "center")
     d.lesson("Imprimo · vzor 03 · VONKAJŠOK (strana 1) – vľavo zadná, vpravo predná strana")
     d.page()
     d.fill(WHITE)                                            # inside
     d.fill(SAND, -3, -3, 216, 18)
     d.text(52.5, 90, "Milí hostia,", 14, K, "center")
-    d.text(52.5, 80, "srdečne vás pozývame…", 9, GREY, "center")
+    d.text(52.5, 80, "srdečne vás pozývame…", 9, GRAY, "center")
     d.text(157.5, 90, "Sobota 14. 2. o 18:00", 12, K, "center")
-    d.text(157.5, 80, "Hotel Dukla, Prešov", 9, GREY, "center")
+    d.text(157.5, 80, "Hotel Dukla, Prešov", 9, GRAY, "center")
     d.lesson("Imprimo · vzor 03 · VNÚTRO (strana 2)")
     d.save()
 
@@ -185,8 +185,8 @@ def lesson_04():
         d.text(x + pw / 2, 150, f"vnútro – diel {i + 1}", 12, K, "center")
         d.text(x + pw / 2, 140, f"{pw} mm", 18, BLUE, "center")
         x += pw
-    d.text(250, 120, "tento diel je o 3 mm užší,", 7, GREY, "center")
-    d.text(250, 115, "aby sa pri zložení nekrčil", 7, GREY, "center")
+    d.text(250, 120, "tento diel je o 3 mm užší,", 7, GRAY, "center")
+    d.text(250, 115, "aby sa pri zložení nekrčil", 7, GRAY, "center")
     d.lesson("Imprimo · vzor 04 · VNÚTRO (strana 1) – diely 100 / 100 / 97 mm")
     d.page()
     x = 0
@@ -231,9 +231,9 @@ def lesson_05():
         # a bar 4 mm from the outer edge – shows creep: inner pages move towards the spine
         bx = w - 6 if right else 4
         d.fill(ORANGE if not cover else WHITE, bx, 20, 2, h - 40)
-        d.text(w / 2, 8, "← chrbát" if right else "chrbát →", 7, GREY if not cover else WHITE,
+        d.text(w / 2, 8, "← chrbát" if right else "chrbát →", 7, GRAY if not cover else WHITE,
                "left" if right else "right")
-        d.lesson(f"Imprimo · vzor 05 · strana {p} z {n}", GREY if not cover else WHITE, 3)
+        d.lesson(f"Imprimo · vzor 05 · strana {p} z {n}", GRAY if not cover else WHITE, 3)
         if p < n:
             d.page()
     d.save()
@@ -248,7 +248,7 @@ def lesson_06():
         d.fill(CMYKColor(0, 0.1, 0.35, 0))
         d.fill(ORANGE, 100, -3, 43, 56)
         d.text(8, 30, "Stužková slávnosť 2027", 13)
-        d.text(8, 22, "vstupenka · sobota 14. 2. · 18:00", 8, GREY)
+        d.text(8, 22, "vstupenka · sobota 14. 2. · 18:00", 8, GRAY)
         d.text(120, 26, f"Č. {p:03d}", 13, WHITE, "center")
         d.text(120, 18, "odtrhnúť", 6, WHITE, "center")
         d.line(100, 3, 100, 47, CMYKColor(0, 0, 0, 0.5), 0.3)
@@ -288,7 +288,7 @@ def lesson_08():
     w, h = 148, 105
     d = Doc("08_chybne_pdf_na_preflight.pdf", w, h, 0, "Chybné PDF – nájdi chyby")
     c = d.c
-    c.setFillColorRGB(0.95, 0.3, 0.2)                        # mistake 1: RGB colour
+    c.setFillColorRGB(0.95, 0.3, 0.2)                        # mistake 1: RGB color
     c.rect(0, 0, w * mm, h * mm, stroke=0, fill=1)           # mistake 2: no bleed
     img = Image.new("RGB", (60, 40))                         # mistake 3: low resolution
     for x in range(60):
@@ -325,7 +325,7 @@ def lesson_09():
         c.setFillColor(col)
         c.circle(w / 2 * mm, 300 * mm, r * mm, stroke=0, fill=1)
     d.text(w / 2, 520, "PLAGÁT", 96, K, "center")
-    d.text(w / 2, 490, "A2 · 420 × 594 mm · vzor 09", 22, GREY, "center")
+    d.text(w / 2, 490, "A2 · 420 × 594 mm · vzor 09", 22, GRAY, "center")
     d.text(w / 2, 292, "A2", 60, WHITE, "center")
     for y, s in ((90, "Vytlač po dieloch na A4 alebo A3 a zlep –"),
                  (72, "šikmé čiary a kruhy musia nadväzovať bez schodíka.")):
@@ -372,23 +372,23 @@ def lesson_11():
         d.fill(WHITE)
         if p == 1:
             d.text(w / 2, 100, "Malý zborník", 18, BLUE, "center")
-            d.text(w / 2, 92, "vzor 11 · väzba V2 (lepená)", 7, GREY, "center")
+            d.text(w / 2, 92, "vzor 11 · väzba V2 (lepená)", 7, GRAY, "center")
         else:
             chapter = (p - 1) // 8 + 1
             if (p - 1) % 8 == 0:                             # a new chapter every 8 pages
                 d.fill(TEAL, 0, h - 34, w, 34)
                 d.text(w / 2, h - 22, f"Kapitola {chapter}", 13, WHITE, "center")
             else:
-                d.text(w / 2, h - 16, f"Kapitola {chapter}", 7, GREY, "center")
+                d.text(w / 2, h - 16, f"Kapitola {chapter}", 7, GRAY, "center")
             for k in range(10):                              # some body text lines
                 d.fill(CMYKColor(0, 0, 0, 0.12), 14, 95 - k * 5, w - 28, 1.8)
         d.text(w / 2, 22, str(p), 30, ORANGE, "center")
         # the head of the page – after folding all heads must point the same way
         band = p > 1 and (p - 1) % 8 == 0
-        d.text(w / 2, h - 7, "▲ hlava", 5, WHITE if band else GREY, "center")
-        d.text(w - 4 if not right else 4, 8, "chrbát →" if not right else "← chrbát", 5, GREY,
+        d.text(w / 2, h - 7, "▲ hlava", 5, WHITE if band else GRAY, "center")
+        d.text(w - 4 if not right else 4, 8, "chrbát →" if not right else "← chrbát", 5, GRAY,
                "right" if not right else "left")
-        d.lesson(f"Imprimo · vzor 11 · strana {p} z {n}", GREY, 3)
+        d.lesson(f"Imprimo · vzor 11 · strana {p} z {n}", GRAY, 3)
         if p < n:
             d.page()
     d.save()
@@ -415,7 +415,7 @@ def lesson_11():
 
 # Lessons whose PDFs were redesigned by hand (Affinity, Illustrator… – see ZADANIE.md):
 # the script no longer overwrites them. Add a lesson number when its new PDFs arrive.
-DESIGNED = {"01", "02"}
+DESIGNED = {"01", "02", "03"}
 
 
 if __name__ == "__main__":
