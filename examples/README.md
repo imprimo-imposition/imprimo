@@ -51,7 +51,7 @@ what positions does Imprimo compute?
 
 ## 05 – Saddle-stitch booklet A5, 12 pages
 Preset ★ *Saddle-stitch booklet*: 3 sheets, sheet 1 has pages 12 | 1, its back 2 | 11. Set *creep* to 0.5 mm and
-watch the orange bar 4 mm from the outer edge move on the inner sheets. *Exercise:* how many sheets for 20 pages,
+watch the dark blue bar 4 mm from the outer edge move on the inner sheets. *Exercise:* how many sheets for 20 pages,
 and what happens with 18?
 
 ## 06 – Tickets, cut & stack

@@ -85,12 +85,12 @@ Medzera medzi kusmi je 2 × spadávka, takže každá vizitka má vlastnú spad�
 
 ## 05 – Brožúra A5, 12 strán
 
-**Súbor:** `05_brozura_A5_12_stran.pdf` – 12 strán A5, oranžový pruh 4 mm od vonkajšieho okraja.
+**Súbor:** `05_brozura_A5_12_stran.pdf` – 12 strán A5, tmavomodrý pruh 4 mm od vonkajšieho okraja.
 **Predvoľba:** ★ *Brožúra V1 – SRA3*
 
 1. Imprimo vyradí 12 strán na **3 hárky** – v *Prehľade hárkov* je na prvom hárku strana 12 vedľa 1, na rube 2 vedľa 11.
 2. Zapni *Čísla strán* a skontroluj poradie: po zložení a zošití musia ísť strany 1 → 12.
-3. V sekcii *Brožúra* nastav **posun (creep)** napr. 0,5 mm a sleduj oranžový pruh na vnútorných hárkoch.
+3. V sekcii *Brožúra* nastav **posun (creep)** napr. 0,5 mm a sleduj tmavomodrý pruh na vnútorných hárkoch.
 
 **Pozri sa:** pri hrubšej brožúre vnútorné hárky po zložení vytŕčajú – posun ich obsah odsunie ku chrbtu,
 aby po orezaní ostal pruh všade rovnako ďaleko od okraja.

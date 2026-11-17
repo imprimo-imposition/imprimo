@@ -57,8 +57,8 @@ Polohy bigov musia sedieť presne – kontrolujú ich testy aj návody k lekciá
 | `02_vizitka_bez_spadavky.pdf` ✓ | 1 | 90 × 50 | **0 mm** | PDF/X-4, FOGRA39 | farba **až po orez** (nie do spadávky) |
 | `03_pozvanka_A5_na_polovicu.pdf` ✓ | 2 – vonkajšok, vnútro | 210 × 148 | 3 mm | PDF/X-4, FOGRA39 | CMYK, bez čiary bigu |
 | `03_pozvanka_A5_bigy.pdf` ✓ | 1 | 210 × 148 | 3 mm | PDF/X-4, FOGRA39 | **len** čiara **Crease** na **105 mm** zľava, cez spadávku, prestrieranie (overprint) |
-| `04_DL_skladacka_zavinovacia.pdf` | 2 – vnútro, vonkajšok | 297 × 210 | 3 mm | PDF/X-4, FOGRA39 | diely **100 / 100 / 97 mm** zľava na 1. strane |
-| `04_DL_skladacka_bigy.pdf` | 1 | 297 × 210 | 3 mm | PDF/X-4, FOGRA39 | **len** čiary **Crease** na **100 a 200 mm** zľava, overprint |
+| `04_DL_skladacka_zavinovacia.pdf` ✓ | 2 – vnútro, vonkajšok | 297 × 210 | 3 mm | PDF/X-4, FOGRA39 | diely **100 / 100 / 97 mm** zľava na 1. strane |
+| `04_DL_skladacka_bigy.pdf` ✓ | 1 | 297 × 210 | 3 mm | PDF/X-4, FOGRA39 | **len** čiary **Crease** na **100 a 200 mm** zľava, overprint |
 | `05_brozura_A5_12_stran.pdf` | **12** | 148 × 210 | 3 mm | PDF/X-4, FOGRA39 | čísla strán, prvok pri vonkajšom okraji (creep) |
 | `06_vstupenky_cut_and_stack.pdf` | **28** | 140 × 50 | 3 mm | PDF/X-4, FOGRA39 | čísla **001–028**, každá strana iné (InDesign: *Data Merge*) |
 | `07_vizitka_s_lakom.pdf` | 1 | 90 × 50 | 3 mm | PDF/X-4, FOGRA39 | CMYK, **bez** laku |
@@ -100,6 +100,6 @@ zo skriptu `make_examples.py` (nedávaj ju do `DESIGNED`).
 1. Súbory s rovnakými názvami dať do priečinka `examples/` (alebo poslať).
 2. Spustiť testy: `python tests/test_core.py` – test `test_examples` overí, že lekcie 01–07 a 09–11
    prejdú preflightom, 08 nie, a že sa bigy nájdu na správnych miestach.
-3. Číslo lekcie pridať do `DESIGNED` v `make_examples.py` – skript ju potom neprepíše (hotové: 01, 02, 03).
+3. Číslo lekcie pridať do `DESIGNED` v `make_examples.py` – skript ju potom neprepíše (hotové: 01, 02, 03, 04).
 4. Nové snímky pre web: `tools_web_screenshots.py` (návod je na začiatku skriptu).
 5. Ak sa niečo v lekcii zmenilo (texty, farby), upraviť `CITAJ-MA.md` a `README.md`.

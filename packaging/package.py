@@ -82,7 +82,8 @@ def copy_app(dst, drop_icons):
     # sample files for Help → Sample files (the generator script stays in the source zip)
     shutil.copytree(os.path.join(ROOT, "examples"), os.path.join(dst, "examples"),
                     ignore=shutil.ignore_patterns("*.py", "ZADANIE.md", "__pycache__", ".DS_Store",
-                                                  "affinity", "*.af", "*~lock~"))
+                                                  "affinity", "*.af", "*~lock~",
+                                                  "illustrator", "*.ai", "fonts"))
     shutil.copytree(os.path.join(ROOT, "imprimo"), os.path.join(dst, "imprimo"),
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     for f in ("imprimo-1024-master.png",) + tuple(drop_icons):
