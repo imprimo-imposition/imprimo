@@ -36,6 +36,42 @@ Polohy bigov musia sedieť presne – kontrolujú ich testy aj návody k lekciá
   zaokrúhľuje stranu na celé pixely (napr. 90 × 50,038 mm namiesto 90 × 50), pozri
   [affinity-page-size.md](affinity-page-size.md).
 
+## Export po súboroch – ťahák
+
+**Spoločné nastavenie** (Illustrator, InDesign):
+
+- Pred prácou: *Edit → Color Settings* → **Europe Prepress 3** (najlepšie v Bridge pre celé Adobe),
+  dokument: *Edit → Assign Profile* → **Coated FOGRA39**. Inak export dá U.S. Web Coated (SWOP).
+- Predvoľba **[PDF/X-4:2008]** · *Output*: **No Conversion** · Output Intent: **Coated FOGRA39**
+  (identifikátor `FOGRA39`).
+- *Marks and Bleeds*: **žiadne značky** (orezky, pasovky robí Imprimo) · spadávka podľa tabuľky.
+- Viac strán = viac kresliacich plôch (Illustrator: *All* artboards) alebo strany v InDesigne –
+  **jednotlivé strany, nie dvojstrany**. Pri 28 a 48 stranách (06, 11) je jednoduchší InDesign.
+- Po exporte otvor PDF v Imprime: rozmer, spadávka a „PDF/X-4 · Coated FOGRA39“ musia sedieť.
+
+| Súbor | Strany | Orez (mm) | Spadávka | Export | Farby / pozor na |
+|---|---|---|---|---|---|
+| `01_vizitky_90x50_obojstranne.pdf` ✓ | 2 – líc, rub | 90 × 50 | 3 mm | PDF/X-4, FOGRA39 | CMYK |
+| `02_vizitka_bez_spadavky.pdf` ✓ | 1 | 90 × 50 | **0 mm** | PDF/X-4, FOGRA39 | farba **až po orez** (nie do spadávky) |
+| `03_pozvanka_A5_na_polovicu.pdf` | 2 – vonkajšok, vnútro | 210 × 148 | 3 mm | PDF/X-4, FOGRA39 | CMYK, bez čiary bigu |
+| `03_pozvanka_A5_bigy.pdf` | 1 | 210 × 148 | 3 mm | PDF/X-4, FOGRA39 | **len** čiara **Crease** na **105 mm** zľava, cez spadávku, prestrieranie (overprint) |
+| `04_DL_skladacka_zavinovacia.pdf` | 2 – vnútro, vonkajšok | 297 × 210 | 3 mm | PDF/X-4, FOGRA39 | diely **100 / 100 / 97 mm** zľava na 1. strane |
+| `04_DL_skladacka_bigy.pdf` | 1 | 297 × 210 | 3 mm | PDF/X-4, FOGRA39 | **len** čiary **Crease** na **100 a 200 mm** zľava, overprint |
+| `05_brozura_A5_12_stran.pdf` | **12** | 148 × 210 | 3 mm | PDF/X-4, FOGRA39 | čísla strán, prvok pri vonkajšom okraji (creep) |
+| `06_vstupenky_cut_and_stack.pdf` | **28** | 140 × 50 | 3 mm | PDF/X-4, FOGRA39 | čísla **001–028**, každá strana iné (InDesign: *Data Merge*) |
+| `07_vizitka_s_lakom.pdf` | 1 | 90 × 50 | 3 mm | PDF/X-4, FOGRA39 | CMYK, **bez** laku |
+| `07_vizitka_lak.pdf` | 1 | 90 × 50 | 3 mm | PDF/X-4, FOGRA39 | **len** plochy vo farbe **Varnish**, overprint, rovnaké miesto ako v tlači |
+| `08_chybne_pdf_na_preflight.pdf` | 1 | 148 × 105 | **0 mm** | **nie** PDF/X (obyčajné PDF) | **naschvál chybné** – pozri nižšie |
+| `09_plagat_A2.pdf` | 1 | 420 × 594 | 3 mm | PDF/X-4, FOGRA39 | prvky, ktoré prechádzajú cez diely (kontrola lepenia) |
+| `10_vizitky_jana.pdf` | 2 – líc, rub | 90 × 50 | 3 mm | PDF/X-4, FOGRA39 | osoba 1, vlastná farba |
+| `10_vizitky_peter.pdf` | 2 – líc, rub | 90 × 50 | 3 mm | PDF/X-4, FOGRA39 | osoba 2, iná farba |
+| `10_vizitky_eva.pdf` | 2 – líc, rub | 90 × 50 | 3 mm | PDF/X-4, FOGRA39 | osoba 3, iná farba |
+| `11_zbornik_A6_48_stran.pdf` | **48** | 105 × 148 | 3 mm | PDF/X-4, FOGRA39 | čísla strán, vyznačená hlava strany |
+| `11_zbornik_A6_obalka.pdf` | 1 – roztvorená | **212,4** × 148 | 3 mm | PDF/X-4, FOGRA39 | zadná 105 · chrbát **2,4** · predná 105 |
+
+✓ = hotové. Súbory s bigmi a lakom majú **rovnaký rozmer aj spadávku** ako tlačové PDF – Imprimo
+ich kladie presne na seba.
+
 ## Lekcia 08 – chyby, ktoré v PDF musia ostať
 
 Preflight v Imprime ich má nájsť (lekcia je o hľadaní chýb):
@@ -45,6 +81,9 @@ Preflight v Imprime ich má nájsť (lekcia je o hľadaní chýb):
 3. obrázok s nízkym rozlíšením (**pod 100 ppi**),
 4. **nevložené písmo**,
 5. čiara vo farbe **Crease** priamo v tlačovom PDF.
+
+Illustrator ani InDesign nevložené písmo pri bežnom exporte neurobia. Ak sa to nepodarí, 08 nechaj
+zo skriptu `make_examples.py` (nedávaj ju do `DESIGNED`).
 
 ## Obsah
 
