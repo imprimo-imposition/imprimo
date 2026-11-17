@@ -83,7 +83,8 @@ def copy_app(dst, drop_icons):
     shutil.copytree(os.path.join(ROOT, "examples"), os.path.join(dst, "examples"),
                     ignore=shutil.ignore_patterns("*.py", "ZADANIE.md", "__pycache__", ".DS_Store",
                                                   "affinity", "*.af", "*~lock~",
-                                                  "illustrator", "*.ai", "fonts"))
+                                                  "illustrator", "*.ai", "fonts",
+                                                  "affinity-page-size.md"))
     shutil.copytree(os.path.join(ROOT, "imprimo"), os.path.join(dst, "imprimo"),
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     for f in ("imprimo-1024-master.png",) + tuple(drop_icons):
@@ -167,14 +168,15 @@ def main():
             os.makedirs(d)
             run("unzip", "-q", zips[-1], "-d", d)
             top = [x for x in os.listdir(d) if not x.startswith("__MACOSX")]
-            bases[name] = (d, top[0])
+            new_top = f"Imprimo-{V}-{name}"
+            os.rename(os.path.join(d, top[0]), os.path.join(d, new_top))   # before looking for
+            bases[name] = (d, top[0])                                       # the runtime Python
         py312 = find_python312(a.python, work)
         print("precompile with:", py312 or "– (no Python 3.12 found, skipping .pyc)")
 
         for name, (d, old_top) in bases.items():
             _pattern, app_rel, drop, prefix = PLATFORMS[name]
             new_top = f"Imprimo-{V}-{name}"
-            os.rename(os.path.join(d, old_top), os.path.join(d, new_top))
             pkg = os.path.join(d, new_top)
             print(f"{name}: {old_top} → {new_top}")
             copy_app(os.path.join(pkg, app_rel), drop)
