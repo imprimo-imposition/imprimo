@@ -96,6 +96,15 @@ h1 { font: 800 clamp(40px, 6.4vw, 76px)/1.02 var(--display); letter-spacing: -.0
 .btn.primary small { color: inherit; opacity: .8; }
 .btn svg { width: 18px; height: 18px; flex: none; }
 .fine { font: 400 13px/1.5 var(--mono); color: var(--muted); margin-top: 14px; }
+.news { margin-top: 18px; max-width: 64ch; border: 1px solid var(--rule); border-radius: 12px; background: var(--sheet); }
+.news summary { cursor: pointer; padding: 12px 16px; font: 600 15px/1.3 var(--text); list-style: none; display: flex; align-items: center; gap: 10px; }
+.news summary::-webkit-details-marker { display: none; }
+.news summary::before { content: ""; width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); rotate: -45deg; transition: rotate .15s; flex: none; }
+.news[open] summary::before { rotate: 45deg; }
+.news summary b { font: 500 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent); padding: 4px 7px; border-radius: 5px; }
+.news ul { margin: 0; padding: 0 16px 0 36px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+.news li + li { margin-top: 6px; }
+.news .more { display: inline-block; margin: 12px 16px 14px 36px; font: 500 13px/1 var(--mono); color: var(--accent); }
 
 /* a screenshot laid on a press sheet, with crop marks and a registration target */
 .sheet { position: relative; padding: 26px; }
@@ -227,7 +236,7 @@ footer a { color: var(--ink); }
 <main id="top">
   <div class="wrap hero">
     <div>
-      <div class="kicker"><b>v0.7.0</b><span>Windows · macOS · Linux</span><span>GPL-3.0</span></div>
+      <div class="kicker"><b>v0.8.1</b><span>Windows · macOS · Linux</span><span>GPL-3.0</span></div>
       <h1><span lang="sk">Vyraďovanie PDF pre tlač.</span><span lang="en">PDF imposition for print.</span></h1>
       <p class="lead">
         <span lang="sk">Vizitky, brožúry, skladačky s bigom aj plagáty po dieloch – rýchlo, vektorovo a s kontrolou PDF/X. Zadarmo, bez inštalácie, pre školy aj tlačiarne.</span>
@@ -248,6 +257,12 @@ footer a { color: var(--ink); }
         <span lang="sk">Rozbaľ a spusti – nič sa neinštaluje. Zdrojový kód a všetky verzie sú na GitHube.</span>
         <span lang="en">Unzip and run – nothing to install. Source code and all versions are on GitHub.</span>
       </p>
+      <!-- filled from latest.json (notes) by the script below; stays hidden without it -->
+      <details class="news" id="news" hidden>
+        <summary><b>v</b><span lang="sk">Čo je nové</span><span lang="en">What's new</span></summary>
+        <ul lang="sk"></ul><ul lang="en"></ul>
+        <a class="more" href="https://github.com/imprimo-imposition/imprimo/releases/latest"><span lang="sk">Všetky zmeny na GitHube →</span><span lang="en">Full release notes on GitHub →</span></a>
+      </details>
     </div>
     <figure class="sheet" style="margin:0">
       <svg class="reg" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="5" fill="none" stroke="currentColor" stroke-width="1"/><path d="M11 0v22M0 11h22" stroke="currentColor" stroke-width="1"/></svg>
@@ -509,10 +524,26 @@ footer a { color: var(--ink); }
     var k = document.querySelector(".kicker b");
     if (k && tag) k.textContent = tag;
   }
+  // "What's new" under the downloads: the notes of the latest release, both languages
+  function news(j) {
+    var box = document.getElementById("news");
+    if (!box || !j.notes) return;
+    var any = false;
+    ["sk", "en"].forEach(function (l) {
+      var ul = box.querySelector('ul[lang="' + l + '"]');
+      (j.notes[l] || []).forEach(function (t) {
+        var li = document.createElement("li"); li.textContent = t; ul.appendChild(li); any = true;
+      });
+    });
+    if (!any) return;
+    box.querySelector("summary b").textContent = "v" + j.version;
+    if (j.page) box.querySelector(".more").href = j.page;
+    box.hidden = false;
+  }
   // latest.json is written by packaging/package.py with every release
   fetch("latest.json", { cache: "no-cache" })
     .then(function (r) { if (!r.ok) throw r; return r.json(); })
-    .then(function (j) { apply("v" + j.version, j.downloads || {}); })
+    .then(function (j) { apply("v" + j.version, j.downloads || {}); news(j); })
     .catch(function () {
       return fetch("https://api.github.com/repos/imprimo-imposition/imprimo/releases/latest")
         .then(function (r) { return r.ok ? r.json() : null; })
