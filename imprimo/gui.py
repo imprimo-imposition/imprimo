@@ -14,7 +14,7 @@ import pypdfium2 as pdfium
 from PySide6.QtCore import (QEvent, QLocale, QObject, QPointF, QRectF, QSettings, Qt, QTimer, QUrl,
                             Signal)
 from PySide6.QtGui import (QAction, QActionGroup, QColor, QDesktopServices, QImage,
-                           QCursor, QKeySequence, QPainter, QPen, QShortcut)
+                           QCursor, QKeySequence, QPainter, QPalette, QPen, QShortcut)
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QCheckBox, QComboBox, QStackedWidget,
                                QDoubleSpinBox, QFileDialog, QFormLayout, QFrame, QGroupBox,
                                QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMessageBox,
@@ -942,30 +942,60 @@ class ElidedLabel(QLabel):
 
 
 class Section(QWidget):
-    """Collapsible panel section: bold title with an arrow, remembers its state."""
+    """Collapsible panel section: bold title with an arrow, remembers its state.
 
-    def __init__(self, title, key):
+    The header also shows a short gray summary of the current values (set_summary), so a
+    closed section still tells what is set. `context` marks a section that belongs to the
+    chosen mode (booklet, signatures…) with a colored bar on the left."""
+
+    def __init__(self, title, key, context=False):
         super().__init__()
         self.key = key
         lay = QVBoxLayout(self)
-        lay.setContentsMargins(0, 2, 0, 2)
+        lay.setContentsMargins(8 if context else 0, 2, 0, 2)
         lay.setSpacing(2)
+        head = QHBoxLayout()
+        head.setContentsMargins(0, 0, 0, 0)
         self.btn = QToolButton()
         self.btn.setText(title)
         self.btn.setCheckable(True)
         self.btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        self.btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        bar = "border-left: 2px solid palette(highlight); padding-left: 6px; " if context else ""
         self.btn.setStyleSheet("QToolButton { border: none; font-weight: bold; padding: 3px 0px; "
-                               "text-align: left; }")
+                               f"{bar}text-align: left; }}")
+        self.summary = QLabel()
+        self.summary.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+        self.summary.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self.summary.setCursor(Qt.PointingHandCursor)
+        self.summary.mousePressEvent = lambda e: self.btn.toggle()
+        self._summary = ""
+        head.addWidget(self.btn)
+        head.addWidget(self.summary, 1)
         self.body = QFrame()
         self.body.setFrameShape(QFrame.StyledPanel)
-        lay.addWidget(self.btn)
+        lay.addLayout(head)
         lay.addWidget(self.body)
         val = store().value(f"section/{key}", True)
         is_open = val not in (False, "false", "0", 0)
         self.btn.setChecked(is_open)
         self._apply(is_open)
         self.btn.toggled.connect(self._toggled)
+
+    def set_summary(self, text):
+        self._summary = text or ""
+        self.summary.setToolTip(self._summary)
+        self._elide()
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        self._elide()
+
+    def _elide(self):
+        col = self.palette().color(QPalette.PlaceholderText).name()
+        self.summary.setStyleSheet(f"color: {col}; padding-right: 2px;")
+        w = max(10, self.summary.width() - 4)
+        self.summary.setText(self.summary.fontMetrics().elidedText(self._summary, Qt.ElideRight, w))
 
     def _apply(self, on):
         self.body.setVisible(on)
@@ -975,6 +1005,30 @@ class Section(QWidget):
     def _toggled(self, on):
         self._apply(on)
         store().setValue(f"section/{self.key}", on)
+
+
+class StepHeader(QWidget):
+    """Separator between groups of sections: a numbered step with a line (① Source ───)."""
+
+    def __init__(self, num, title):
+        super().__init__()
+        h = QHBoxLayout(self)
+        h.setContentsMargins(0, 12, 0, 2)
+        h.setSpacing(8)
+        n = QLabel(str(num))
+        n.setFixedSize(20, 20)
+        n.setAlignment(Qt.AlignCenter)
+        n.setStyleSheet("background: palette(highlight); color: palette(highlighted-text); "
+                        "border-radius: 10px; font-weight: bold; font-size: 11px;")
+        lbl = QLabel(title)
+        lbl.setStyleSheet("font-weight: bold;")
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Plain)
+        line.setStyleSheet("color: palette(mid);")
+        h.addWidget(n)
+        h.addWidget(lbl)
+        h.addWidget(line, 1)
 
 
 class LayerRow(QFrame):
@@ -1240,7 +1294,7 @@ class MainWindow(QMainWindow):
         self._fill_job_combo()
 
         # File
-        g = Section(t("file"), "file")
+        g = self.file_box = Section(t("file"), "file")
         v = QVBoxLayout(g.body)
         b = QPushButton(t("open_pdf"))
         b.clicked.connect(self.choose_file)
@@ -1249,10 +1303,9 @@ class MainWindow(QMainWindow):
         self.file_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         v.addWidget(b)
         v.addWidget(self.file_label)
-        col.addWidget(g)
 
         # Mode
-        g = Section(t("mode"), "mode")
+        g = self.mode_box = Section(t("mode"), "mode")
         f = QFormLayout(g.body)
         self.mode = QComboBox()
         for k in MODES:
@@ -1268,10 +1321,9 @@ class MainWindow(QMainWindow):
         self.split.setChecked(True)
         self.split.setVisible(False)
         f.addRow(self.split)
-        col.addWidget(g)
 
         # Jobs on the sheet (gang run)
-        self.gang_box = Section(t("gang_group"), "gang")
+        self.gang_box = Section(t("gang_group"), "gang", context=True)
         gv = QVBoxLayout(self.gang_box.body)
         self.jobs_col = QVBoxLayout()
         self.jobs_col.setSpacing(2)
@@ -1283,11 +1335,10 @@ class MainWindow(QMainWindow):
         self.gang_info.setTextFormat(Qt.RichText)
         gv.addWidget(self.gang_info)
         gv.addWidget(hint_label(t("gang_hint")))
-        col.addWidget(self.gang_box)
         self.job_rows = []
 
         # Sheet
-        g = Section(t("sheet_group"), "sheet")
+        g = self.sheet_box = Section(t("sheet_group"), "sheet")
         f = QFormLayout(g.body)
         self.sheet = QComboBox()
         for name in SHEET_PRESETS:
@@ -1310,7 +1361,6 @@ class MainWindow(QMainWindow):
         f.addRow(t("sheet_size"), wh)
         f.addRow(t("orientation"), self.orientation)
         f.addRow(t("margin"), self.margin)
-        col.addWidget(g)
 
         # Layout (n-up)
         self.grid_box = Section(t("layout_group"), "layout")
@@ -1362,10 +1412,9 @@ class MainWindow(QMainWindow):
         self.gutter_btn.clicked.connect(self._gutter_double_bleed)
         gv.addWidget(self.gutter_btn, 0, Qt.AlignLeft)
         gv.addWidget(hint_label(t("gap_hint")))
-        col.addWidget(self.grid_box)
 
         # Booklet
-        self.booklet_box = Section(t("booklet_group"), "booklet")
+        self.booklet_box = Section(t("booklet_group"), "booklet", context=True)
         f = QFormLayout(self.booklet_box.body)
         self.creep = mm_spin(0, 0, 10, 0.05, 2)
         self.creep.setToolTip(t("creep_tip"))
@@ -1375,10 +1424,9 @@ class MainWindow(QMainWindow):
         f.addRow(t("creep"), self.creep)
         f.addRow(hint_label(t("creep_tip")))
         f.addRow(t("blanks"), self.blanks)
-        col.addWidget(self.booklet_box)
 
         # Signatures (perfect / sewn binding)
-        self.sig_box = Section(t("sig_group"), "signatures")
+        self.sig_box = Section(t("sig_group"), "signatures", context=True)
         f = QFormLayout(self.sig_box.body)
         self.sig_pages = QComboBox()
         self.sig_pages.addItem(t("sig_auto"), 0)
@@ -1406,10 +1454,9 @@ class MainWindow(QMainWindow):
         cover_btn.clicked.connect(self.show_cover)
         f.addRow(cover_btn)
         self.sig_form = f
-        col.addWidget(self.sig_box)
 
         # Poster in pieces
-        self.tile_box = Section(t("tile_group"), "tile")
+        self.tile_box = Section(t("tile_group"), "tile", context=True)
         f = QFormLayout(self.tile_box.body)
         self.tile_target = QComboBox()
         for key in TILE_TARGETS:
@@ -1426,10 +1473,9 @@ class MainWindow(QMainWindow):
         f.addRow(t("tile_overlap"), self.tile_overlap)
         f.addRow(self.tile_info)
         f.addRow(hint_label(t("tile_hint")))
-        col.addWidget(self.tile_box)
 
         # Bleed
-        g = Section(t("bleed_group"), "bleed")
+        g = self.bleed_box = Section(t("bleed_group"), "bleed")
         f = QFormLayout(g.body)
         self.bleed = mm_spin(3, 0, 20)
         self.bleed_fill = QComboBox()
@@ -1441,10 +1487,9 @@ class MainWindow(QMainWindow):
         f.addRow(t("bleed"), self.bleed)
         f.addRow(t("bleed_fill"), self.bleed_fill)
         f.addRow(t("assume"), self.assume)
-        col.addWidget(g)
 
         # Double-sided printing
-        g = Section(t("duplex_group"), "duplex")
+        g = self.duplex_box = Section(t("duplex_group"), "duplex")
         f = QFormLayout(g.body)
         self.duplex = QCheckBox(t("duplex"))
         self.flip = QComboBox()
@@ -1460,10 +1505,9 @@ class MainWindow(QMainWindow):
         self.back_or_label = QLabel(t("back_piece"))
         f.addRow(self.back_or_label, self.back_or)
         f.addRow(hint_label(t("flip_tip")))
-        col.addWidget(g)
 
         # Marks
-        g = Section(t("marks_group"), "marks")
+        g = self.marks_box = Section(t("marks_group"), "marks")
         f = QFormLayout(g.body)
         self.crop = QCheckBox(t("crop"))
         self.mark_off = mm_spin(3, 0, 20)
@@ -1477,7 +1521,6 @@ class MainWindow(QMainWindow):
         f.addRow(t("mark_weight"), self.mark_w)
         f.addRow(self.reg)
         f.addRow(self.slug)
-        col.addWidget(g)
 
         # Creasing
         self.crease_box = Section(t("crease_group"), "crease")
@@ -1517,7 +1560,6 @@ class MainWindow(QMainWindow):
         f.addRow(self.crease_marks)
         f.addRow(self.crease_status)
         f.addRow(hint_label(t("crease_hint")))
-        col.addWidget(self.crease_box)
 
         # Layers
         g = Section(t("layers_group"), "layers")
@@ -1529,10 +1571,9 @@ class MainWindow(QMainWindow):
         add.clicked.connect(self.add_layer)
         lv.addWidget(add, 0, Qt.AlignLeft)
         lv.addWidget(hint_label(t("layers_hint")))
-        col.addWidget(g)
 
         # Export PDF
-        g = Section(t("export_group"), "export")
+        g = self.export_box = Section(t("export_group"), "export")
         f = QFormLayout(g.body)
         self.std = QComboBox()
         self.std.addItem(t("std_keep", std="–"), "keep")
@@ -1564,7 +1605,19 @@ class MainWindow(QMainWindow):
         self.preflight.setTextFormat(Qt.RichText)
         f.addRow(self.preflight)
         f.addRow(hint_label(t("export_hint")))
-        col.addWidget(g)
+
+        # the sections in the order of the work: source → sheet and layout → finishing → output;
+        # the section of the chosen mode (booklet, signatures, poster, gang run) right under the mode
+        steps = ((t("step_source"), [self.file_box]),
+                 (t("step_sheet"), [self.mode_box, self.gang_box, self.booklet_box, self.sig_box,
+                                    self.tile_box, self.sheet_box, self.grid_box, self.duplex_box]),
+                 (t("step_finish"), [self.bleed_box, self.marks_box, self.crease_box,
+                                     self.layers_box]),
+                 (t("step_output"), [self.export_box]))
+        for i, (title, boxes) in enumerate(steps, 1):
+            col.addWidget(StepHeader(i, title))
+            for box in boxes:
+                col.addWidget(box)
         col.addStretch(1)
 
         scroll = QScrollArea()
@@ -2713,6 +2766,7 @@ class MainWindow(QMainWindow):
         if p.cap:
             txt += f"<br><span style='color:gray'>{t('layout_cap', c=p.cap[0], r=p.cap[1])}</span>"
         self.picker_label.setText(txt)
+        self._update_summaries()
 
     def _update_visibility(self):
         mode = self.mode.currentData()
@@ -2757,6 +2811,71 @@ class MainWindow(QMainWindow):
         self.mark_len.setEnabled(marks)
         if hasattr(self, "crease_box"):
             self._update_crease_panel()
+        self._update_summaries()
+
+    def _update_summaries(self):
+        """Gray one-line summaries in the section headers – what is set, even when closed."""
+        def num(v):
+            return f"{v:g}".replace(".", ",") if get_language() == "sk" else f"{v:g}"
+
+        def txt(combo):
+            return combo.currentText()
+
+        sep = " · "
+        p = self.plan
+        # source
+        if self.src is not None and self.path:
+            parts = [os.path.basename(self.path)]
+            if self.infos:
+                i0 = self.infos[0]
+                parts.append(t("sum_pages", n=len(self.infos)))
+                parts.append(f"{num(round(to_mm(i0.vis_w), 1))} × {num(round(to_mm(i0.vis_h), 1))} mm")
+            self.file_box.set_summary(sep.join(parts))
+        else:
+            self.file_box.set_summary(t("no_file"))
+        rng = self.range.text().strip()
+        self.mode_box.set_summary(txt(self.mode) + (sep + rng if rng and self.range.isEnabled() else ""))
+        self.gang_box.set_summary(t("sum_jobs", n=len(getattr(self, "job_rows", []) or [])))
+        self.booklet_box.set_summary(t("sum_creep", mm=num(self.creep.value())))
+        self.sig_box.set_summary(sep.join((txt(self.sig_pages), txt(self.binding))))
+        self.tile_box.set_summary(sep.join((txt(self.tile_target), f"{num(self.tile_scale.value())} %")))
+        # sheet and layout
+        sheet = txt(self.sheet)
+        if self.sheet.currentData() == CUSTOM:
+            sheet = f"{num(self.sheet_w.value())} × {num(self.sheet_h.value())} mm"
+        parts = [sheet]
+        if self.orientation.currentData() != "auto":
+            parts.append(txt(self.orientation))
+        parts.append(t("sum_margin", mm=num(self.margin.value())))
+        self.sheet_box.set_summary(sep.join(parts))
+        parts = [t("sum_manual") if self.manual_rb.isChecked() else t("sum_auto")]
+        if p is not None and getattr(p, "cols", 0):
+            parts.append(f"{p.cols} × {p.rows}")
+        gx, gy = self.gutter_x.value(), self.gutter_y.value()
+        if gx or gy:
+            parts.append(t("sum_gaps", x=num(gx), y=num(gy)))
+        self.grid_box.set_summary(sep.join(parts))
+        if not self.duplex.isEnabled() and self.mode.currentData() == "tile":
+            self.duplex_box.set_summary(t("sum_off"))
+        elif self.duplex.isChecked() or not self.duplex.isEnabled():
+            self.duplex_box.set_summary(txt(self.flip))
+        else:
+            self.duplex_box.set_summary(t("sum_off"))
+        # finishing
+        parts = [f"{num(self.bleed.value())} mm"]
+        if self.bleed_fill.currentData() != "off":
+            parts.append(txt(self.bleed_fill))
+        self.bleed_box.set_summary(sep.join(parts))
+        marks = [t(k) for k, cb in (("sum_crop", self.crop), ("sum_reg", self.reg),
+                                    ("sum_slug", self.slug)) if cb.isChecked()]
+        self.marks_box.set_summary(sep.join(marks) or t("sum_none"))
+        cr = txt(self.crease)
+        if self.crease.currentData() != "off" and self.crease_pos.text().strip():
+            cr += sep + self.crease_pos.text().strip() + " mm"
+        self.crease_box.set_summary(cr)
+        names = [layer_display_name(e["layer"]) for e in self.layers]
+        self.layers_box.set_summary(sep.join(names) or t("sum_none"))
+        self.export_box.set_summary(txt(self.std))
 
     def changed(self, *_):
         if self._loading:
