@@ -6,6 +6,9 @@ na GitHube sú v priečinku [`examples/`](.).
 
 Chceš vzory navrhnúť graficky po svojom? Technické požiadavky sú v [ZADANIE.md](ZADANIE.md).
 
+> **Robíš v Affinity?** Exportované PDF môže mať nepresný rozmer strany (napr. 50,038 mm namiesto 50).
+> Prečo a ako to obísť: [affinity-page-size.md](affinity-page-size.md).
+
 Všetky farby sú CMYK alebo spotové, písmo je vložené – vzory prejdú preflightom
 (okrem lekcie 08, tá je chybná naschvál). Vytvára ich skript `make_examples.py`.
 

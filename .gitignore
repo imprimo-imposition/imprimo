@@ -7,3 +7,6 @@ tests/samples/
 .DS_Store
 *_imposed*.pdf
 CLAUDE.local.md
+
+# Affinity lock files
+*~lock~

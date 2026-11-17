@@ -390,6 +390,20 @@ def test_examples():
                     build_plan(analyze(src), s, [GangJob(pdf, [0, 1], 100)])
                 else:
                     build_plan(analyze(src), s)
+    # exact trim sizes (mm) as in examples/ZADANIE.md – catches apps that round the page,
+    # e.g. Affinity exporting 90 × 50.038 mm (examples/affinity-page-size.md); 08 is free
+    sizes = {"01": (90, 50), "02": (90, 50), "03": (210, 148), "04": (297, 210),
+             "05": (148, 210), "06": (140, 50), "07": (90, 50), "09": (420, 594),
+             "10": (90, 50), "11": (105, 148)}
+    for name in sorted(os.listdir(d)):
+        want = sizes.get(name[:2])
+        if not name.endswith(".pdf") or want is None or name == "11_zbornik_A6_obalka.pdf":
+            continue
+        with pikepdf.open(os.path.join(d, name)) as src:
+            for i in analyze(src):
+                got = (i.vis_w / mm(1), i.vis_h / mm(1))
+                assert all(abs(g - w) < 0.005 for g, w in zip(got, want)), \
+                    (name, i.index + 1, [round(g, 3) for g in got], want)
     # lesson 11: 6 signatures of 8 pages on SRA3, the cover fits the computed 2.4 mm spine
     import shutil, tempfile
     from imprimo.cover import caliper, prepare, spine_width

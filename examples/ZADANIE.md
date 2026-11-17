@@ -32,7 +32,9 @@ Polohy bigov musia sedieť presne – kontrolujú ich testy aj návody k lekciá
 - Spotové farby z palety Imprimo (`spot-colors/Imprimo-spot-colors.ase`, v Affinity importovaná ako
   **aplikačná** paleta, nie systémová): big = **Crease**, lak = **Varnish**.
 - Bigy a lak **ako samostatné PDF**, nie v tlačovom PDF (tlačové PDF sa exportuje bez tejto vrstvy).
-- Rozmer strany presne podľa tabuľky.
+- Rozmer strany presne podľa tabuľky – test ho kontroluje na 0,005 mm. **Pozor na Affinity:** pri exporte
+  zaokrúhľuje stranu na celé pixely (napr. 90 × 50,038 mm namiesto 90 × 50), pozri
+  [affinity-page-size.md](affinity-page-size.md).
 
 ## Lekcia 08 – chyby, ktoré v PDF musia ostať
 
@@ -56,6 +58,6 @@ Preflight v Imprime ich má nájsť (lekcia je o hľadaní chýb):
 1. Súbory s rovnakými názvami dať do priečinka `examples/` (alebo poslať).
 2. Spustiť testy: `python tests/test_core.py` – test `test_examples` overí, že lekcie 01–07 a 09–11
    prejdú preflightom, 08 nie, a že sa bigy nájdu na správnych miestach.
-3. Číslo lekcie pridať do `DESIGNED` v `make_examples.py` – skript ju potom neprepíše (hotové: 01).
+3. Číslo lekcie pridať do `DESIGNED` v `make_examples.py` – skript ju potom neprepíše (hotové: 01, 02).
 4. Nové snímky pre web: `tools_web_screenshots.py` (návod je na začiatku skriptu).
 5. Ak sa niečo v lekcii zmenilo (texty, farby), upraviť `CITAJ-MA.md` a `README.md`.

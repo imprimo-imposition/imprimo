@@ -2815,7 +2815,8 @@ class MainWindow(QMainWindow):
         if spreads:
             pages_txt = t("src_spreads", n=len(raw) + len(spreads), pdf=len(raw), s=len(spreads))
         else:
-            pages_txt = t("src_pages", n=len(raw))
+            n = len(raw)
+            pages_txt = t("src_page_one" if n == 1 else "src_pages_few" if n < 5 else "src_pages", n=n)
         trim = t("src_trim_ok") if p.has_trim else t("src_trim_no")
         pr = self.profile
         std = pr.pdfx or pr.pdfa or t("src_no_std")

@@ -415,7 +415,7 @@ def lesson_11():
 
 # Lessons whose PDFs were redesigned by hand (Affinity, Illustrator… – see ZADANIE.md):
 # the script no longer overwrites them. Add a lesson number when its new PDFs arrive.
-DESIGNED = {"01"}
+DESIGNED = {"01", "02"}
 
 
 if __name__ == "__main__":

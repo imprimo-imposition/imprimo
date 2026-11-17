@@ -4,6 +4,9 @@ Samples for trying Imprimo and for teaching imposition. Every lesson has a PDF, 
 what to look at and a small exercise. In Imprimo open them via **Help → Sample files…**.
 Slovak version: [CITAJ-MA.md](CITAJ-MA.md).
 
+> **Using Affinity?** Its exported PDF may have an inexact page size (e.g. 50.038 mm instead of 50).
+> Why and how to avoid it: [affinity-page-size.md](affinity-page-size.md).
+
 All colours are CMYK or spot colours and the font is embedded, so the samples pass the preflight –
 except lesson 08, which is wrong on purpose. They are built by `make_examples.py`
 (`pip install reportlab pillow`, `python examples/make_examples.py`).
