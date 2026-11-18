@@ -172,6 +172,31 @@ h2 { font: 800 clamp(30px, 3.6vw, 44px)/1.08 var(--display); margin: 10px 0 0; t
 .textlink { font-weight: 600; color: var(--accent); text-decoration: none; }
 .textlink:hover { text-decoration: underline; }
 
+
+
+/* print glossary: small drawings next to short definitions */
+.terms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 40px; margin-top: 36px; border-top: 1px solid var(--rule); }
+.term { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 20px; padding: 24px 0; border-bottom: 1px solid var(--rule); scroll-margin-top: 110px; }
+.term h3 { font: 700 19px/1.25 var(--display); margin: 0; }
+.term p { color: var(--muted); font-size: 15.5px; margin: 6px 0 0; }
+.term .textlink { display: inline-block; margin-top: 8px; font-size: 15px; }
+.term:target h3 { color: var(--accent); }
+.g { width: 72px; height: 56px; color: var(--ink); margin-top: 2px; }
+.g * { vector-effect: non-scaling-stroke; }
+.g-sheet, .g-paper { fill: var(--sheet); stroke: currentColor; stroke-width: 1.2; }
+.g-line { fill: none; stroke: currentColor; stroke-width: 1.2; }
+.g-trim { fill: none; stroke: currentColor; stroke-width: 1.2; stroke-dasharray: 3 2; }
+.g-crease { fill: none; stroke: var(--m); stroke-width: 2; stroke-dasharray: 4 2.5; }
+.g-staple { fill: none; stroke: var(--muted); stroke-width: 3; stroke-linecap: round; }
+.g-fill-c { fill: var(--c); } .g-fill-m { fill: var(--m); } .g-fill-y { fill: var(--y); stroke: currentColor; stroke-width: 1.2; }
+.g-fill-k { fill: var(--ink); }
+.g-fill-c, .g-fill-m { stroke: none; }
+path.g-fill-c { stroke: currentColor; stroke-width: 1.2; }
+.g-reg-c, .g-reg-m { fill: none; stroke-width: 1.2; mix-blend-mode: multiply; opacity: .8; }
+.g-reg-c { stroke: var(--c); } .g-reg-m { stroke: var(--m); }
+.g-num { font: 600 11px/1 var(--mono); fill: currentColor; text-anchor: middle; }
+.g-badge { font: 600 9px/1 var(--mono); fill: var(--paper); text-anchor: middle; }
+
 footer { border-top: 1px solid var(--rule); padding-block: 36px 48px; color: var(--muted); font-size: 14px; }
 .foot { display: flex; flex-wrap: wrap; gap: 12px 32px; justify-content: space-between; }
 footer a { color: var(--ink); }
@@ -202,6 +227,7 @@ footer a { color: var(--ink); }
   .tp-grid { grid-template-columns: minmax(0, 1fr); }
   .seg button { padding: 11px 16px; font-size: 15px; }
   .lessons { columns: 1; }
+  .terms { grid-template-columns: minmax(0, 1fr); }
   section { padding-block: 48px; }
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -217,6 +243,7 @@ footer a { color: var(--ink); }
     <nav aria-label="Menu" id="site-nav">
       <a href="#funkcie"><span lang="sk">Funkcie</span><span lang="en">Features</span></a>
       <a href="#pre-koho"><span lang="sk">Pre koho</span><span lang="en">Who it's for</span></a>
+      <a href="#slovnik"><span lang="sk">Slovníček</span><span lang="en">Glossary</span></a>
       <a href="https://github.com/imprimo-imposition/imprimo">GitHub</a>
       <a class="nav-support" data-goatcounter-click="ko-fi" href="https://ko-fi.com/imprimo"><span lang="sk">♥ Podporiť projekt</span><span lang="en">♥ Support the project</span></a>
     </nav>
@@ -290,7 +317,7 @@ footer a { color: var(--ink); }
       <h2><span lang="sk">Od vizitky po plagát – všetko na jednom hárku</span><span lang="en">From a business card to a poster – all on one sheet</span></h2>
       <p class="intro"><span lang="sk">Strany sa vkladajú ako vektorové objekty: písma, CMYK, priame farby aj prechody ostanú presne také, aké boli. Nič sa nerastruje.</span><span lang="en">Pages are placed as vector objects: fonts, CMYK, spot colors and gradients stay exactly as they were. Nothing is rasterized.</span></p>
 
-      <article class="feature">
+      <article class="feature" id="f-brozura">
         <div class="copy">
           <span class="spec"><i style="background:var(--c)"></i><span lang="sk">Brožúra V1 · 12 strán · 3 hárky</span><span lang="en">Saddle stitch · 12 pages · 3 sheets</span></span>
           <h3><span lang="sk">Brožúry so správnym poradím strán</span><span lang="en">Booklets with the right page order</span></h3>
@@ -299,7 +326,7 @@ footer a { color: var(--ink); }
         <figure class="sheet" style="margin:0"><picture lang="sk"><source srcset="mac/booklet_sk_dark.webp" media="(prefers-color-scheme: dark)"><img src="mac/booklet_sk_light.webp" width="1300" height="871" alt="Prehľad hárkov brožúry s číslami strán" loading="lazy"></picture><picture lang="en"><source srcset="mac/booklet_en_dark.webp" media="(prefers-color-scheme: dark)"><img src="mac/booklet_en_light.webp" width="1300" height="871" alt="All sheets of a booklet with page numbers" loading="lazy"></picture></figure>
       </article>
 
-      <article class="feature">
+      <article class="feature" id="f-zlozky">
         <div class="copy">
           <span class="spec"><i style="background:var(--m)"></i><span lang="sk">Väzba V2 · 48 strán · 6 zložiek po 8</span><span lang="en">Perfect binding · 48 pages · 6 × 8</span></span>
           <h3><span lang="sk">Knihy a zborníky zo zložiek</span><span lang="en">Books made of signatures</span></h3>
@@ -309,7 +336,7 @@ footer a { color: var(--ink); }
         <figure class="sheet" style="margin:0"><picture lang="sk"><source srcset="mac/signatures_sk_dark.webp" media="(prefers-color-scheme: dark)"><img src="mac/signatures_sk_light.webp" width="1300" height="871" alt="Zborník A6 v zložkách po 8 stranách na hárkoch SRA3" loading="lazy"></picture><picture lang="en"><source srcset="mac/signatures_en_dark.webp" media="(prefers-color-scheme: dark)"><img src="mac/signatures_en_light.webp" width="1300" height="871" alt="An A6 book in 8-page signatures on SRA3 sheets" loading="lazy"></picture></figure>
       </article>
 
-      <article class="feature">
+      <article class="feature" id="f-bigovanie">
         <div class="copy">
           <span class="spec"><i style="background:var(--y)"></i><span lang="sk">Big · 100 / 200 mm · značky B</span><span lang="en">Crease · 100 / 200 mm · crease marks</span></span>
           <h3><span lang="sk">Bigovanie bez počítania</span><span lang="en">Creasing without the maths</span></h3>
@@ -318,7 +345,7 @@ footer a { color: var(--ink); }
         <figure class="sheet" style="margin:0"><picture lang="sk"><source srcset="mac/crease_sk_dark.webp" media="(prefers-color-scheme: dark)"><img src="mac/crease_sk_light.webp" width="1300" height="871" alt="DL zavinovacia skladačka s bigmi na hárku SRA3" loading="lazy"></picture><picture lang="en"><source srcset="mac/crease_en_dark.webp" media="(prefers-color-scheme: dark)"><img src="mac/crease_en_light.webp" width="1300" height="871" alt="DL roll fold leaflet with creases on an SRA3 sheet" loading="lazy"></picture></figure>
       </article>
 
-      <article class="feature">
+      <article class="feature" id="f-plagat">
         <div class="copy">
           <span class="spec"><i style="background:var(--k)"></i><span lang="sk">A2 → 8 × A4 · prekryv 10 mm</span><span lang="en">A2 → 8 × A4 · 10 mm overlap</span></span>
           <h3><span lang="sk">Plagát z kancelárskej tlačiarne</span><span lang="en">A poster from an office printer</span></h3>
@@ -327,7 +354,7 @@ footer a { color: var(--ink); }
         <figure class="sheet" style="margin:0"><picture lang="sk"><source srcset="mac/poster_sk_dark.webp" media="(prefers-color-scheme: dark)"><img src="mac/poster_sk_light.webp" width="1300" height="871" alt="Plagát A2 poskladaný z dielov A4" loading="lazy"></picture><picture lang="en"><source srcset="mac/poster_en_dark.webp" media="(prefers-color-scheme: dark)"><img src="mac/poster_en_light.webp" width="1300" height="871" alt="A2 poster assembled from A4 pieces" loading="lazy"></picture></figure>
       </article>
 
-      <article class="feature">
+      <article class="feature" id="f-gang">
         <div class="copy">
           <span class="spec"><i style="background:var(--c)"></i><span lang="sk">A 100 ks · B 250 ks · C 50 ks → 17 hárkov</span><span lang="en">A 100 · B 250 · C 50 pcs → 17 sheets</span></span>
           <h3><span lang="sk">Viac zákaziek na jednom hárku</span><span lang="en">Several jobs on one sheet</span></h3>
@@ -422,6 +449,144 @@ footer a { color: var(--ink); }
             <li><span lang="sk">Export PDF/X-1a, X-3 a X-4.</span><span lang="en">PDF/X-1a, X-3 and X-4 export.</span></li>
           </ul>
         </div>
+      </div>
+    </div>
+  </section>
+  <section id="slovnik" style="padding-top:0">
+    <div class="wrap">
+      <div class="eyebrow"><span lang="sk">Slovníček tlače</span><span lang="en">Print glossary</span></div>
+      <h2><span lang="sk">Čo je bigovanie, spadávka či creep?</span><span lang="en">What are creasing, bleed and creep?</span></h2>
+      <p class="intro"><span lang="sk">Pojmy, na ktoré narazíš pri príprave tlače a v Imprime – stručne, pre začiatočníkov aj študentov.</span><span lang="en">Terms you meet in print production and in Imprimo – in short, for beginners and students.</span></p>
+      <div class="terms">
+        <article class="term" id="vyradovanie">
+          <svg class="g" viewBox="0 0 72 56" aria-hidden="true"><rect x="6" y="4" width="60" height="48" rx="1.5" class="g-sheet"/>
+<rect x="12" y="9" width="22" height="17" class="g-line"/><rect x="38" y="9" width="22" height="17" class="g-line"/>
+<rect x="12" y="30" width="22" height="17" class="g-line"/><rect x="38" y="30" width="22" height="17" class="g-line"/>
+<text x="23" y="21" class="g-num">8</text><text x="49" y="21" class="g-num">1</text>
+<text x="23" y="42" class="g-num">5</text><text x="49" y="42" class="g-num">4</text></svg>
+          <div>
+            <h3><span lang="sk">Vyraďovanie</span><span lang="en">Imposition</span></h3>
+            <p><span lang="sk">Rozloženie strán na tlačový hárok tak, aby po tlači, rezaní a skladaní vznikol hotový produkt so stranami v správnom poradí. Na jednom hárku SRA3 je napríklad 24 vizitiek alebo 8 strán brožúry A5.</span><span lang="en">Arranging pages on a press sheet so that printing, cutting and folding give a finished product with the pages in the right order. One SRA3 sheet holds e.g. 24 business cards or 8 pages of an A5 booklet.</span></p>
+            
+          </div>
+        </article>
+        <article class="term" id="opakovanie">
+          <svg class="g" viewBox="0 0 72 56" aria-hidden="true"><rect x="6" y="4" width="60" height="48" rx="1.5" class="g-sheet"/><rect x="11.0" y="8.0" width="15" height="11.5" class="g-fill-c"/><rect x="28.5" y="8.0" width="15" height="11.5" class="g-fill-c"/><rect x="46.0" y="8.0" width="15" height="11.5" class="g-fill-c"/><rect x="11.0" y="22.5" width="15" height="11.5" class="g-fill-c"/><rect x="28.5" y="22.5" width="15" height="11.5" class="g-fill-c"/><rect x="46.0" y="22.5" width="15" height="11.5" class="g-fill-c"/><rect x="11.0" y="37.0" width="15" height="11.5" class="g-fill-c"/><rect x="28.5" y="37.0" width="15" height="11.5" class="g-fill-c"/><rect x="46.0" y="37.0" width="15" height="11.5" class="g-fill-c"/></svg>
+          <div>
+            <h3><span lang="sk">Opakovanie (step & repeat)</span><span lang="en">Step & repeat</span></h3>
+            <p><span lang="sk">Jedna strana sa zopakuje na celom hárku – vizitky, etikety, pozvánky. Pri obojstrannej tlači musí byť rub uložený tak, aby po otočení hárku (po dlhšej alebo kratšej strane) sedel presne na líce.</span><span lang="en">One page repeated across the whole sheet – business cards, labels, invitations. For double-sided printing the back is laid out so that it lines up with the front after the sheet is turned (on the long or the short edge).</span></p>
+            
+          </div>
+        </article>
+        <article class="term" id="spadavka">
+          <svg class="g" viewBox="0 0 72 56" aria-hidden="true"><rect x="14" y="8" width="44" height="40" class="g-fill-m"/>
+<rect x="19" y="13" width="34" height="30" class="g-trim"/>
+<path d="M10 13h5M10 43h5M57 13h5M57 43h5M19 4v5M53 4v5M19 47v5M53 47v5" class="g-line"/></svg>
+          <div>
+            <h3><span lang="sk">Spadávka</span><span lang="en">Bleed</span></h3>
+            <p><span lang="sk">Grafika, ktorá siaha až po okraj, musí pokračovať 3 mm za čistý formát – ak s tlačiarňou nie je dohodnuté inak. Rez nikdy nie je úplne presný a bez spadávky by na okraji ostal tenký biely prúžok papiera.</span><span lang="en">Artwork that runs to the edge has to continue 3 mm past the trim size – unless agreed otherwise with the print shop. No cut is perfectly accurate, and without bleed a thin white line of paper would show at the edge.</span></p>
+            
+          </div>
+        </article>
+        <article class="term" id="cisty-format">
+          <svg class="g" viewBox="0 0 72 56" aria-hidden="true"><rect x="18" y="12" width="36" height="32" class="g-paper"/>
+<path d="M6 12h8M6 44h8M58 12h8M58 44h8M18 2v6M54 2v6M18 48v6M54 48v6" class="g-line"/></svg>
+          <div>
+            <h3><span lang="sk">Čistý formát a orezové značky</span><span lang="en">Trim size and crop marks</span></h3>
+            <p><span lang="sk">Čistý formát je konečná veľkosť produktu po orezaní, v PDF je zapísaný ako TrimBox. Orezové značky sú tenké čiary mimo produktu, podľa ktorých sa reže – sú odsadené, aby nezasahovali do spadávky.</span><span lang="en">The trim size is the final size of the product after cutting; a PDF stores it as the TrimBox. Crop marks are thin lines outside the product that show where to cut – offset so they stay clear of the bleed.</span></p>
+            
+          </div>
+        </article>
+        <article class="term" id="pasovacie-kriziky">
+          <svg class="g" viewBox="0 0 72 56" aria-hidden="true"><circle cx="36" cy="28" r="12" class="g-line"/><circle cx="36" cy="28" r="5" class="g-line"/>
+<path d="M36 8v40M16 28h40" class="g-line"/>
+<circle cx="37.2" cy="28.8" r="12" class="g-reg-c"/><circle cx="35" cy="27.4" r="12" class="g-reg-m"/></svg>
+          <div>
+            <h3><span lang="sk">Pasovacie krížiky</span><span lang="en">Registration marks</span></h3>
+            <p><span lang="sk">Terčíky tlačené vo všetkých farbách naraz. Ak sú farby CMYK presne na sebe (v sútlači), krížik je čierny a ostrý; ak nie, vidno farebné okraje.</span><span lang="en">Targets printed in all colors at once. When the CMYK colors are exactly on top of each other (in register) the target is black and sharp; when they are not, colored fringes show.</span></p>
+            
+          </div>
+        </article>
+        <article class="term" id="bigovanie">
+          <svg class="g" viewBox="0 0 72 56" aria-hidden="true"><path d="M8 46 30 40V10L8 16z" class="g-paper"/><path d="M30 40l34 6V16L30 10z" class="g-paper"/>
+<path d="M30 10v30" class="g-crease"/></svg>
+          <div>
+            <h3><span lang="sk">Bigovanie</span><span lang="en">Creasing</span></h3>
+            <p><span lang="sk">Vytlačenie drážky (bigu) do papiera v mieste ohybu. Hrubší papier – zhruba od 170 g/m² – sa bez bigu pri skladaní láme a farba na prehybe praská. Big sa robí pred skladaním (falcovaním).</span><span lang="en">Pressing a groove (crease) into the paper where it will fold. Heavier stock – from roughly 170 g/m² – cracks along the fold without one, and the ink on the fold breaks. Creasing comes before folding.</span></p>
+            <a class="textlink" href="#f-bigovanie"><span lang="sk">Bigovanie v Imprime →</span><span lang="en">Creasing in Imprimo →</span></a>
+          </div>
+        </article>
+        <article class="term" id="brozura-v1">
+          <svg class="g" viewBox="0 0 72 56" aria-hidden="true"><path d="M36 12C28 8 16 8 6 10v34c10-2 22-2 30 2zM36 12c8-4 20-4 30-2v34c-10-2-22-2-30 2z" class="g-paper"/>
+<path d="M36 12v34" class="g-line"/><path d="M36 18v6M36 34v6" class="g-staple"/></svg>
+          <div>
+            <h3><span lang="sk">Brožúra V1 (šitá)</span><span lang="en">Saddle-stitched booklet</span></h3>
+            <p><span lang="sk">Hárky sa vložia do seba, zložia v polovici a zošijú drôtom cez chrbát. Počet strán musí byť deliteľný štyrmi; na jednom hárku sú vedľa seba napríklad strany 12 a 1, na rube 2 a 11.</span><span lang="en">Sheets are nested, folded in half and stapled through the spine. The page count must be a multiple of four; one sheet carries e.g. pages 12 and 1 side by side, and 2 and 11 on the back.</span></p>
+            <a class="textlink" href="#f-brozura"><span lang="sk">Brožúry v Imprime →</span><span lang="en">Booklets in Imprimo →</span></a>
+          </div>
+        </article>
+        <article class="term" id="creep">
+          <svg class="g" viewBox="0 0 72 56" aria-hidden="true"><path d="M8 10h44l8 18-8 18H8" class="g-line"/><path d="M8 16h40l6 12-6 12H8" class="g-line"/>
+<path d="M8 22h36l3 6-3 6H8" class="g-line"/>
+<path d="M44 6v44" class="g-trim"/></svg>
+          <div>
+            <h3><span lang="sk">Posun strán (creep)</span><span lang="en">Creep</span></h3>
+            <p><span lang="sk">Pri hrubšej šitej brožúre vnútorné hárky po zložení vytŕčajú, a po orezaní sú ich strany užšie. Posun k chrbtu to vyrovná – približne počet hárkov × hrúbka papiera ÷ 2.</span><span lang="en">In a thicker saddle-stitched booklet the inner sheets stick out after folding, so their pages end up narrower after trimming. Shifting them towards the spine compensates – roughly number of sheets × paper thickness ÷ 2.</span></p>
+            
+          </div>
+        </article>
+        <article class="term" id="zlozka">
+          <svg class="g" viewBox="0 0 72 56" aria-hidden="true"><rect x="14" y="8" width="44" height="7" rx="1" class="g-paper"/><rect x="14" y="8.0" width="4" height="3" class="g-fill-m"/><rect x="16" y="16" width="44" height="7" rx="1" class="g-paper"/><rect x="16" y="17.1" width="4" height="3" class="g-fill-m"/><rect x="18" y="24" width="44" height="7" rx="1" class="g-paper"/><rect x="18" y="26.2" width="4" height="3" class="g-fill-m"/><rect x="20" y="32" width="44" height="7" rx="1" class="g-paper"/><rect x="20" y="35.3" width="4" height="3" class="g-fill-m"/><rect x="22" y="40" width="44" height="7" rx="1" class="g-paper"/><rect x="22" y="44.4" width="4" height="3" class="g-fill-m"/></svg>
+          <div>
+            <h3><span lang="sk">Zložka a väzba V2</span><span lang="en">Signatures and perfect binding</span></h3>
+            <p><span lang="sk">Zložka je hárok zložený na 4, 8, 16 alebo 32 strán. Pri knihe sa zložky znesú na seba a zlepia (V2) alebo zošijú niťou. Šikmé značky na chrbte ukážu, či sú zložky v správnom poradí.</span><span lang="en">A signature is a sheet folded into 4, 8, 16 or 32 pages. For a book the signatures are gathered and glued (perfect binding) or sewn. Stepped marks on the spine show whether the signatures are in the right order.</span></p>
+            <a class="textlink" href="#f-zlozky"><span lang="sk">Zložky v Imprime →</span><span lang="en">Signatures in Imprimo →</span></a>
+          </div>
+        </article>
+        <article class="term" id="gang-run">
+          <svg class="g" viewBox="0 0 72 56" aria-hidden="true"><rect x="6" y="4" width="60" height="48" rx="1.5" class="g-sheet"/><rect x="11.0" y="8.0" width="15" height="11.5" class="g-fill-c"/><rect x="28.5" y="8.0" width="15" height="11.5" class="g-fill-c"/><rect x="46.0" y="8.0" width="15" height="11.5" class="g-fill-c"/><rect x="11.0" y="22.5" width="15" height="11.5" class="g-fill-m"/><rect x="28.5" y="22.5" width="15" height="11.5" class="g-fill-m"/><rect x="46.0" y="22.5" width="15" height="11.5" class="g-fill-y"/><rect x="11.0" y="37.0" width="15" height="11.5" class="g-fill-y"/><rect x="28.5" y="37.0" width="15" height="11.5" class="g-fill-y"/><rect x="46.0" y="37.0" width="15" height="11.5" class="g-fill-y"/></svg>
+          <div>
+            <h3><span lang="sk">Gang run</span><span lang="en">Gang run</span></h3>
+            <p><span lang="sk">Viac rôznych zákaziek rovnakého formátu na jednom hárku – napríklad vizitky troch ľudí. Počet miest na hárku sa rozdelí podľa nákladu, takže sa netlačí zbytočne.</span><span lang="en">Several different jobs of the same size on one sheet – e.g. business cards for three people. The slots are shared out by quantity, so nothing is printed in vain.</span></p>
+            <a class="textlink" href="#f-gang"><span lang="sk">Gang run v Imprime →</span><span lang="en">Gang runs in Imprimo →</span></a>
+          </div>
+        </article>
+        <article class="term" id="cut-and-stack">
+          <svg class="g" viewBox="0 0 72 56" aria-hidden="true"><rect x="8.0" y="14.0" width="16" height="30" rx="1" class="g-paper"/><rect x="9.5" y="11.5" width="16" height="30" rx="1" class="g-paper"/><rect x="11.0" y="9.0" width="16" height="30" rx="1" class="g-paper"/><rect x="28.0" y="14.0" width="16" height="30" rx="1" class="g-paper"/><rect x="29.5" y="11.5" width="16" height="30" rx="1" class="g-paper"/><rect x="31.0" y="9.0" width="16" height="30" rx="1" class="g-paper"/><rect x="48.0" y="14.0" width="16" height="30" rx="1" class="g-paper"/><rect x="49.5" y="11.5" width="16" height="30" rx="1" class="g-paper"/><rect x="51.0" y="9.0" width="16" height="30" rx="1" class="g-paper"/><text x="19" y="34" class="g-num">1</text><text x="39" y="34" class="g-num">2</text><text x="59" y="34" class="g-num">3</text></svg>
+          <div>
+            <h3><span lang="sk">Cut & stack</span><span lang="en">Cut & stack</span></h3>
+            <p><span lang="sk">Rozloženie pre číslované vstupenky a poukážky: celý stoh hárkov sa prereže naraz, kôpky sa položia na seba a čísla idú po poradí od 1 do konca.</span><span lang="en">A layout for numbered tickets and vouchers: the whole pile of sheets is cut at once, the stacks are put on top of each other and the numbers run in order from first to last.</span></p>
+            
+          </div>
+        </article>
+        <article class="term" id="pdf-x">
+          <svg class="g" viewBox="0 0 72 56" aria-hidden="true"><path d="M18 4h26l10 10v38H18z" class="g-paper"/><path d="M44 4v10h10" class="g-line"/>
+<rect x="24" y="30" width="34" height="14" rx="3" class="g-fill-k"/><text x="41" y="40.5" class="g-badge">PDF/X</text></svg>
+          <div>
+            <h3><span lang="sk">PDF/X a výstupný profil</span><span lang="en">PDF/X and output intent</span></h3>
+            <p><span lang="sk">PDF/X je norma pre tlačové PDF: písma vložené, žiadne RGB bez profilu. X-1a je čisté CMYK, X-4 dovolí priehľadnosť a vrstvy. Výstupný profil (napr. Coated FOGRA39) hovorí, pre akú tlač bol súbor pripravený.</span><span lang="en">PDF/X is the standard for print PDFs: fonts embedded, no untagged RGB. X-1a is plain CMYK, X-4 allows transparency and layers. The output intent (e.g. Coated FOGRA39) says which printing condition the file was made for.</span></p>
+            
+          </div>
+        </article>
+        <article class="term" id="vrstvy">
+          <svg class="g" viewBox="0 0 72 56" aria-hidden="true"><path d="M10 40 36 50 62 40 36 30z" class="g-paper"/>
+<path d="M10 30 36 40 62 30 36 20z" class="g-fill-y"/>
+<path d="M10 20 36 30 62 20 36 10z" class="g-fill-c"/></svg>
+          <div>
+            <h3><span lang="sk">Lak, biela, výsek, fólia</span><span lang="en">Varnish, white, die-cut, foil</span></h3>
+            <p><span lang="sk">Ďalšie vrstvy nad tlačou alebo pod ňou: parciálny lak, podtlač bielou na fóliu či farebný papier, kontúra pre výsek alebo plotter a razba fóliou. Pripravujú sa ako samostatné PDF alebo priame farby a musia sedieť presne na tlač.</span><span lang="en">Extra layers above or under the print: spot varnish, white underprint on film or colored stock, a contour for die-cutting or a plotter, and foil. They come as separate PDFs or spot colors and must line up exactly with the print.</span></p>
+            
+          </div>
+        </article>
+        <article class="term" id="sra3">
+          <svg class="g" viewBox="0 0 72 56" aria-hidden="true"><rect x="14" y="2" width="44" height="52" class="g-line"/><rect x="17" y="6" width="38" height="44" class="g-paper"/>
+<text x="36" y="31" class="g-num">A3</text></svg>
+          <div>
+            <h3><span lang="sk">SRA3</span><span lang="en">SRA3</span></h3>
+            <p><span lang="sk">Hárok 320 × 450 mm, o kúsok väčší než A3 (297 × 420 mm), aby sa na neho vošla A3 aj so spadávkou a značkami. Je to typický hárok digitálnych tlačových strojov.</span><span lang="en">A 320 × 450 mm sheet, slightly larger than A3 (297 × 420 mm), so that an A3 page fits with its bleed and marks. It is the usual sheet size of digital presses.</span></p>
+            
+          </div>
+        </article>
       </div>
     </div>
   </section>
