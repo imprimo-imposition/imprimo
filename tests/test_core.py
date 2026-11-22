@@ -105,6 +105,60 @@ def test_layers_export():
             assert len(ocgs) == 2 and detect_profile(c).pdfx == "PDF/X-4"
 
 
+def _used_ocgs(pdf):
+    """objgen of every OCG that page content reaches through /Properties."""
+    import pikepdf
+    found, seen = set(), set()
+
+    def walk(res):
+        if not isinstance(res, pikepdf.Dictionary):
+            return
+        for g in res.get("/Properties", {}).values():
+            if g.get("/Type") == "/OCG":
+                found.add(g.objgen)
+        for x in res.get("/XObject", {}).values():
+            if x.objgen not in seen:
+                seen.add(x.objgen)
+                walk(x.get("/Resources"))
+
+    for pg in pdf.pages:
+        walk(pg.obj.get("/Resources"))
+    return found
+
+
+def test_source_layers_direct_ocproperties():
+    """Illustrator/Affinity write /OCProperties as a direct object; its layers must survive."""
+    import tempfile
+    import pikepdf
+    from pikepdf import Array, Dictionary, Name
+    from imprimo.core import impose_file
+    with tempfile.TemporaryDirectory() as d:
+        src = pikepdf.new()
+        g1 = src.make_indirect(Dictionary(Type=Name.OCG, Name=pikepdf.String("Art")))
+        g2 = src.make_indirect(Dictionary(Type=Name.OCG, Name=pikepdf.String("Text")))
+        content = (b"/OC /MC0 BDC 0 0 0 1 k 0 0 100 100 re f EMC "
+                   b"/OC /MC1 BDC 0 1 0 0 k 10 10 50 50 re f EMC")
+        page = Dictionary(Type=Name.Page, MediaBox=Array([0, 0, mm(85), mm(55)]),
+                          Resources=Dictionary(Properties=Dictionary(MC0=g1, MC1=g2)),
+                          Contents=src.make_stream(content))
+        src.pages.append(pikepdf.Page(page))
+        src.Root.OCProperties = Dictionary(          # direct, not an indirect reference
+            OCGs=Array([g1, g2]), D=Dictionary(Order=Array([g1, g2]), ON=Array([g1, g2])))
+        assert not src.Root.OCProperties.is_indirect
+        sp, op = os.path.join(d, "layers.pdf"), os.path.join(d, "layers_imposed.pdf")
+        src.save(sp)
+        impose_file(sp, op, Settings(pdf_standard="x4", icc_profile="bundled"))
+        with pikepdf.open(op) as p:
+            assert "/OCProperties" in p.Root
+            listed = {g.objgen for g in p.Root.OCProperties.OCGs}
+            used = _used_ocgs(p)
+            assert len(used) == 2 and used <= listed
+            assert {str(g.Name) for g in p.Root.OCProperties.OCGs} == {"Art", "Text"}
+        impose_file(sp, op, Settings(pdf_standard="x1a2001", icc_profile="bundled"))
+        with pikepdf.open(op) as p:
+            assert "/OCProperties" not in p.Root       # no layers in PDF/X-1a
+
+
 # --------------------------------------------------------------------------
 # Creasing and spot colors
 

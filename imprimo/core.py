@@ -1544,6 +1544,19 @@ def resolve_export(s: Settings, prof: SourceProfile) -> ExportPlan:
     return ex
 
 
+def _copy_foreign_any(out: pikepdf.Pdf, obj):
+    """Copies an object from another PDF into `out`, also when it is a direct object
+    (copy_foreign only takes indirect ones). Indirect parts go through copy_foreign, so
+    they map to the same objects as the copied page content (pikepdf caches per source)."""
+    if obj.is_indirect:
+        return out.copy_foreign(obj)
+    if isinstance(obj, Dictionary):
+        return Dictionary({k: _copy_foreign_any(out, v) for k, v in obj.items()})
+    if isinstance(obj, Array):
+        return Array([_copy_foreign_any(out, v) for v in obj])
+    return obj                                    # names, strings, numbers: plain values
+
+
 def _pdf_date(dt):
     off = dt.utcoffset() or datetime.timedelta(0)
     mins = int(off.total_seconds() // 60)
@@ -1606,7 +1619,7 @@ def finalize(out: pikepdf.Pdf, src: pikepdf.Pdf, prof: SourceProfile, s: Setting
             del out.Root["/OCProperties"]
     elif "/OCProperties" in src.Root:
         try:
-            theirs = out.copy_foreign(src.Root.OCProperties)
+            theirs = _copy_foreign_any(out, src.Root.OCProperties)
             if "/OCProperties" not in out.Root:
                 out.Root.OCProperties = theirs
             else:                                 # merge with Imprimo's layers
