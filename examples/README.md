@@ -1,4 +1,4 @@
-# Imprimo sample files – 11 lessons
+# Imprimo sample files – 12 lessons
 
 Samples for trying Imprimo and for teaching imposition. Every lesson has a PDF, a preset, steps,
 what to look at and a small exercise. In Imprimo open them via **Help → Sample files…**.
@@ -24,6 +24,7 @@ except lesson 08, which is wrong on purpose. They are built by `make_examples.py
 | 09 | `09_plagat_A2.pdf` | poster in pieces on A4 / A3, overlap, scaling to A1 |
 | 10 | `10_vizitky_jana.pdf`, `…_peter.pdf`, `…_eva.pdf` | several jobs on one sheet (gang run) |
 | 11 | `11_zbornik_A6_48_stran.pdf` + `…_obalka.pdf` | perfect binding: signatures, collation marks, cover with spine |
+| 12 | `12_vstupenka_na_cislovanie.pdf` | numbering tickets in Imprimo (Imprimo RS 0.9) |
 
 (File names are Slovak: *vizitky* = business cards, *obojstranne* = double-sided, *bez spadávky* =
 without bleed, *pozvánka* = invitation, *bigy* = creases, *skladačka* = leaflet, *brožúra* = booklet,
@@ -91,3 +92,12 @@ must run 1 → 8 with all heads ▲ up. Stack the folded signatures: the black *
 staircase. **Tools → Cover with spine…**: 48 pages on 80 g/m² uncoated give a **2.4 mm** spine; *Impose the finished
 cover…* with `11_zbornik_A6_obalka.pdf` opens it with creases at 105 and 107.4 mm. *Exercise:* the spine on 100 g/m²
 paper with bulk 1.2? How many signatures and sheets for a 52-page book?
+
+## 12 – A ticket for numbering (Imprimo RS 0.9)
+File `12_vstupenka_na_cislovanie.pdf` – one ticket design 140 × 50 mm with an empty place for the number; preset
+★ *Tickets – cut & stack* with **Numbering** on. Imprimo repeats the design **600 times** (16 per SRA3 sheet = 38 sheets)
+and gives every piece its own number: *Number 1* on the ticket, *Number 2* on the stub – white and turned by 90° so it
+reads on the blue. Click *Place by clicking* and then in the preview; fine-tune by dragging. Sheet 1 carries 1, 39, 77…;
+after cutting and stacking the piles the tickets are in order 1 → 600. Task: add a third number for the counter coupon.
+How many sheets do 1,000 tickets need?
+

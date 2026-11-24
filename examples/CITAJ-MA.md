@@ -1,4 +1,4 @@
-# Vzorové súbory Imprimo – 11 lekcií
+# Vzorové súbory Imprimo – 12 lekcií
 
 Vzory na vyskúšanie Imprima a na výučbu vyraďovania. Každá lekcia má PDF, predvoľbu,
 postup, na čo sa pozrieť a malú úlohu. V Imprime ich otvoríš cez **Pomocník → Vzorové súbory…**,
@@ -25,6 +25,7 @@ Všetky farby sú CMYK alebo spotové, písmo je vložené – vzory prejdú pre
 | 09 | `09_plagat_A2.pdf` | plagát po dieloch na A4 / A3, prekryv, zväčšenie na A1 |
 | 10 | `10_vizitky_jana.pdf`, `…_peter.pdf`, `…_eva.pdf` | viac zákaziek na jednom hárku (gang run) |
 | 11 | `11_zbornik_A6_48_stran.pdf` + `…_obalka.pdf` | väzba V2: zložky, znášacie značky, obálka s chrbtom |
+| 12 | `12_vstupenka_na_cislovanie.pdf` | číslovanie lístkov priamo v Imprime (Imprimo RS 0.9) |
 
 ---
 
@@ -200,3 +201,19 @@ zborník a aké budú?
 ---
 
 Ďalšie lekcie pribudnú s ďalšími funkciami Imprima.
+
+## 12 – Vstupenka na číslovanie (Imprimo RS 0.9)
+
+**Súbor:** `12_vstupenka_na_cislovanie.pdf` – jeden návrh vstupenky 140 × 50 mm, na mieste čísla je voľné miesto.
+**Predvoľba:** ★ *Vstupenky – cut & stack* a zapnuté **Číslovanie**
+
+1. Imprimo zopakuje jeden návrh **600-krát** (16 na hárok SRA3 = 38 hárkov) a každý kus dostane vlastné číslo.
+2. **Číslo 1** je na lístku, **Číslo 2** na ústrižku – biele a otočené o 90°, aby bolo čitateľné na modrej.
+   Klikni *Umiestniť kliknutím* a potom do náhľadu – číslo skočí tam, kam klikneš. Doladíš ho ťahaním myšou.
+3. Pozri prvý hárok: čísla idú 1, 39, 77… Po rozrezaní a položení kôpok na seba sú vstupenky po poradí 1 → 600.
+
+**Pozri sa:** tvar `Nº {00000}` dá *Nº 00001*, `{0}` čísla bez núl. Farba *Prímá farba „Numbering“* je pre
+číslovací stroj, ktorý tlačí čísla zvlášť.
+
+**Úloha:** pridaj tretie číslo na kontrolný kupón pri pokladnici. Koľko hárkov treba na 1 000 vstupeniek?
+

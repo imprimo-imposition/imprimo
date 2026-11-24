@@ -319,6 +319,23 @@ def lesson_06():
     d.save()
 
 
+# 12 – one ticket design for numbering in Imprimo (no number printed in the design)
+
+def lesson_12():
+    w, h = 140, 50
+    d = Doc("12_vstupenka_na_cislovanie.pdf", w, h, 3, "Ticket for numbering in Imprimo")
+    d.fill(LIGHT)
+    d.fill(BLUE, 100, -3, 43, 56)                            # the stub
+    d.rich(8, 30, [("Prom Night ", "light"), ("2027", "bold")], 14, K)
+    d.text(8, 23, "ticket · Saturday, Feb 14 · 6:00 PM", 8, DARK)
+    d.text(120, 12, "tear off", 6, WHITE, "center")          # the number goes above
+    d.c.setDash(1.5, 1.5)                                    # perforation
+    d.line(100, 3, 100, 47, MID, 0.5)
+    d.c.setDash()
+    d.label(8, 7, "12", "one design – Imprimo prints the numbers", MID, "left")
+    d.save()
+
+
 # 07 – card with spot varnish (layer)
 
 def lesson_07():
@@ -481,7 +498,7 @@ if __name__ == "__main__":
     force = "--all" in sys.argv          # rebuild even the designed ones (old generated look)
     print("Imprimo – sample files:")
     for f in (lesson_01, lesson_02, lesson_03, lesson_04, lesson_05, lesson_06, lesson_07,
-              lesson_08, lesson_09, lesson_10, lesson_11):
+              lesson_08, lesson_09, lesson_10, lesson_11, lesson_12):
         num = f.__name__[-2:]
         if num in DESIGNED and not force:
             print(f"   {num}: navrhnuté ručne – preskočené (--all ich prepíše)")
