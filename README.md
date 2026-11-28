@@ -1,4 +1,12 @@
-# Imprimo 0.8.1
+# Imprimo 0.8.1 (Python)
+
+> **This branch is the Python version of Imprimo (0.4 – 0.8.1). It is kept for reference and
+> is no longer developed.** The current Imprimo (0.9 and later, a native app written in Rust) is
+> on the [`main`](https://github.com/imprimo-imposition/imprimo) branch. Downloads of 0.8.1 and
+> every earlier version stay in [Releases](https://github.com/imprimo-imposition/imprimo/releases).
+>
+> **Táto vetva je Python verzia Imprima (0.4 – 0.8.1), ostáva na nahliadnutie a už sa nevyvíja.**
+> Aktuálne Imprimo (0.9 a novšie) je vo vetve `main`.
 
 Imposition of print-ready PDFs for Windows, macOS and Linux – business cards, labels, booklets, cut & stack – with PDF/X export, preflight and extra layers (varnish, white, die-cut, foil).
 
